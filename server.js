@@ -30,6 +30,27 @@ app.get('/', (req, res) => {
                     .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
                     .button:hover { background-color: #45a049; }
                 </style>
+                <script>
+                    // Функция для обновления данных на странице
+                    function updateSensorData() {
+                        fetch('/sensorData')
+                            .then(response => response.json())
+                            .then(data => {
+                                document.getElementById('temperature').textContent = data.temperature !== null ? data.temperature : '—';
+                                document.getElementById('humidity').textContent = data.humidity !== null ? data.humidity : '—';
+                                document.getElementById('soilMoisture').textContent = data.soil_moisture !== null ? data.soil_moisture : '—';
+                                document.getElementById('relayState').textContent = data.relayState ? 'Включено' : 'Выключено';
+                                document.getElementById('fanState').textContent = data.fanState ? 'Включено' : 'Выключено';
+                            })
+                            .catch(error => console.error('Error fetching sensor data:', error));
+                    }
+
+                    // Обновляем данные каждую секунду
+                    setInterval(updateSensorData, 1000);
+
+                    // Загружаем данные сразу при первой загрузке страницы
+                    window.onload = updateSensorData;
+                </script>
             </head>
             <body>
                 <div class="container">
@@ -43,11 +64,11 @@ app.get('/', (req, res) => {
                             <th>Состояние кулера</th>
                         </tr>
                         <tr>
-                            <td>${sensorData.temperature !== null ? sensorData.temperature : '—'}</td>
-                            <td>${sensorData.humidity !== null ? sensorData.humidity : '—'}</td>
-                            <td>${sensorData.soil_moisture !== null ? sensorData.soil_moisture : '—'}</td>
-                            <td>${sensorData.relayState ? 'Включено' : 'Выключено'}</td>
-                            <td>${sensorData.fanState ? 'Включено' : 'Выключено'}</td>
+                            <td id="temperature">—</td>
+                            <td id="humidity">—</td>
+                            <td id="soilMoisture">—</td>
+                            <td id="relayState">—</td>
+                            <td id="fanState">—</td>
                         </tr>
                     </table>
                     <div style="text-align: center; margin-top: 20px;">
@@ -58,6 +79,11 @@ app.get('/', (req, res) => {
             </body>
         </html>
     `);
+});
+
+// Обработчик для получения последних данных с датчиков (GET запрос)
+app.get('/sensorData', (req, res) => {
+    res.json(sensorData);
 });
 
 // Обработчик для получения данных с ESP32 (POST запрос)
