@@ -29,8 +29,6 @@ app.get('/', (req, res) => {
                     th { background-color: #f2f2f2; }
                     .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
                     .button:hover { background-color: #45a049; }
-                    .button-blue { background-color: #2196F3; }
-                    .button-blue:hover { background-color: #0b7dda; }
                 </style>
             </head>
             <body>
@@ -54,7 +52,7 @@ app.get('/', (req, res) => {
                     </table>
                     <div style="text-align: center; margin-top: 20px;">
                         <a href="/toggleRelay" class="button">Переключить реле</a>
-                        <a href="/toggleFan" class="button button-blue">Переключить кулер</a>
+                        <a href="/toggleFan" class="button" style="background-color: #2196F3;">Переключить кулер</a>
                     </div>
                 </div>
             </body>
@@ -73,14 +71,12 @@ app.post('/data', (req, res) => {
 // Маршруты для переключения реле и кулера
 app.get('/toggleRelay', (req, res) => {
     sensorData.relayState = !sensorData.relayState;
-    console.log('Состояние реле изменено на:', sensorData.relayState ? 'Включено' : 'Выключено');
-    res.redirect('/');  // Перенаправляем на главную страницу
+    res.redirect('/');
 });
 
 app.get('/toggleFan', (req, res) => {
     sensorData.fanState = !sensorData.fanState;
-    console.log('Состояние кулера изменено на:', sensorData.fanState ? 'Включено' : 'Выключено');
-    res.redirect('/');  // Перенаправляем на главную страницу
+    res.redirect('/');
 });
 
 // Запускаем сервер
