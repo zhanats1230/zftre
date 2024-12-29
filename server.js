@@ -29,6 +29,8 @@ app.get('/', (req, res) => {
                     th { background-color: #f2f2f2; }
                     .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
                     .button:hover { background-color: #45a049; }
+                    .red-button { background-color: #f44336; }
+                    .red-button:hover { background-color: #e53935; }
                 </style>
                 <script>
                     // Функция для обновления данных на странице
@@ -43,6 +45,17 @@ app.get('/', (req, res) => {
                                 document.getElementById('fanState').textContent = data.fanState ? 'Включено' : 'Выключено';
                             })
                             .catch(error => console.error('Error fetching sensor data:', error));
+                    }
+
+                    // Функция для отправки запроса на переключение реле
+                    function toggleRelay() {
+                        fetch('/toggleRelay', { method: 'GET' })
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log('Relay toggled');
+                                updateSensorData();  // Обновим данные после изменения состояния реле
+                            })
+                            .catch(error => console.error('Error toggling relay:', error));
                     }
 
                     // Обновляем данные каждую секунду
@@ -72,7 +85,7 @@ app.get('/', (req, res) => {
                         </tr>
                     </table>
                     <div style="text-align: center; margin-top: 20px;">
-                        <a href="/toggleRelay" class="button">Переключить реле</a>
+                        <button onclick="toggleRelay()" class="button">Переключить реле</button>
                         <a href="/toggleFan" class="button" style="background-color: #2196F3;">Переключить кулер</a>
                     </div>
                 </div>
@@ -94,12 +107,15 @@ app.post('/data', (req, res) => {
     res.status(200).send('Data received');
 });
 
-// Маршруты для переключения реле и кулера
+// Обработчик для переключения реле
 app.get('/toggleRelay', (req, res) => {
     sensorData.relayState = !sensorData.relayState;
-    res.redirect('/');
+    // Переключаем реле (вам нужно будет подключить физическое реле через GPIO)
+    console.log(`Relay is now ${sensorData.relayState ? 'ON' : 'OFF'}`);
+    res.json({ relayState: sensorData.relayState });
 });
 
+// Маршрут для переключения кулера
 app.get('/toggleFan', (req, res) => {
     sensorData.fanState = !sensorData.fanState;
     res.redirect('/');
