@@ -1,20 +1,19 @@
 const express = require('express');
 const app = express();
+const fetch = require('node-fetch'); // Убедитесь, что эта библиотека установлена: npm install node-fetch
 const port = process.env.PORT || 80;
 
-// Переменная для хранения последних данных
 let sensorData = {
     temperature: null,
     humidity: null,
     soil_moisture: null,
     relayState: false,
-    fanState: false
+    fanState: false,
 };
 
-// Для обработки JSON данных
 app.use(express.json());
 
-// Главная страница с HTML
+// Главная страница
 app.get('/', (req, res) => {
     res.send(`
         <html>
@@ -33,7 +32,6 @@ app.get('/', (req, res) => {
                     .red-button:hover { background-color: #e53935; }
                 </style>
                 <script>
-                    // Функция для обновления данных на странице
                     function updateSensorData() {
                         fetch('/sensorData')
                             .then(response => response.json())
@@ -47,21 +45,27 @@ app.get('/', (req, res) => {
                             .catch(error => console.error('Error fetching sensor data:', error));
                     }
 
-                    // Функция для отправки запроса на переключение реле
-                    function toggleRelay() {
-                        fetch('/toggleRelay', { method: 'GET' })
+                    function turnOnRelay() {
+                        fetch('/turnOnRelay')
                             .then(response => response.json())
                             .then(data => {
-                                console.log('Relay toggled');
-                                updateSensorData();  // Обновим данные после изменения состояния реле
+                                console.log(data.message);
+                                updateSensorData();
                             })
-                            .catch(error => console.error('Error toggling relay:', error));
+                            .catch(error => console.error('Error turning on relay:', error));
                     }
 
-                    // Обновляем данные каждую секунду
-                    setInterval(updateSensorData, 1000);
+                    function turnOffRelay() {
+                        fetch('/turnOffRelay')
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log(data.message);
+                                updateSensorData();
+                            })
+                            .catch(error => console.error('Error turning off relay:', error));
+                    }
 
-                    // Загружаем данные сразу при первой загрузке страницы
+                    setInterval(updateSensorData, 1000);
                     window.onload = updateSensorData;
                 </script>
             </head>
@@ -85,8 +89,8 @@ app.get('/', (req, res) => {
                         </tr>
                     </table>
                     <div style="text-align: center; margin-top: 20px;">
-                        <button onclick="toggleRelay()" class="button">Переключить реле</button>
-                        <a href="/toggleFan" class="button" style="background-color: #2196F3;">Переключить кулер</a>
+                        <button onclick="turnOnRelay()" class="button">Включить реле</button>
+                        <button onclick="turnOffRelay()" class="red-button">Выключить реле</button>
                     </div>
                 </div>
             </body>
@@ -94,34 +98,44 @@ app.get('/', (req, res) => {
     `);
 });
 
-// Обработчик для получения последних данных с датчиков (GET запрос)
 app.get('/sensorData', (req, res) => {
     res.json(sensorData);
 });
 
-// Обработчик для получения данных с ESP32 (POST запрос)
 app.post('/data', (req, res) => {
     console.log('Получены данные: ', req.body);
-    // Обновляем данные на сервере
     sensorData = req.body;
     res.status(200).send('Data received');
 });
 
-// Обработчик для переключения реле
-app.get('/toggleRelay', (req, res) => {
-    sensorData.relayState = !sensorData.relayState;
-    // Переключаем реле (вам нужно будет подключить физическое реле через GPIO)
-    console.log(`Relay is now ${sensorData.relayState ? 'ON' : 'OFF'}`);
-    res.json({ relayState: sensorData.relayState });
+app.get('/turnOnRelay', (req, res) => {
+    fetch('http://<ESP32_IP>/turnOnRelay') // Замените <ESP32_IP> на IP вашего ESP32
+        .then(response => response.text())
+        .then(data => {
+            console.log('Relay turned ON on ESP32');
+            sensorData.relayState = true;
+            res.json({ success: true, message: 'Relay turned ON' });
+        })
+        .catch(err => {
+            console.error('Error turning on relay:', err);
+            res.status(500).json({ success: false, message: 'Failed to turn on relay' });
+        });
 });
 
-// Маршрут для переключения кулера
-app.get('/toggleFan', (req, res) => {
-    sensorData.fanState = !sensorData.fanState;
-    res.redirect('/');
+app.get('/turnOffRelay', (req, res) => {
+    fetch('http://<ESP32_IP>/turnOffRelay') // Замените <ESP32_IP> на IP вашего ESP32
+        .then(response => response.text())
+        .then(data => {
+            console.log('Relay turned OFF on ESP32');
+            sensorData.relayState = false;
+            res.json({ success: true, message: 'Relay turned OFF' });
+        })
+        .catch(err => {
+            console.error('Error turning off relay:', err);
+            res.status(500).json({ success: false, message: 'Failed to turn off relay' });
+        });
 });
 
-// Запускаем сервер
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
