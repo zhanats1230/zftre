@@ -32,6 +32,10 @@ wss.on('connection', (ws) => {
     console.log('WebSocket disconnected');
     espSocket = null;
   });
+
+  ws.on('message', (message) => {
+    console.log('Received:', message);
+  });
 });
 
 // Главная страница с HTML
@@ -53,7 +57,6 @@ app.get('/', (req, res) => {
           .red-button:hover { background-color: #e53935; }
         </style>
         <script>
-          // Функция для обновления данных на странице
           function updateSensorData() {
             fetch('/sensorData')
               .then(response => response.json())
@@ -67,32 +70,21 @@ app.get('/', (req, res) => {
               .catch(error => console.error('Error fetching sensor data:', error));
           }
 
-          // Функция для отправки запроса на переключение реле
           function toggleRelay() {
             fetch('/toggleRelay', { method: 'GET' })
               .then(response => response.json())
-              .then(data => {
-                console.log('Relay toggled');
-                updateSensorData();  // Обновим данные после изменения состояния реле
-              })
+              .then(data => updateSensorData())
               .catch(error => console.error('Error toggling relay:', error));
           }
 
-          // Функция для отправки запроса на переключение кулера
           function toggleFan() {
             fetch('/toggleFan', { method: 'GET' })
               .then(response => response.json())
-              .then(data => {
-                console.log('Fan toggled');
-                updateSensorData();  // Обновим данные после изменения состояния кулера
-              })
+              .then(data => updateSensorData())
               .catch(error => console.error('Error toggling fan:', error));
           }
 
-          // Обновляем данные каждую секунду
           setInterval(updateSensorData, 1000);
-
-          // Загружаем данные сразу при первой загрузке страницы
           window.onload = updateSensorData;
         </script>
       </head>
@@ -125,15 +117,14 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Обработчик для получения последних данных с датчиков (GET запрос)
+// Обработчик для получения последних данных с датчиков
 app.get('/sensorData', (req, res) => {
   res.json(sensorData);
 });
 
-// Обработчик для получения данных с ESP32 (POST запрос)
+// Обработчик для получения данных с ESP32
 app.post('/data', (req, res) => {
   console.log('Получены данные: ', req.body);
-  // Обновляем данные на сервере
   sensorData = req.body;
   res.status(200).send('Data received');
 });
@@ -141,7 +132,6 @@ app.post('/data', (req, res) => {
 // Обработчик для переключения реле
 app.get('/toggleRelay', (req, res) => {
   sensorData.relayState = !sensorData.relayState;
-  // Отправляем команду через WebSocket на ESP32
   if (espSocket) {
     espSocket.send('toggleRelay');
   }
@@ -152,7 +142,6 @@ app.get('/toggleRelay', (req, res) => {
 // Обработчик для переключения кулера
 app.get('/toggleFan', (req, res) => {
   sensorData.fanState = !sensorData.fanState;
-  // Отправляем команду через WebSocket на ESP32
   if (espSocket) {
     espSocket.send('toggleFan');
   }
@@ -160,7 +149,7 @@ app.get('/toggleFan', (req, res) => {
   res.json({ fanState: sensorData.fanState });
 });
 
-// Запускаем сервер
+// Запуск сервера
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
