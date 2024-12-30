@@ -2,87 +2,139 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;
 
-// Хранение данных сенсоров
+// Переменная для хранения последних данных
 let sensorData = {
     temperature: null,
     humidity: null,
     soil_moisture: null,
     relayState: false,
-    fanState: false,
+    fanState: false
 };
 
-// Внешний IP ESP32 (замените на ваш)
-const esp32IP = "http://192.168.1.100"; // Укажите локальный или публичный IP ESP32
-
+// Для обработки JSON данных
 app.use(express.json());
 
-// Главная страница
+// Главная страница с HTML
 app.get('/', (req, res) => {
     res.send(`
         <html>
             <head>
-                <title>Управление системой</title>
+                <title>Информация с датчиков</title>
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 800px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+                    h1 { text-align: center; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+                    th { background-color: #f2f2f2; }
+                    .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+                    .button:hover { background-color: #45a049; }
+                    .red-button { background-color: #f44336; }
+                    .red-button:hover { background-color: #e53935; }
+                </style>
                 <script>
-                    function toggleRelay(state) {
-                        fetch('/toggleRelay', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ relayState: state })
-                        })
-                        .then(response => response.json())
-                        .then(data => console.log(data))
-                        .catch(error => console.error('Ошибка:', error));
-                    }
-
-                    function refreshData() {
+                    // Функция для обновления данных на странице
+                    function updateSensorData() {
                         fetch('/sensorData')
                             .then(response => response.json())
                             .then(data => {
-                                document.getElementById('relayState').textContent = data.relayState ? "Включено" : "Выключено";
+                                document.getElementById('temperature').textContent = data.temperature !== null ? data.temperature : '—';
+                                document.getElementById('humidity').textContent = data.humidity !== null ? data.humidity : '—';
+                                document.getElementById('soilMoisture').textContent = data.soil_moisture !== null ? data.soil_moisture : '—';
+                                document.getElementById('relayState').textContent = data.relayState ? 'Включено' : 'Выключено';
+                                document.getElementById('fanState').textContent = data.fanState ? 'Включено' : 'Выключено';
                             })
-                            .catch(error => console.error('Ошибка обновления:', error));
+                            .catch(error => console.error('Error fetching sensor data:', error));
                     }
 
-                    setInterval(refreshData, 2000);
-                    window.onload = refreshData;
+                    // Функция для отправки запроса на переключение реле
+                    function toggleRelay() {
+                        fetch('/toggleRelay', { method: 'GET' })
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log('Relay toggled');
+                                updateSensorData();  // Обновим данные после изменения состояния реле
+                            })
+                            .catch(error => console.error('Error toggling relay:', error));
+                    }
+
+                    // Функция для отправки запроса на переключение кулера
+                    function toggleFan() {
+                        fetch('/toggleFan', { method: 'GET' })
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log('Fan toggled');
+                                updateSensorData();  // Обновим данные после изменения состояния кулера
+                            })
+                            .catch(error => console.error('Error toggling fan:', error));
+                    }
+
+                    // Обновляем данные каждую секунду
+                    setInterval(updateSensorData, 1000);
+
+                    // Загружаем данные сразу при первой загрузке страницы
+                    window.onload = updateSensorData;
                 </script>
             </head>
             <body>
-                <h1>Управление системой</h1>
-                <p>Реле: <span id="relayState">—</span></p>
-                <button onclick="toggleRelay(true)">Включить реле</button>
-                <button onclick="toggleRelay(false)">Выключить реле</button>
+                <div class="container">
+                    <h1>Информация с датчиков</h1>
+                    <table>
+                        <tr>
+                            <th>Температура (°C)</th>
+                            <th>Влажность (%)</th>
+                            <th>Влажность почвы (%)</th>
+                            <th>Состояние реле</th>
+                            <th>Состояние кулера</th>
+                        </tr>
+                        <tr>
+                            <td id="temperature">—</td>
+                            <td id="humidity">—</td>
+                            <td id="soilMoisture">—</td>
+                            <td id="relayState">—</td>
+                            <td id="fanState">—</td>
+                        </tr>
+                    </table>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button onclick="toggleRelay()" class="button">Переключить реле</button>
+                        <button onclick="toggleFan()" class="button" style="background-color: #2196F3;">Переключить кулер</button>
+                    </div>
+                </div>
             </body>
         </html>
     `);
 });
 
-// Получение данных с ESP32
+// Обработчик для получения последних данных с датчиков (GET запрос)
 app.get('/sensorData', (req, res) => {
     res.json(sensorData);
 });
 
-// Обработка управления реле
-app.post('/toggleRelay', async (req, res) => {
-    const { relayState } = req.body;
-
-    try {
-        const espResponse = await fetch(`${esp32IP}/toggleRelay`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ relayState }),
-        });
-        const result = await espResponse.json();
-
-        sensorData.relayState = relayState;
-        res.json({ success: true, message: result });
-    } catch (error) {
-        console.error('Ошибка отправки команды на ESP32:', error);
-        res.status(500).json({ success: false, error: 'Не удалось отправить команду' });
-    }
+// Обработчик для получения данных с ESP32 (POST запрос)
+app.post('/data', (req, res) => {
+    console.log('Получены данные: ', req.body);
+    // Обновляем данные на сервере
+    sensorData = req.body;
+    res.status(200).send('Data received');
 });
 
-// Сервер запускается
+// Обработчик для переключения реле
+app.get('/toggleRelay', (req, res) => {
+    sensorData.relayState = !sensorData.relayState;
+    // Здесь вы можете отправить команду на ESP32 для управления физическим реле
+    console.log(`Relay is now ${sensorData.relayState ? 'ON' : 'OFF'}`);
+    res.json({ relayState: sensorData.relayState });
+});
+
+// Обработчик для переключения кулера
+app.get('/toggleFan', (req, res) => {
+    sensorData.fanState = !sensorData.fanState;
+    // Здесь вы можете отправить команду на ESP32 для управления физическим кулером
+    console.log(`Fan is now ${sensorData.fanState ? 'ON' : 'OFF'}`);
+    res.json({ fanState: sensorData.fanState });
+});
+
+// Запускаем сервер
 app.listen(port, () => {
-    console.log(`Сервер запущен на порту ${port}`);
+    console.log(`Server running on port ${port}`);
 });
