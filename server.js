@@ -6,11 +6,11 @@ const port = process.env.PORT || 80;
 
 // Переменная для хранения последних данных
 let sensorData = {
-    temperature: null,
-    humidity: null,
-    soil_moisture: null,
-    relayState: false,
-    fanState: false
+  temperature: null,
+  humidity: null,
+  soil_moisture: null,
+  relayState: false,
+  fanState: false
 };
 
 // Для обработки JSON данных
@@ -25,22 +25,22 @@ let espSocket = null;
 
 // Обработка WebSocket соединений
 wss.on('connection', (ws) => {
-    console.log('WebSocket connected');
-    espSocket = ws;
+  console.log('WebSocket connected');
+  espSocket = ws;
 
-    ws.on('close', () => {
-        console.log('WebSocket disconnected');
-        espSocket = null;
-    });
+  ws.on('close', () => {
+    console.log('WebSocket disconnected');
+    espSocket = null;
+  });
 
-    ws.on('message', (message) => {
-        console.log('Received:', message);
-    });
+  ws.on('message', (message) => {
+    console.log('Received:', message);
+  });
 });
 
-// Главная страница с HTML
+// Главная страница с интерфейсом
 app.get('/', (req, res) => {
-    res.send(`
+  res.send(`
     <html>
       <head>
         <title>Информация с датчиков</title>
@@ -51,7 +51,7 @@ app.get('/', (req, res) => {
           table { width: 100%; border-collapse: collapse; margin-top: 20px; }
           th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
           th { background-color: #f2f2f2; }
-          .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+          .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; font-size: 18px; }
           .button:hover { background-color: #45a049; }
           .red-button { background-color: #f44336; }
           .red-button:hover { background-color: #e53935; }
@@ -119,37 +119,37 @@ app.get('/', (req, res) => {
 
 // Обработчик для получения последних данных с датчиков
 app.get('/sensorData', (req, res) => {
-    res.json(sensorData);
+  res.json(sensorData);
 });
 
 // Обработчик для получения данных с ESP32
 app.post('/data', (req, res) => {
-    console.log('Получены данные: ', req.body);
-    sensorData = req.body;
-    res.status(200).send('Data received');
+  console.log('Получены данные: ', req.body);
+  sensorData = req.body;
+  res.status(200).send('Data received');
 });
 
 // Обработчик для переключения реле
 app.post('/toggleRelay', (req, res) => {
-    sensorData.relayState = !sensorData.relayState;
-    if (espSocket) {
-        espSocket.send(JSON.stringify({ action: 'toggleRelay' }));
-    }
-    console.log(`Relay is now ${sensorData.relayState ? 'ON' : 'OFF'}`);
-    res.json({ relayState: sensorData.relayState });
+  sensorData.relayState = !sensorData.relayState;
+  if (espSocket) {
+    espSocket.send(JSON.stringify({ action: 'toggleRelay' }));
+  }
+  console.log(`Relay is now ${sensorData.relayState ? 'ON' : 'OFF'}`);
+  res.json({ relayState: sensorData.relayState });
 });
 
 // Обработчик для переключения кулера
 app.post('/toggleFan', (req, res) => {
-    sensorData.fanState = !sensorData.fanState;
-    if (espSocket) {
-        espSocket.send(JSON.stringify({ action: 'toggleFan' }));
-    }
-    console.log(`Fan is now ${sensorData.fanState ? 'ON' : 'OFF'}`);
-    res.json({ fanState: sensorData.fanState });
+  sensorData.fanState = !sensorData.fanState;
+  if (espSocket) {
+    espSocket.send(JSON.stringify({ action: 'toggleFan' }));
+  }
+  console.log(`Fan is now ${sensorData.fanState ? 'ON' : 'OFF'}`);
+  res.json({ fanState: sensorData.fanState });
 });
 
 // Запуск сервера
 server.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });
