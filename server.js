@@ -6,11 +6,11 @@ const port = process.env.PORT || 80;
 
 // Переменная для хранения последних данных
 let sensorData = {
-  temperature: null,
-  humidity: null,
-  soil_moisture: null,
-  relayState: false,
-  fanState: false
+    temperature: null,
+    humidity: null,
+    soil_moisture: null,
+    relayState: false,
+    fanState: false
 };
 
 // Для обработки JSON данных
@@ -38,7 +38,7 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Главная страница с интерфейсом
+// Главная страница с HTML
 app.get('/', (req, res) => {
   res.send(`
     <html>
@@ -51,7 +51,7 @@ app.get('/', (req, res) => {
           table { width: 100%; border-collapse: collapse; margin-top: 20px; }
           th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
           th { background-color: #f2f2f2; }
-          .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; font-size: 18px; }
+          .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
           .button:hover { background-color: #45a049; }
           .red-button { background-color: #f44336; }
           .red-button:hover { background-color: #e53935; }
@@ -71,14 +71,14 @@ app.get('/', (req, res) => {
           }
 
           function toggleRelay() {
-            fetch('/toggleRelay', { method: 'POST' })
+            fetch('/toggleRelay', { method: 'GET' })
               .then(response => response.json())
               .then(data => updateSensorData())
               .catch(error => console.error('Error toggling relay:', error));
           }
 
           function toggleFan() {
-            fetch('/toggleFan', { method: 'POST' })
+            fetch('/toggleFan', { method: 'GET' })
               .then(response => response.json())
               .then(data => updateSensorData())
               .catch(error => console.error('Error toggling fan:', error));
@@ -130,20 +130,20 @@ app.post('/data', (req, res) => {
 });
 
 // Обработчик для переключения реле
-app.post('/toggleRelay', (req, res) => {
+app.get('/toggleRelay', (req, res) => {
   sensorData.relayState = !sensorData.relayState;
   if (espSocket) {
-    espSocket.send(JSON.stringify({ action: 'toggleRelay' }));
+    espSocket.send('toggleRelay');
   }
   console.log(`Relay is now ${sensorData.relayState ? 'ON' : 'OFF'}`);
   res.json({ relayState: sensorData.relayState });
 });
 
 // Обработчик для переключения кулера
-app.post('/toggleFan', (req, res) => {
+app.get('/toggleFan', (req, res) => {
   sensorData.fanState = !sensorData.fanState;
   if (espSocket) {
-    espSocket.send(JSON.stringify({ action: 'toggleFan' }));
+    espSocket.send('toggleFan');
   }
   console.log(`Fan is now ${sensorData.fanState ? 'ON' : 'OFF'}`);
   res.json({ fanState: sensorData.fanState });
