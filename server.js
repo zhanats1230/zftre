@@ -1,11 +1,9 @@
 const express = require('express');
 const app = express();
 const http = require('http');
-const WebSocket = require('ws');
-const fetch = require('node-fetch'); // Для работы с HTTP-запросами
+const fetch = require('node-fetch');
 const port = process.env.PORT || 80;
 
-// Переменная для хранения последних данных
 let sensorData = {
     temperature: null,
     humidity: null,
@@ -14,10 +12,8 @@ let sensorData = {
     fanState: false,
 };
 
-// Для обработки JSON данных
 app.use(express.json());
 
-// Главная страница с HTML
 app.get('/', (req, res) => {
     res.send(`
     <html>
@@ -32,8 +28,6 @@ app.get('/', (req, res) => {
           th { background-color: #f2f2f2; }
           .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
           .button:hover { background-color: #45a049; }
-          .blue-button { background-color: #2196F3; }
-          .blue-button:hover { background-color: #1e88e5; }
         </style>
         <script>
           function updateSensorData() {
@@ -92,7 +86,7 @@ app.get('/', (req, res) => {
           </table>
           <div style="text-align: center; margin-top: 20px;">
             <button onclick="toggleRelay()" class="button">Переключить реле</button>
-            <button onclick="toggleFan()" class="blue-button">Переключить кулер</button>
+            <button onclick="toggleFan()" class="button">Переключить кулер</button>
           </div>
         </div>
       </body>
@@ -100,32 +94,26 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Эндпоинт для получения последних данных с датчиков
 app.get('/sensorData', (req, res) => {
     res.json(sensorData);
 });
 
-// Эндпоинт для переключения реле
 app.post('/toggleRelay', (req, res) => {
     sensorData.relayState = !sensorData.relayState;
     console.log(`Relay toggled to ${sensorData.relayState ? 'ON' : 'OFF'}`);
-    // Вызываем сервер ESP32, чтобы переключить реле
     updateRelayState(sensorData.relayState);
     res.json({ relayState: sensorData.relayState });
 });
 
-// Эндпоинт для переключения кулера
 app.post('/toggleFan', (req, res) => {
     sensorData.fanState = !sensorData.fanState;
     console.log(`Fan toggled to ${sensorData.fanState ? 'ON' : 'OFF'}`);
-    // Вызываем сервер ESP32, чтобы переключить кулер
     updateFanState(sensorData.fanState);
     res.json({ fanState: sensorData.fanState });
 });
 
-// Функция для отправки команды на ESP32 для управления реле
 async function updateRelayState(state) {
-    const relayControlURL = "https://zftre.onrender.com/controlRelay"; // URL для управления реле
+    const relayControlURL = "https://zftre.onrender.com/controlRelay";
     const response = await fetch(relayControlURL, {
         method: 'POST',
         headers: {
@@ -133,14 +121,12 @@ async function updateRelayState(state) {
         },
         body: JSON.stringify({ relayState: state }),
     });
-    if (!response.ok) {
-        console.error("Failed to update relay state on ESP32");
-    }
+    const result = await response.json();
+    console.log('Relay control update response:', result);
 }
 
-// Функция для отправки команды на ESP32 для управления кулером
 async function updateFanState(state) {
-    const fanControlURL = "https://zftre.onrender.com/controlFan"; // URL для управления кулером
+    const fanControlURL = "https://zftre.onrender.com/controlFan";
     const response = await fetch(fanControlURL, {
         method: 'POST',
         headers: {
@@ -148,45 +134,10 @@ async function updateFanState(state) {
         },
         body: JSON.stringify({ fanState: state }),
     });
-    if (!response.ok) {
-        console.error("Failed to update fan state on ESP32");
-    }
+    const result = await response.json();
+    console.log('Fan control update response:', result);
 }
 
-// Регулярный запрос состояния реле и кулера с ESP32
-async function fetchRelayState() {
-    const relayControlURL = "https://zftre.onrender.com/getRelayState"; // URL для получения состояния реле
-
-    try {
-        const response = await fetch(relayControlURL);
-        if (response.ok) {
-            const data = await response.json();
-            const relayState = data.relayState;
-            const fanState = data.fanState;
-
-            // Если состояние реле или кулера изменилось, обновляем в нашей системе
-            if (sensorData.relayState !== relayState) {
-                sensorData.relayState = relayState;
-                console.log(`Relay state updated from ESP32: ${relayState ? 'ON' : 'OFF'}`);
-            }
-
-            if (sensorData.fanState !== fanState) {
-                sensorData.fanState = fanState;
-                console.log(`Fan state updated from ESP32: ${fanState ? 'ON' : 'OFF'}`);
-            }
-        } else {
-            console.log("Failed to fetch relay state");
-        }
-    } catch (error) {
-        console.error("Error fetching relay state from ESP32:", error);
-    }
-}
-
-// Регулярный запрос состояния реле с ESP32
-setInterval(fetchRelayState, 5000); // Каждые 5 секунд
-
-// Запуск сервера
-const server = http.createServer(app);
-server.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
