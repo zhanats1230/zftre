@@ -2,12 +2,12 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;
 
-// Хранение данных для двух реле и датчиков
+// Хранение данных для реле и датчиков
 let sensorData = {
   relayState1: false, // Состояние первого реле (пин 5)
   relayState2: false, // Состояние второго реле (пин 18)
-  temperature: 0,     // Температура (для демонстрации, в реальной ситуации нужно будет передавать реальные данные)
-  humidity: 0         // Влажность (для демонстрации, в реальной ситуации нужно будет передавать реальные данные)
+  temperature: 0,     // Температура
+  humidity: 0         // Влажность
 };
 
 // Для обработки JSON запросов
@@ -96,6 +96,19 @@ app.get('/getSensorData', (req, res) => {
     temperature: sensorData.temperature,
     humidity: sensorData.humidity
   });
+});
+
+// Эндпоинт для обновления данных с датчиков
+app.post('/updateSensorData', (req, res) => {
+  const { temperature, humidity } = req.body;
+  if (temperature != null && humidity != null) {
+    sensorData.temperature = temperature;
+    sensorData.humidity = humidity;
+    console.log(`Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%`);
+    res.json({ message: 'Sensor data updated successfully' });
+  } else {
+    res.status(400).json({ error: 'Invalid data' });
+  }
 });
 
 // Эндпоинт для переключения первого реле (Пин 5)
