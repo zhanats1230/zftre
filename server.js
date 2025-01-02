@@ -1,61 +1,54 @@
+const express = require('express');
 const app = express();
-const http = require('http');
-const WebSocket = require('ws');
-const port = process.env.PORT || 80; // Использование порта, предоставленного окружением
+const port = process.env.PORT || 80;
 
-// Переменная для хранения последних данных
+// Хранение данных для двух реле и датчиков
 let sensorData = {
-    temperature: null,
-    humidity: null,
-    soil_moisture: null,
-    relayState: false,
-    fanState: false,
+  temperature: 25,  // Температура (градусы Цельсия)
+  humidity: 60,     // Влажность (%)
+  soil_moisture: 40,  // Влажность почвы (%)
+  relayState1: false, // Состояние первого реле (пин 5)
+  relayState2: false, // Состояние второго реле (пин 18)
 };
 
-// Для обработки JSON данных
+// Для обработки JSON запросов
 app.use(express.json());
 
-// Создание HTTP сервера и WebSocket сервера
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
-
-// Храним последний подключённый WebSocket
-let espSocket = null;
-
-// Обработка WebSocket соединений
-wss.on('connection', (ws) => {
-    console.log('WebSocket connected');
-    espSocket = ws;
-
-    ws.on('close', () => {
-        console.log('WebSocket disconnected');
-        espSocket = null;
-    });
-
-    ws.on('message', (message) => {
-        console.log('Received:', message);
-    });
-});
-
-// Главная страница с HTML
+// Главная страница с интерфейсом
 app.get('/', (req, res) => {
-    res.send(
+  res.send(`
     <html>
       <head>
-        <title>Управление системой</title>
+        <title>Управление реле и датчиками</title>
         <style>
           body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
           .container { max-width: 800px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
           h1 { text-align: center; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
-          th { background-color: #f2f2f2; }
-          .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+          .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; font-size: 18px; }
           .button:hover { background-color: #45a049; }
-          .blue-button { background-color: #2196F3; }
+          .blue-button { background-color: #2196F3; color: white; }
           .blue-button:hover { background-color: #1e88e5; }
+          .status { font-weight: bold; }
         </style>
         <script>
+          function toggleRelay1() {
+            fetch('/toggleRelay1', { method: 'POST' })
+              .then(response => response.json())
+              .then(data => {
+                document.getElementById('relayState1').textContent = data.relayState1 ? 'Включено' : 'Выключено';
+              })
+              .catch(error => console.error('Error toggling relay 1:', error));
+          }
+
+          function toggleRelay2() {
+            fetch('/toggleRelay2', { method: 'POST' })
+              .then(response => response.json())
+              .then(data => {
+                document.getElementById('relayState2').textContent = data.relayState2 ? 'Включено' : 'Выключено';
+              })
+              .catch(error => console.error('Error toggling relay 2:', error));
+          }
+
           function updateSensorData() {
             fetch('/sensorData')
               .then(response => response.json())
@@ -63,28 +56,7 @@ app.get('/', (req, res) => {
                 document.getElementById('temperature').textContent = data.temperature !== null ? data.temperature : '—';
                 document.getElementById('humidity').textContent = data.humidity !== null ? data.humidity : '—';
                 document.getElementById('soilMoisture').textContent = data.soil_moisture !== null ? data.soil_moisture : '—';
-                document.getElementById('relayState').textContent = data.relayState ? 'Включено' : 'Выключено';
-                document.getElementById('fanState').textContent = data.fanState ? 'Включено' : 'Выключено';
-              })
-              .catch(error => console.error('Error fetching sensor data:', error));
-          }
-
-          function toggleRelay() {
-            fetch('/toggleRelay', { method: 'POST' })
-              .then(response => response.json())
-              .then(data => {
-                updateSensorData();
-              })
-              .catch(error => console.error('Error toggling relay:', error));
-          }
-
-          function toggleFan() {
-            fetch('/toggleFan', { method: 'POST' })
-              .then(response => response.json())
-              .then(data => {
-                updateSensorData();
-              })
-              .catch(error => console.error('Error toggling fan:', error));
+              });
           }
 
           setInterval(updateSensorData, 1000);
@@ -93,76 +65,44 @@ app.get('/', (req, res) => {
       </head>
       <body>
         <div class="container">
-          <h1>Управление системой</h1>
-          <table>
-            <tr>
-              <th>Температура (°C)</th>
-              <th>Влажность (%)</th>
-              <th>Влажность почвы (%)</th>
-              <th>Состояние реле</th>
-              <th>Состояние кулера</th>
-            </tr>
-            <tr>
-              <td id="temperature">—</td>
-              <td id="humidity">—</td>
-              <td id="soilMoisture">—</td>
-              <td id="relayState">—</td>
-              <td id="fanState">—</td>
-            </tr>
-          </table>
-          <div style="text-align: center; margin-top: 20px;">
-            <button onclick="toggleRelay()" class="button">Переключить реле</button>
-            <button onclick="toggleFan()" class="blue-button">Переключить кулер</button>
-          </div>
+          <h1>Управление реле и датчиками</h1>
+
+          <h3>Данные с датчиков:</h3>
+          <p>Температура: <span id="temperature">—</span> °C</p>
+          <p>Влажность: <span id="humidity">—</span> %</p>
+          <p>Влажность почвы: <span id="soilMoisture">—</span> %</p>
+
+          <h3>Управление реле:</h3>
+          <p>Состояние реле 1 (Пин 5): <span id="relayState1">—</span></p>
+          <button class="button" onclick="toggleRelay1()">Переключить реле 1</button>
+          <p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
+          <button class="blue-button" onclick="toggleRelay2()">Переключить реле 2</button>
         </div>
       </body>
     </html>
-  );
+  `);
 });
 
-// Эндпоинт для получения последних данных с датчиков
+// Эндпоинт для получения данных с датчиков
 app.get('/sensorData', (req, res) => {
-    res.json(sensorData);
+  res.json(sensorData);
 });
 
-// Эндпоинт для переключения реле
-app.post('/toggleRelay', (req, res) => {
-    sensorData.relayState = !sensorData.relayState;
-    if (espSocket) {
-        espSocket.send(JSON.stringify({ action: 'toggleRelay', relayState: sensorData.relayState }));
-    }
-    console.log(Relay toggled to ${sensorData.relayState ? 'ON' : 'OFF'});
-    res.json({ relayState: sensorData.relayState });
+// Эндпоинт для переключения первого реле (Пин 5)
+app.post('/toggleRelay1', (req, res) => {
+  sensorData.relayState1 = !sensorData.relayState1;
+  console.log(`Relay 1 toggled to ${sensorData.relayState1 ? 'ON' : 'OFF'}`);
+  res.json({ relayState1: sensorData.relayState1 });
 });
 
-// Эндпоинт для переключения кулера
-app.post('/toggleFan', (req, res) => {
-    sensorData.fanState = !sensorData.fanState;
-    if (espSocket) {
-        espSocket.send(JSON.stringify({ action: 'toggleFan', fanState: sensorData.fanState }));
-    }
-    console.log(Fan toggled to ${sensorData.fanState ? 'ON' : 'OFF'});
-    res.json({ fanState: sensorData.fanState });
+// Эндпоинт для переключения второго реле (Пин 18)
+app.post('/toggleRelay2', (req, res) => {
+  sensorData.relayState2 = !sensorData.relayState2;
+  console.log(`Relay 2 toggled to ${sensorData.relayState2 ? 'ON' : 'OFF'}`);
+  res.json({ relayState2: sensorData.relayState2 });
 });
 
 // Запуск сервера
-server.listen(port, () => {
-    console.log(Server running on port ${port});
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
-
-
-
-{
-  "name": "sensor-server",
-  "version": "1.0.0",
-  "description": "Server for sensor data",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.17.1",
-    "ws": "^8.11.0",
-    "node-fetch": "^2.6.1"
-  }
-}
