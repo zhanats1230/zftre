@@ -1,4 +1,4 @@
-const app = express();
+const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const port = process.env.PORT || 80; // Использование порта, предоставленного окружением
@@ -13,6 +13,7 @@ let sensorData = {
 };
 
 // Для обработки JSON данных
+const app = express();
 app.use(express.json());
 
 // Создание HTTP сервера и WebSocket сервера
