@@ -13,7 +13,7 @@ app.use(express.json());
 
 // Главная страница с интерфейсом
 app.get('/', (req, res) => {
-  res.send(
+  res.send(`
     <html>
       <head>
         <title>Управление реле</title>
@@ -65,20 +65,20 @@ app.get('/', (req, res) => {
         </div>
       </body>
     </html>
-  );
+  `);
 });
 
 // Эндпоинт для переключения первого реле (Пин 5)
 app.post('/toggleRelay1', (req, res) => {
   sensorData.relayState1 = !sensorData.relayState1;
-  console.log(Relay 1 toggled to ${sensorData.relayState1 ? 'ON' : 'OFF'});
+  console.log(`Relay 1 toggled to ${sensorData.relayState1 ? 'ON' : 'OFF'}`);
   res.json({ relayState1: sensorData.relayState1 });
 });
 
 // Эндпоинт для переключения второго реле (Пин 18)
 app.post('/toggleRelay2', (req, res) => {
   sensorData.relayState2 = !sensorData.relayState2;
-  console.log(Relay 2 toggled to ${sensorData.relayState2 ? 'ON' : 'OFF'});
+  console.log(`Relay 2 toggled to ${sensorData.relayState2 ? 'ON' : 'OFF'}`);
   res.json({ relayState2: sensorData.relayState2 });
 });
 
@@ -89,5 +89,5 @@ app.get('/getRelayState', (req, res) => {
 
 // Запуск сервера
 app.listen(port, () => {
-  console.log(Server running on port ${port});
+  console.log(`Server running on port ${port}`);
 });
