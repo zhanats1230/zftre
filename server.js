@@ -86,7 +86,7 @@ app.get('/', (req, res) => {
           </table>
           <div style="text-align: center; margin-top: 20px;">
             <button onclick="toggleRelay()" class="button">Переключить реле</button>
-            <button onclick="toggleFan()" class="button">Переключить кулер</button>
+            <button onclick="toggleFan()" class="button">Переключить куле</button>
           </div>
         </div>
       </body>
