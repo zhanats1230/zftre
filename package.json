@@ -10,5 +10,6 @@
     "express": "^4.17.1",
     "ws": "^8.11.0",
     "node-fetch": "^2.6.1"
-  }
+  },
+  "license": "MIT"
 }
