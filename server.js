@@ -2,8 +2,8 @@ const express = require('express');
 const app = express();
 const http = require('http');
 const WebSocket = require('ws');
-const fetch = require('node-fetch'); // Добавим fetch для HTTP-запросов
-const port = process.env.PORT || 80; // Использование порта, предоставленного окружением
+const fetch = require('node-fetch'); // Для работы с HTTP-запросами
+const port = process.env.PORT || 80;
 
 // Переменная для хранения последних данных
 let sensorData = {
@@ -36,6 +36,14 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         console.log('Received:', message);
+        try {
+            const data = JSON.parse(message);
+            if (data.temperature !== undefined) sensorData.temperature = data.temperature;
+            if (data.humidity !== undefined) sensorData.humidity = data.humidity;
+            if (data.soil_moisture !== undefined) sensorData.soil_moisture = data.soil_moisture;
+        } catch (err) {
+            console.error('Error parsing message:', err);
+        }
     });
 });
 
