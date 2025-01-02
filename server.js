@@ -1,4 +1,4 @@
-const express = require('express');
+const app = express();
 const http = require('http');
 const WebSocket = require('ws');
 const port = process.env.PORT || 80; // Использование порта, предоставленного окружением
@@ -13,7 +13,6 @@ let sensorData = {
 };
 
 // Для обработки JSON данных
-const app = express();
 app.use(express.json());
 
 // Создание HTTP сервера и WebSocket сервера
@@ -40,7 +39,7 @@ wss.on('connection', (ws) => {
 
 // Главная страница с HTML
 app.get('/', (req, res) => {
-    res.send(`
+    res.send(
     <html>
       <head>
         <title>Управление системой</title>
@@ -118,7 +117,7 @@ app.get('/', (req, res) => {
         </div>
       </body>
     </html>
-  `);
+  );
 });
 
 // Эндпоинт для получения последних данных с датчиков
@@ -132,7 +131,7 @@ app.post('/toggleRelay', (req, res) => {
     if (espSocket) {
         espSocket.send(JSON.stringify({ action: 'toggleRelay', relayState: sensorData.relayState }));
     }
-    console.log(`Relay toggled to ${sensorData.relayState ? 'ON' : 'OFF'}`);
+    console.log(Relay toggled to ${sensorData.relayState ? 'ON' : 'OFF'});
     res.json({ relayState: sensorData.relayState });
 });
 
@@ -142,11 +141,28 @@ app.post('/toggleFan', (req, res) => {
     if (espSocket) {
         espSocket.send(JSON.stringify({ action: 'toggleFan', fanState: sensorData.fanState }));
     }
-    console.log(`Fan toggled to ${sensorData.fanState ? 'ON' : 'OFF'}`);
+    console.log(Fan toggled to ${sensorData.fanState ? 'ON' : 'OFF'});
     res.json({ fanState: sensorData.fanState });
 });
 
 // Запуск сервера
 server.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+    console.log(Server running on port ${port});
 });
+
+
+
+{
+  "name": "sensor-server",
+  "version": "1.0.0",
+  "description": "Server for sensor data",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "ws": "^8.11.0",
+    "node-fetch": "^2.6.1"
+  }
+}
