@@ -2,10 +2,12 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;
 
-// Хранение данных для двух реле
+// Хранение данных для двух реле и данных с датчиков
 let sensorData = {
   relayState1: false, // Состояние первого реле (пин 5)
   relayState2: false, // Состояние второго реле (пин 18)
+  temperature: 25.0,  // Температура (например, с датчика DHT)
+  humidity: 50,       // Влажность (например, с датчика DHT)
 };
 
 // Для обработки JSON запросов
@@ -16,7 +18,7 @@ app.get('/', (req, res) => {
   res.send(`
     <html>
       <head>
-        <title>Управление реле</title>
+        <title>Управление реле и датчиками</title>
         <style>
           body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
           .container { max-width: 800px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
@@ -49,6 +51,8 @@ app.get('/', (req, res) => {
               .then(data => {
                 document.getElementById('relayState1').textContent = data.relayState1 ? 'Включено' : 'Выключено';
                 document.getElementById('relayState2').textContent = data.relayState2 ? 'Включено' : 'Выключено';
+                document.getElementById('temperature').textContent = 'Температура: ' + data.temperature + ' °C';
+                document.getElementById('humidity').textContent = 'Влажность: ' + data.humidity + ' %';
               });
           }
 
@@ -57,11 +61,16 @@ app.get('/', (req, res) => {
       </head>
       <body>
         <div class="container">
-          <h1>Управление реле</h1>
+          <h1>Управление реле и датчиками</h1>
+          
           <p>Состояние реле 1 (Пин 5): <span id="relayState1">—</span></p>
           <button class="button" onclick="toggleRelay1()">Переключить реле 1</button>
+          
           <p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
           <button class="button" onclick="toggleRelay2()">Переключить реле 2</button>
+          
+          <p id="temperature">Температура: —</p>
+          <p id="humidity">Влажность: —</p>
         </div>
       </body>
     </html>
@@ -70,21 +79,26 @@ app.get('/', (req, res) => {
 
 // Эндпоинт для переключения первого реле (Пин 5)
 app.post('/toggleRelay1', (req, res) => {
-  sensorData.relayState1 = !sensorData.relayState1;
+  sensorData.relayState1 = !sensorData.relayState1; // Инвертируем состояние
   console.log(`Relay 1 toggled to ${sensorData.relayState1 ? 'ON' : 'OFF'}`);
   res.json({ relayState1: sensorData.relayState1 });
 });
 
 // Эндпоинт для переключения второго реле (Пин 18)
 app.post('/toggleRelay2', (req, res) => {
-  sensorData.relayState2 = !sensorData.relayState2;
+  sensorData.relayState2 = !sensorData.relayState2; // Инвертируем состояние
   console.log(`Relay 2 toggled to ${sensorData.relayState2 ? 'ON' : 'OFF'}`);
   res.json({ relayState2: sensorData.relayState2 });
 });
 
-// Эндпоинт для получения состояния обоих реле
+// Эндпоинт для получения состояния обоих реле и данных с датчиков
 app.get('/getRelayState', (req, res) => {
-  res.json({ relayState1: sensorData.relayState1, relayState2: sensorData.relayState2 });
+  res.json({
+    relayState1: sensorData.relayState1,
+    relayState2: sensorData.relayState2,
+    temperature: sensorData.temperature,
+    humidity: sensorData.humidity,
+  });
 });
 
 // Запуск сервера
