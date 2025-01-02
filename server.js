@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const http = require('http');
 const WebSocket = require('ws');
+const fetch = require('node-fetch'); // Добавим fetch для HTTP-запросов
 const port = process.env.PORT || 80; // Использование порта, предоставленного окружением
 
 // Переменная для хранения последних данных
@@ -129,22 +130,50 @@ app.get('/sensorData', (req, res) => {
 // Эндпоинт для переключения реле
 app.post('/toggleRelay', (req, res) => {
     sensorData.relayState = !sensorData.relayState;
+    console.log(`Relay toggled to ${sensorData.relayState ? 'ON' : 'OFF'}`);
+    // Отправляем на сервер ESP, чтобы он переключил реле
     if (espSocket) {
         espSocket.send(JSON.stringify({ action: 'toggleRelay', relayState: sensorData.relayState }));
     }
-    console.log(`Relay toggled to ${sensorData.relayState ? 'ON' : 'OFF'}`);
     res.json({ relayState: sensorData.relayState });
 });
 
 // Эндпоинт для переключения кулера
 app.post('/toggleFan', (req, res) => {
     sensorData.fanState = !sensorData.fanState;
+    console.log(`Fan toggled to ${sensorData.fanState ? 'ON' : 'OFF'}`);
+    // Отправляем на сервер ESP, чтобы он переключил кулер
     if (espSocket) {
         espSocket.send(JSON.stringify({ action: 'toggleFan', fanState: sensorData.fanState }));
     }
-    console.log(`Fan toggled to ${sensorData.fanState ? 'ON' : 'OFF'}`);
     res.json({ fanState: sensorData.fanState });
 });
+
+// Запрос состояния реле с другого сервера
+async function fetchRelayState() {
+    const relayControlURL = "https://zftre.onrender.com/getRelayState"; // URL для получения состояния реле
+
+    try {
+        const response = await fetch(relayControlURL);
+        if (response.ok) {
+            const data = await response.json();
+            const relayState = data.relayState;
+
+            // Если состояние реле изменилось, обновляем в нашей системе
+            if (sensorData.relayState !== relayState) {
+                sensorData.relayState = relayState;
+                console.log(`Relay state updated from external server: ${relayState ? 'ON' : 'OFF'}`);
+            }
+        } else {
+            console.log("Failed to fetch relay state");
+        }
+    } catch (error) {
+        console.error("Error fetching relay state from server:", error);
+    }
+}
+
+// Регулярный запрос состояния реле
+setInterval(fetchRelayState, 5000); // Каждые 5 секунд
 
 // Запуск сервера
 server.listen(port, () => {
