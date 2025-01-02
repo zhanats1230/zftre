@@ -10,7 +10,7 @@ let sensorData = {
     humidity: null,
     soil_moisture: null,
     relayState: false,
-    fanState: false
+    fanState: false,
 };
 
 // Для обработки JSON данных
@@ -43,7 +43,7 @@ app.get('/', (req, res) => {
     res.send(`
     <html>
       <head>
-        <title>Информация с датчиков</title>
+        <title>Управление системой</title>
         <style>
           body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
           .container { max-width: 800px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
@@ -53,8 +53,8 @@ app.get('/', (req, res) => {
           th { background-color: #f2f2f2; }
           .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
           .button:hover { background-color: #45a049; }
-          .red-button { background-color: #f44336; }
-          .red-button:hover { background-color: #e53935; }
+          .blue-button { background-color: #2196F3; }
+          .blue-button:hover { background-color: #1e88e5; }
         </style>
         <script>
           function updateSensorData() {
@@ -73,14 +73,18 @@ app.get('/', (req, res) => {
           function toggleRelay() {
             fetch('/toggleRelay', { method: 'POST' })
               .then(response => response.json())
-              .then(data => updateSensorData())
+              .then(data => {
+                updateSensorData();
+              })
               .catch(error => console.error('Error toggling relay:', error));
           }
 
           function toggleFan() {
             fetch('/toggleFan', { method: 'POST' })
               .then(response => response.json())
-              .then(data => updateSensorData())
+              .then(data => {
+                updateSensorData();
+              })
               .catch(error => console.error('Error toggling fan:', error));
           }
 
@@ -90,7 +94,7 @@ app.get('/', (req, res) => {
       </head>
       <body>
         <div class="container">
-          <h1>Информация с датчиков</h1>
+          <h1>Управление системой</h1>
           <table>
             <tr>
               <th>Температура (°C)</th>
@@ -109,7 +113,7 @@ app.get('/', (req, res) => {
           </table>
           <div style="text-align: center; margin-top: 20px;">
             <button onclick="toggleRelay()" class="button">Переключить реле</button>
-            <button onclick="toggleFan()" class="button" style="background-color: #2196F3;">Переключить кулер</button>
+            <button onclick="toggleFan()" class="blue-button">Переключить кулер</button>
           </div>
         </div>
       </body>
@@ -117,39 +121,32 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Обработчик для получения последних данных с датчиков
+// Эндпоинт для получения последних данных с датчиков
 app.get('/sensorData', (req, res) => {
     res.json(sensorData);
 });
 
-// Обработчик для получения данных с ESP32
-app.post('/data', (req, res) => {
-    console.log('Получены данные: ', req.body);
-    sensorData = req.body;
-    res.status(200).send('Data received');
-});
-
-// Обработчик для переключения реле
+// Эндпоинт для переключения реле
 app.post('/toggleRelay', (req, res) => {
     sensorData.relayState = !sensorData.relayState;
     if (espSocket) {
-        espSocket.send(JSON.stringify({ action: 'toggleRelay' }));
+        espSocket.send(JSON.stringify({ action: 'toggleRelay', relayState: sensorData.relayState }));
     }
-    console.log(`Relay is now ${sensorData.relayState ? 'ON' : 'OFF'}`);
+    console.log(`Relay toggled to ${sensorData.relayState ? 'ON' : 'OFF'}`);
     res.json({ relayState: sensorData.relayState });
 });
 
-// Обработчик для переключения кулера
+// Эндпоинт для переключения кулера
 app.post('/toggleFan', (req, res) => {
     sensorData.fanState = !sensorData.fanState;
     if (espSocket) {
-        espSocket.send(JSON.stringify({ action: 'toggleFan' }));
+        espSocket.send(JSON.stringify({ action: 'toggleFan', fanState: sensorData.fanState }));
     }
-    console.log(`Fan is now ${sensorData.fanState ? 'ON' : 'OFF'}`);
+    console.log(`Fan toggled to ${sensorData.fanState ? 'ON' : 'OFF'}`);
     res.json({ fanState: sensorData.fanState });
 });
 
-// Запуск сервера на всех интерфейсах
-server.listen(port, '0.0.0.0', () => {
+// Запуск сервера
+server.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
