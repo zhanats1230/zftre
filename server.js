@@ -4,8 +4,8 @@ const port = process.env.PORT || 80;
 
 // Хранение данных для двух реле
 let sensorData = {
-    relayState1: false, // Состояние первого реле (пин 5)
-    relayState2: false, // Состояние второго реле (пин 18)
+  relayState1: false, // Состояние первого реле (пин 5)
+  relayState2: false, // Состояние второго реле (пин 18)
 };
 
 // Для обработки JSON запросов
@@ -84,7 +84,6 @@ app.post('/toggleRelay2', (req, res) => {
 
 // Эндпоинт для получения состояния обоих реле
 app.get('/getRelayState', (req, res) => {
-  console.log(`Getting relay states: ${sensorData.relayState1 ? 'ON' : 'OFF'}, ${sensorData.relayState2 ? 'ON' : 'OFF'}`);
   res.json({ relayState1: sensorData.relayState1, relayState2: sensorData.relayState2 });
 });
 
