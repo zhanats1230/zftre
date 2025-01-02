@@ -2,9 +2,10 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;
 
-// Хранение данных
+// Хранение данных для двух реле
 let sensorData = {
-    relayState: false, // Состояние реле
+    relayState1: false, // Состояние первого реле
+    relayState2: false, // Состояние второго реле (освещение)
 };
 
 // Для обработки JSON запросов
@@ -24,20 +25,30 @@ app.get('/', (req, res) => {
           .button:hover { background-color: #45a049; }
         </style>
         <script>
-          function toggleRelay() {
-            fetch('/toggleRelay', { method: 'POST' })
+          function toggleRelay1() {
+            fetch('/toggleRelay1', { method: 'POST' })
               .then(response => response.json())
               .then(data => {
-                document.getElementById('relayState').textContent = data.relayState ? 'Включено' : 'Выключено';
+                document.getElementById('relayState1').textContent = data.relayState1 ? 'Включено' : 'Выключено';
               })
-              .catch(error => console.error('Error toggling relay:', error));
+              .catch(error => console.error('Error toggling relay 1:', error));
+          }
+
+          function toggleRelay2() {
+            fetch('/toggleRelay2', { method: 'POST' })
+              .then(response => response.json())
+              .then(data => {
+                document.getElementById('relayState2').textContent = data.relayState2 ? 'Включено' : 'Выключено';
+              })
+              .catch(error => console.error('Error toggling relay 2:', error));
           }
 
           function updateRelayState() {
             fetch('/getRelayState')
               .then(response => response.json())
               .then(data => {
-                document.getElementById('relayState').textContent = data.relayState ? 'Включено' : 'Выключено';
+                document.getElementById('relayState1').textContent = data.relayState1 ? 'Включено' : 'Выключено';
+                document.getElementById('relayState2').textContent = data.relayState2 ? 'Включено' : 'Выключено';
               });
           }
 
@@ -47,24 +58,33 @@ app.get('/', (req, res) => {
       <body>
         <div class="container">
           <h1>Управление реле</h1>
-          <p>Состояние реле: <span id="relayState">—</span></p>
-          <button class="button" onclick="toggleRelay()">Переключить реле</button>
+          <p>Состояние реле 1: <span id="relayState1">—</span></p>
+          <button class="button" onclick="toggleRelay1()">Переключить реле 1</button>
+          <p>Состояние реле 2 (освещение): <span id="relayState2">—</span></p>
+          <button class="button" onclick="toggleRelay2()">Переключить реле 2</button>
         </div>
       </body>
     </html>
   `);
 });
 
-// Эндпоинт для переключения реле
-app.post('/toggleRelay', (req, res) => {
-  sensorData.relayState = !sensorData.relayState;
-  console.log(`Relay toggled to ${sensorData.relayState ? 'ON' : 'OFF'}`);
-  res.json({ relayState: sensorData.relayState });
+// Эндпоинт для переключения первого реле
+app.post('/toggleRelay1', (req, res) => {
+  sensorData.relayState1 = !sensorData.relayState1;
+  console.log(`Relay 1 toggled to ${sensorData.relayState1 ? 'ON' : 'OFF'}`);
+  res.json({ relayState1: sensorData.relayState1 });
 });
 
-// Эндпоинт для получения состояния реле
+// Эндпоинт для переключения второго реле (освещение)
+app.post('/toggleRelay2', (req, res) => {
+  sensorData.relayState2 = !sensorData.relayState2;
+  console.log(`Relay 2 toggled to ${sensorData.relayState2 ? 'ON' : 'OFF'}`);
+  res.json({ relayState2: sensorData.relayState2 });
+});
+
+// Эндпоинт для получения состояния обоих реле
 app.get('/getRelayState', (req, res) => {
-  res.json({ relayState: sensorData.relayState });
+  res.json({ relayState1: sensorData.relayState1, relayState2: sensorData.relayState2 });
 });
 
 // Запуск сервера
