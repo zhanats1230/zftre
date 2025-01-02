@@ -9,6 +9,6 @@
   "dependencies": {
     "express": "^4.17.1",
     "ws": "^8.11.0",
-    "node-fetch": "^2.6.1"  // Добавьте эту строку
+    "node-fetch": "^2.6.1"
   }
 }
