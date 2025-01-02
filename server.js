@@ -60,7 +60,7 @@ app.get('/', (req, res) => {
           <h1>Управление реле</h1>
           <p>Состояние реле 1: <span id="relayState1">—</span></p>
           <button class="button" onclick="toggleRelay1()">Переключить реле 1</button>
-          <p>Состояние реле 2 (освещение): <span id="relayState2">—</span></p>
+          <p>Состояние реле 2 (освещение1): <span id="relayState2">—</span></p>
           <button class="button" onclick="toggleRelay2()">Переключить реле 2</button>
         </div>
       </body>
