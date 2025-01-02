@@ -1,124 +1,151 @@
-const express = require('express');
 const app = express();
-const port = process.env.PORT || 80;
-const sensor = require('node-dht-sensor');  // Подключаем библиотеку для работы с DHT датчиками
+const http = require('http');
+const WebSocket = require('ws');
+const port = process.env.PORT || 80; // Использование порта, предоставленного окружением
 
-// Хранение данных для двух реле и данных с датчиков
+// Переменная для хранения последних данных
 let sensorData = {
-  relayState1: false, // Состояние первого реле (пин 5)
-  relayState2: false, // Состояние второго реле (пин 18)
-  temperature: 0.0,   // Температура (получаем с датчика)
-  humidity: 0.0,      // Влажность (получаем с датчика)
+    temperature: null,
+    humidity: null,
+    soil_moisture: null,
+    relayState: false,
+    fanState: false,
 };
 
-// Для обработки JSON запросов
+// Для обработки JSON данных
 app.use(express.json());
 
-// Функция для получения данных с датчика
-function readDHTSensor() {
-  // Параметры: тип датчика, пин подключения
-  sensor.read(11, 4, function(err, temperature, humidity) {
-    if (!err) {
-      sensorData.temperature = temperature.toFixed(2);  // Сохраняем температуру
-      sensorData.humidity = humidity.toFixed(2);        // Сохраняем влажность
-    } else {
-      console.error('Ошибка чтения с датчика: ', err);
-    }
-  });
-}
+// Создание HTTP сервера и WebSocket сервера
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
-// Главная страница с интерфейсом
+// Храним последний подключённый WebSocket
+let espSocket = null;
+
+// Обработка WebSocket соединений
+wss.on('connection', (ws) => {
+    console.log('WebSocket connected');
+    espSocket = ws;
+
+    ws.on('close', () => {
+        console.log('WebSocket disconnected');
+        espSocket = null;
+    });
+
+    ws.on('message', (message) => {
+        console.log('Received:', message);
+    });
+});
+
+// Главная страница с HTML
 app.get('/', (req, res) => {
-  res.send(`
+    res.send(`
     <html>
       <head>
-        <title>Управление реле и датчиками</title>
+        <title>Управление системой</title>
         <style>
           body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
           .container { max-width: 800px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
           h1 { text-align: center; }
-          .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; font-size: 18px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+          th { background-color: #f2f2f2; }
+          .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
           .button:hover { background-color: #45a049; }
+          .blue-button { background-color: #2196F3; }
+          .blue-button:hover { background-color: #1e88e5; }
         </style>
         <script>
-          function toggleRelay1() {
-            fetch('/toggleRelay1', { method: 'POST' })
+          function updateSensorData() {
+            fetch('/sensorData')
               .then(response => response.json())
               .then(data => {
-                document.getElementById('relayState1').textContent = data.relayState1 ? 'Включено' : 'Выключено';
+                document.getElementById('temperature').textContent = data.temperature !== null ? data.temperature : '—';
+                document.getElementById('humidity').textContent = data.humidity !== null ? data.humidity : '—';
+                document.getElementById('soilMoisture').textContent = data.soil_moisture !== null ? data.soil_moisture : '—';
+                document.getElementById('relayState').textContent = data.relayState ? 'Включено' : 'Выключено';
+                document.getElementById('fanState').textContent = data.fanState ? 'Включено' : 'Выключено';
               })
-              .catch(error => console.error('Error toggling relay 1:', error));
+              .catch(error => console.error('Error fetching sensor data:', error));
           }
 
-          function toggleRelay2() {
-            fetch('/toggleRelay2', { method: 'POST' })
+          function toggleRelay() {
+            fetch('/toggleRelay', { method: 'POST' })
               .then(response => response.json())
               .then(data => {
-                document.getElementById('relayState2').textContent = data.relayState2 ? 'Включено' : 'Выключено';
+                updateSensorData();
               })
-              .catch(error => console.error('Error toggling relay 2:', error));
+              .catch(error => console.error('Error toggling relay:', error));
           }
 
-          function updateRelayState() {
-            fetch('/getRelayState')
+          function toggleFan() {
+            fetch('/toggleFan', { method: 'POST' })
               .then(response => response.json())
               .then(data => {
-                document.getElementById('relayState1').textContent = data.relayState1 ? 'Включено' : 'Выключено';
-                document.getElementById('relayState2').textContent = data.relayState2 ? 'Включено' : 'Выключено';
-                document.getElementById('temperature').textContent = 'Температура: ' + data.temperature + ' °C';
-                document.getElementById('humidity').textContent = 'Влажность: ' + data.humidity + ' %';
-              });
+                updateSensorData();
+              })
+              .catch(error => console.error('Error toggling fan:', error));
           }
 
-          setInterval(updateRelayState, 1000);
+          setInterval(updateSensorData, 1000);
+          window.onload = updateSensorData;
         </script>
       </head>
       <body>
         <div class="container">
-          <h1>Управление реле и датчиками</h1>
-          
-          <p>Состояние реле 1 (Пин 5): <span id="relayState1">—</span></p>
-          <button class="button" onclick="toggleRelay1()">Переключить реле 1</button>
-          
-          <p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
-          <button class="button" onclick="toggleRelay2()">Переключить реле 2</button>
-          
-          <p id="temperature">Температура: —</p>
-          <p id="humidity">Влажность: —</p>
+          <h1>Управление системой</h1>
+          <table>
+            <tr>
+              <th>Температура (°C)</th>
+              <th>Влажность (%)</th>
+              <th>Влажность почвы (%)</th>
+              <th>Состояние реле</th>
+              <th>Состояние кулера</th>
+            </tr>
+            <tr>
+              <td id="temperature">—</td>
+              <td id="humidity">—</td>
+              <td id="soilMoisture">—</td>
+              <td id="relayState">—</td>
+              <td id="fanState">—</td>
+            </tr>
+          </table>
+          <div style="text-align: center; margin-top: 20px;">
+            <button onclick="toggleRelay()" class="button">Переключить реле</button>
+            <button onclick="toggleFan()" class="blue-button">Переключить кулер</button>
+          </div>
         </div>
       </body>
     </html>
   `);
 });
 
-// Эндпоинт для переключения первого реле (Пин 5)
-app.post('/toggleRelay1', (req, res) => {
-  sensorData.relayState1 = !sensorData.relayState1; // Инвертируем состояние
-  console.log(`Relay 1 toggled to ${sensorData.relayState1 ? 'ON' : 'OFF'}`);
-  res.json({ relayState1: sensorData.relayState1 });
+// Эндпоинт для получения последних данных с датчиков
+app.get('/sensorData', (req, res) => {
+    res.json(sensorData);
 });
 
-// Эндпоинт для переключения второго реле (Пин 18)
-app.post('/toggleRelay2', (req, res) => {
-  sensorData.relayState2 = !sensorData.relayState2; // Инвертируем состояние
-  console.log(`Relay 2 toggled to ${sensorData.relayState2 ? 'ON' : 'OFF'}`);
-  res.json({ relayState2: sensorData.relayState2 });
+// Эндпоинт для переключения реле
+app.post('/toggleRelay', (req, res) => {
+    sensorData.relayState = !sensorData.relayState;
+    if (espSocket) {
+        espSocket.send(JSON.stringify({ action: 'toggleRelay', relayState: sensorData.relayState }));
+    }
+    console.log(`Relay toggled to ${sensorData.relayState ? 'ON' : 'OFF'}`);
+    res.json({ relayState: sensorData.relayState });
 });
 
-// Эндпоинт для получения состояния обоих реле и данных с датчиков
-app.get('/getRelayState', (req, res) => {
-  // Обновляем данные с датчиков
-  readDHTSensor();
-
-  res.json({
-    relayState1: sensorData.relayState1,
-    relayState2: sensorData.relayState2,
-    temperature: sensorData.temperature,
-    humidity: sensorData.humidity,
-  });
+// Эндпоинт для переключения кулера
+app.post('/toggleFan', (req, res) => {
+    sensorData.fanState = !sensorData.fanState;
+    if (espSocket) {
+        espSocket.send(JSON.stringify({ action: 'toggleFan', fanState: sensorData.fanState }));
+    }
+    console.log(`Fan toggled to ${sensorData.fanState ? 'ON' : 'OFF'}`);
+    res.json({ fanState: sensorData.fanState });
 });
 
 // Запуск сервера
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+server.listen(port, () => {
+    console.log(`Server running on port ${port}`);
 });
