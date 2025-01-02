@@ -84,6 +84,7 @@ app.post('/toggleRelay2', (req, res) => {
 
 // Эндпоинт для получения состояния обоих реле
 app.get('/getRelayState', (req, res) => {
+  console.log(`Getting relay states: ${sensorData.relayState1 ? 'ON' : 'OFF'}, ${sensorData.relayState2 ? 'ON' : 'OFF'}`);
   res.json({ relayState1: sensorData.relayState1, relayState2: sensorData.relayState2 });
 });
 
