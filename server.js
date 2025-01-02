@@ -4,8 +4,8 @@ const port = process.env.PORT || 80;
 
 // Хранение данных для двух реле
 let sensorData = {
-    relayState1: false, // Состояние первого реле
-    relayState2: false, // Состояние второго реле (освещение)
+    relayState1: false, // Состояние первого реле (пин 5)
+    relayState2: false, // Состояние второго реле (пин 18)
 };
 
 // Для обработки JSON запросов
@@ -58,9 +58,9 @@ app.get('/', (req, res) => {
       <body>
         <div class="container">
           <h1>Управление реле</h1>
-          <p>Состояние реле 1: <span id="relayState1">—</span></p>
+          <p>Состояние реле 1 (Пин 5): <span id="relayState1">—</span></p>
           <button class="button" onclick="toggleRelay1()">Переключить реле 1</button>
-          <p>Состояние реле 2 (освещение1): <span id="relayState2">—</span></p>
+          <p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
           <button class="button" onclick="toggleRelay2()">Переключить реле 2</button>
         </div>
       </body>
@@ -68,14 +68,14 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Эндпоинт для переключения первого реле
+// Эндпоинт для переключения первого реле (Пин 5)
 app.post('/toggleRelay1', (req, res) => {
   sensorData.relayState1 = !sensorData.relayState1;
   console.log(`Relay 1 toggled to ${sensorData.relayState1 ? 'ON' : 'OFF'}`);
   res.json({ relayState1: sensorData.relayState1 });
 });
 
-// Эндпоинт для переключения второго реле (освещение)
+// Эндпоинт для переключения второго реле (Пин 18)
 app.post('/toggleRelay2', (req, res) => {
   sensorData.relayState2 = !sensorData.relayState2;
   console.log(`Relay 2 toggled to ${sensorData.relayState2 ? 'ON' : 'OFF'}`);
