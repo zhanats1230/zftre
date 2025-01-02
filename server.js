@@ -1,17 +1,31 @@
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;
+const sensor = require('node-dht-sensor');  // Подключаем библиотеку для работы с DHT датчиками
 
 // Хранение данных для двух реле и данных с датчиков
 let sensorData = {
   relayState1: false, // Состояние первого реле (пин 5)
   relayState2: false, // Состояние второго реле (пин 18)
-  temperature: 25.0,  // Температура (например, с датчика DHT)
-  humidity: 50,       // Влажность (например, с датчика DHT)
+  temperature: 0.0,   // Температура (получаем с датчика)
+  humidity: 0.0,      // Влажность (получаем с датчика)
 };
 
 // Для обработки JSON запросов
 app.use(express.json());
+
+// Функция для получения данных с датчика
+function readDHTSensor() {
+  // Параметры: тип датчика, пин подключения
+  sensor.read(11, 4, function(err, temperature, humidity) {
+    if (!err) {
+      sensorData.temperature = temperature.toFixed(2);  // Сохраняем температуру
+      sensorData.humidity = humidity.toFixed(2);        // Сохраняем влажность
+    } else {
+      console.error('Ошибка чтения с датчика: ', err);
+    }
+  });
+}
 
 // Главная страница с интерфейсом
 app.get('/', (req, res) => {
@@ -93,6 +107,9 @@ app.post('/toggleRelay2', (req, res) => {
 
 // Эндпоинт для получения состояния обоих реле и данных с датчиков
 app.get('/getRelayState', (req, res) => {
+  // Обновляем данные с датчиков
+  readDHTSensor();
+
   res.json({
     relayState1: sensorData.relayState1,
     relayState2: sensorData.relayState2,
