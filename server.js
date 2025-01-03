@@ -25,7 +25,7 @@ app.get('/', (req, res) => {
           h1 { text-align: center; }
           .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; font-size: 18px; }
           .button:hover { background-color: #45a049; }
-          .data { font-size: 18px; }
+          .data { font-size: 18px; margin-top: 20px; }
         </style>
         <script>
           function toggleRelay1() {
@@ -70,7 +70,7 @@ app.get('/', (req, res) => {
       </head>
       <body>
         <div class="container">
-          <h1>Управление реле</h1>
+          <h1>Управление реле и датчиками</h1>
           <p>Состояние реле 1 (Пин 5): <span id="relayState1">—</span></p>
           <button class="button" onclick="toggleRelay1()">Переключить реле 1</button>
           <p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
