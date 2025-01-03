@@ -8,7 +8,7 @@ let sensorData = {
   relayState2: false,
   temperature: 0,
   humidity: 0,
-  soilMoisture: 0 // Влажность почвы
+  soilMoisture: 0, // Влажность почвы
 };
 
 // Для обработки JSON запросов
@@ -21,87 +21,123 @@ app.get('/', (req, res) => {
       <head>
         <title>Управление реле</title>
         <style>
-          body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
-          .container { max-width: 800px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
-          h1 { text-align: center; }
-          .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; font-size: 18px; }
-          .button:hover { background-color: #45a049; }
-          .data { font-size: 18px; margin-top: 20px; }
-          .disabled { background-color: #ccc; cursor: not-allowed; }
+          body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+          }
+          .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          }
+          h1 {
+            text-align: center;
+          }
+          .button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 10px;
+          }
+          .button:hover {
+            background-color: #45a049;
+          }
+          .data {
+            font-size: 18px;
+            margin-top: 20px;
+          }
+          .disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+          }
+          .relay-button {
+            margin-bottom: 10px;
+          }
         </style>
         <script>
-  let currentMode = 'auto'; // Начальный режим
+          let currentMode = 'auto'; // Начальный режим
 
- function toggleRelay(relayNumber) {
-  if (currentMode === 'manual') {
-    fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
-      .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        return response.json();
-      })
-      .then(data => {
-        const relayState = data[`relayState${relayNumber}`];
-        document.getElementById(`relayState${relayNumber}`).textContent = relayState ? 'Включено' : 'Выключено';
-      })
-      .catch(error => console.error('Error toggling relay:', error));
-  } else {
-    alert('Реле можно переключать только в ручном режиме!');
-  }
-}
+          function toggleRelay(relayNumber) {
+            if (currentMode === 'manual') {
+              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
+                .then((response) => {
+                  if (!response.ok) throw new Error('Network response was not ok');
+                  return response.json();
+                })
+                .then((data) => {
+                  const relayState = data[\`relayState\${relayNumber}\`];
+                  document.getElementById(\`relayState\${relayNumber}\`).textContent =
+                    relayState ? 'Включено' : 'Выключено';
+                })
+                .catch((error) => console.error('Error toggling relay:', error));
+            } else {
+              alert('Реле можно переключать только в ручном режиме!');
+            }
+          }
 
+          function toggleMode() {
+            fetch('/setMode', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                mode: currentMode === 'auto' ? 'manual' : 'auto',
+              }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                currentMode = data.mode;
+                document.getElementById('mode').textContent =
+                  currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+                updateButtonState();
+              })
+              .catch((error) => console.error('Error toggling mode:', error));
+          }
 
-  function toggleMode() {
-    fetch('/setMode', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: currentMode === 'auto' ? 'manual' : 'auto' })
-    })
-    .then(response => response.json())
-    .then(data => {
-      currentMode = data.mode;
-      document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-      updateButtonState();
-    })
-    .catch(error => console.error('Error toggling mode:', error));
-  }
+          function updateButtonState() {
+            const relayButtons = document.querySelectorAll('.relay-button');
+            relayButtons.forEach((button) => {
+              if (currentMode === 'auto') {
+                button.disabled = true;
+                button.classList.add('disabled');
+              } else {
+                button.disabled = false;
+                button.classList.remove('disabled');
+              }
+            });
+          }
 
-  function updateButtonState() {
-    const relayButtons = document.querySelectorAll('.relay-button');
-    relayButtons.forEach(button => {
-      if (currentMode === 'auto') {
-        button.disabled = true;
-        button.classList.add('disabled');
-      } else {
-        button.disabled = false;
-        button.classList.remove('disabled');
-      }
-    });
-  }
+          function updateMode() {
+            fetch('/getMode')
+              .then((response) => response.json())
+              .then((data) => {
+                currentMode = data.mode;
+                document.getElementById('mode').textContent =
+                  currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+                updateButtonState();
+              })
+              .catch((error) => console.error('Error fetching mode:', error));
+          }
 
-  function updateMode() {
-    fetch('/getMode')
-      .then(response => response.json())
-      .then(data => {
-        currentMode = data.mode;
-        document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-        updateButtonState();
-      })
-      .catch(error => console.error('Error fetching mode:', error));
-  }
-
-  setInterval(updateMode, 1000);
-</script>
-
+          setInterval(updateMode, 1000);
+        </script>
       </head>
       <body>
         <div class="container">
           <h1>Управление реле и датчиками</h1>
           <p>Состояние реле 1 (Пин 5): <span id="relayState1">—</span></p>
-<button class="button relay-button" onclick="toggleRelay(1)">Переключить реле 1</button>
-<p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
-<button class="button relay-button" onclick="toggleRelay(2)">Переключить реле 2</button>
-<p>Режим работы: <span id="mode">—</span></p>
-<button class="button" onclick="toggleMode()">Переключить режим</button>
+          <button class="button relay-button" onclick="toggleRelay(1)">Переключить реле 1</button>
+          <p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
+          <button class="button relay-button" onclick="toggleRelay(2)">Переключить реле 2</button>
+          <p>Режим работы: <span id="mode">—</span></p>
+          <button class="button" onclick="toggleMode()">Переключить режим</button>
 
           <div class="data">
             <p id="temperature">Температура: —</p>
@@ -116,7 +152,10 @@ app.get('/', (req, res) => {
 
 // Эндпоинт для получения состояния реле
 app.get('/getRelayState', (req, res) => {
-  res.json({ relayState1: sensorData.relayState1, relayState2: sensorData.relayState2 });
+  res.json({
+    relayState1: sensorData.relayState1,
+    relayState2: sensorData.relayState2,
+  });
 });
 
 // Эндпоинт для получения данных с датчиков
@@ -124,7 +163,7 @@ app.get('/getSensorData', (req, res) => {
   res.json({
     temperature: sensorData.temperature,
     humidity: sensorData.humidity,
-    soilMoisture: sensorData.soilMoisture
+    soilMoisture: sensorData.soilMoisture,
   });
 });
 
@@ -135,7 +174,9 @@ app.post('/updateSensorData', (req, res) => {
     sensorData.temperature = temperature;
     sensorData.humidity = humidity;
     sensorData.soilMoisture = soilMoisture;
-    console.log(`Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%, Soil Moisture: ${soilMoisture}%`);
+    console.log(
+      `Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%, Soil Moisture: ${soilMoisture}%`
+    );
     res.json({ message: 'Sensor data updated successfully' });
   } else {
     res.status(400).json({ error: 'Invalid data' });
@@ -143,7 +184,7 @@ app.post('/updateSensorData', (req, res) => {
 });
 
 // Переменная для режима
-let currentMode = 'auto';  // Стартовый режим - автоматический
+let currentMode = 'auto'; // Стартовый режим - автоматический
 
 // Эндпоинт для получения текущего режима
 app.get('/getMode', (req, res) => {
@@ -164,18 +205,20 @@ app.post('/setMode', (req, res) => {
 
 // Эндпоинт для переключения состояния реле
 app.post('/toggleRelay/:relayNumber', (req, res) => {
-  const { relayNumber } = req.params;
-  if (currentMode === 'manual') {
-    const relayStateKey = `relayState${relayNumber}`;
-    if (sensorData[relayStateKey] != null) {
+  const relayNumber = parseInt(req.params.relayNumber, 10);
+  const relayStateKey = `relayState${relayNumber}`;
+  if (!Number.isNaN(relayNumber) && sensorData[relayStateKey] != null) {
+    if (currentMode === 'manual') {
       sensorData[relayStateKey] = !sensorData[relayStateKey];
-      console.log(`Relay ${relayNumber} toggled to ${sensorData[relayStateKey] ? 'ON' : 'OFF'}`);
+      console.log(
+        `Relay ${relayNumber} toggled to ${sensorData[relayStateKey] ? 'ON' : 'OFF'}`
+      );
       res.json({ [relayStateKey]: sensorData[relayStateKey] });
     } else {
-      res.status(400).json({ error: 'Invalid relay number' });
+      res.status(403).json({ error: 'Cannot toggle relay in automatic mode' });
     }
   } else {
-    res.status(403).json({ error: 'Cannot toggle relay in automatic mode' });
+    res.status(400).json({ error: 'Invalid relay number' });
   }
 });
 
