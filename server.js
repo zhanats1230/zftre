@@ -144,10 +144,10 @@ app.get('/', (req, res) => {
       <body>
         <div class="container">
           <h1>Управление реле и датчиками</h1>
-          <p>Состояние реле 1 (Пин 5): <span id="relayState1">—</span></p>
-          <button class="button relay-button" onclick="toggleRelay(1)">Переключить реле 1</button>
-          <p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
-          <button class="button relay-button" onclick="toggleRelay(2)">Переключить реле 2</button>
+          <p>Освещение в теплице: <span id="relayState1">—</span></p>
+          <button class="button relay-button" onclick="toggleRelay(1)">Переключить</button>
+          <p>Вентиляция в теплице: <span id="relayState2">—</span></p>
+          <button class="button relay-button" onclick="toggleRelay(2)">Переключить</button>
           <p>Режим работы: <span id="mode">—</span></p>
           <button class="button" onclick="toggleMode()">Переключить режим</button>
 
