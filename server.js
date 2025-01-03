@@ -125,7 +125,17 @@ app.get('/', (req, res) => {
               })
               .catch((error) => console.error('Error fetching mode:', error));
           }
-
+          function updateSensorData() {
+  fetch('/getSensorData')
+    .then((response) => response.json())
+    .then((data) => {
+      document.getElementById('temperature').textContent = `Температура: ${data.temperature}°C`;
+      document.getElementById('humidity').textContent = `Влажность: ${data.humidity}%`;
+      document.getElementById('soilMoisture').textContent = `Влажность почвы: ${data.soilMoisture}%`;
+    })
+    .catch((error) => console.error('Error fetching sensor data:', error));
+}
+          setInterval(updateSensorData, 1000); // Обновление данных каждые 5 секунд
           setInterval(updateMode, 1000);
         </script>
       </head>
