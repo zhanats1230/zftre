@@ -29,6 +29,8 @@ app.get('/', (req, res) => {
           .data { font-size: 18px; margin-top: 20px; }
         </style>
         <script>
+          let currentMode = 'auto'; // Инициализация режима
+
           function toggleRelay(relayNumber) {
             fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
               .then(response => response.json())
@@ -58,30 +60,28 @@ app.get('/', (req, res) => {
           }
 
           function toggleMode() {
-  // Отправляем запрос для переключения режима
-  fetch('/setMode', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mode: currentMode === 'auto' ? 'manual' : 'auto' })
-  })
-  .then(response => response.json())
-  .then(data => {
-    currentMode = data.mode;
-    document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-  })
-  .catch(error => console.error('Error toggling mode:', error));
-}
+            fetch('/setMode', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mode: currentMode === 'auto' ? 'manual' : 'auto' })
+            })
+            .then(response => response.json())
+            .then(data => {
+              currentMode = data.mode;
+              document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+            })
+            .catch(error => console.error('Error toggling mode:', error));
+          }
 
-function updateMode() {
-  // Обновляем UI с текущим состоянием режима
-  fetch('/getMode')
-    .then(response => response.json())
-    .then(data => {
-      currentMode = data.mode; // Обновляем текущий режим
-      document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-    })
-    .catch(error => console.error('Error fetching mode:', error));
-}
+          function updateMode() {
+            fetch('/getMode')
+              .then(response => response.json())
+              .then(data => {
+                currentMode = data.mode;
+                document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+              })
+              .catch(error => console.error('Error fetching mode:', error));
+          }
 
           setInterval(updateRelayState, 1000);
           setInterval(updateSensorData, 1000);
@@ -112,7 +112,7 @@ app.get('/getRelayState', (req, res) => {
   res.json({ relayState1: sensorData.relayState1, relayState2: sensorData.relayState2 });
 });
 
-// Эндпоинт для получения данных с датчиков (температуры и влажности)
+// Эндпоинт для получения данных с датчиков
 app.get('/getSensorData', (req, res) => {
   res.json({
     temperature: sensorData.temperature,
