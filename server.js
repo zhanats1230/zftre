@@ -29,22 +29,13 @@ app.get('/', (req, res) => {
           .data { font-size: 18px; margin-top: 20px; }
         </style>
         <script>
-          function toggleRelay1() {
-            fetch('/toggleRelay1', { method: 'POST' })
+          function toggleRelay(relayNumber) {
+            fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
               .then(response => response.json())
               .then(data => {
-                document.getElementById('relayState1').textContent = data.relayState1 ? 'Выключено' : 'Включено';
+                document.getElementById('relayState' + relayNumber).textContent = data['relayState' + relayNumber] ? 'Выключено' : 'Включено';
               })
-              .catch(error => console.error('Error toggling relay 1:', error));
-          }
-
-          function toggleRelay2() {
-            fetch('/toggleRelay2', { method: 'POST' })
-              .then(response => response.json())
-              .then(data => {
-                document.getElementById('relayState2').textContent = data.relayState2 ? 'Выключено' : 'Включено';
-              })
-              .catch(error => console.error('Error toggling relay 2:', error));
+              .catch(error => console.error('Error toggling relay:', error));
           }
 
           function updateRelayState() {
@@ -57,51 +48,49 @@ app.get('/', (req, res) => {
           }
 
           function updateSensorData() {
-  fetch('/getSensorData')
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById('temperature').textContent = 'Температура: ' + data.temperature + '°C';
-      document.getElementById('humidity').textContent = 'Влажность: ' + data.humidity + '%';
-      document.getElementById('soilMoisture').textContent = 'Влажность почвы: ' + data.soilMoisture + '%';
-    });
-}
+            fetch('/getSensorData')
+              .then(response => response.json())
+              .then(data => {
+                document.getElementById('temperature').textContent = 'Температура: ' + data.temperature + '°C';
+                document.getElementById('humidity').textContent = 'Влажность: ' + data.humidity + '%';
+                document.getElementById('soilMoisture').textContent = 'Влажность почвы: ' + data.soilMoisture + '%';
+              });
+          }
 
+          function toggleMode() {
+            fetch('/setMode', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mode: currentMode === 'auto' ? 'manual' : 'auto' })
+            })
+            .then(response => response.json())
+            .then(data => {
+              currentMode = data.mode;
+              document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+            })
+            .catch(error => console.error('Error toggling mode:', error));
+          }
 
-function toggleMode() {
-    fetch('/setMode', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: currentMode === 'auto' ? 'manual' : 'auto' })
-    })
-    .then(response => response.json())
-    .then(data => {
-      currentMode = data.mode;
-      document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-    })
-    .catch(error => console.error('Error toggling mode:', error));
-  }
-
-  function updateMode() {
-    fetch('/getMode')
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('mode').textContent = data.mode === 'auto' ? 'Автоматический' : 'Ручной';
-      });
-  }
-
-  setInterval(updateMode, 1000);  // Обновление режима каждую секунду
+          function updateMode() {
+            fetch('/getMode')
+              .then(response => response.json())
+              .then(data => {
+                document.getElementById('mode').textContent = data.mode === 'auto' ? 'Автоматический' : 'Ручной';
+              });
+          }
 
           setInterval(updateRelayState, 1000);
           setInterval(updateSensorData, 1000);
+          setInterval(updateMode, 1000); // Обновление режима каждую секунду
         </script>
       </head>
       <body>
         <div class="container">
           <h1>Управление реле и датчиками</h1>
           <p>Состояние реле 1 (Пин 5): <span id="relayState1">—</span></p>
-          <button class="button" onclick="toggleRelay1()">Переключить реле 1</button>
+          <button class="button" onclick="toggleRelay(1)">Переключить реле 1</button>
           <p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
-          <button class="button" onclick="toggleRelay2()">Переключить реле 2</button>
+          <button class="button" onclick="toggleRelay(2)">Переключить реле 2</button>
           <p>Режим работы: <span id="mode">—</span></p>
           <button class="button" onclick="toggleMode()">Переключить режим</button>
           <div class="data">
@@ -124,29 +113,25 @@ app.get('/getRelayState', (req, res) => {
 app.get('/getSensorData', (req, res) => {
   res.json({
     temperature: sensorData.temperature,
-    humidity: sensorData.humidity
+    humidity: sensorData.humidity,
+    soilMoisture: sensorData.soilMoisture
   });
 });
 
 // Эндпоинт для обновления данных с датчиков
 app.post('/updateSensorData', (req, res) => {
-  const { temperature, humidity } = req.body;
-  if (temperature != null && humidity != null) {
+  const { temperature, humidity, soilMoisture } = req.body;
+  if (temperature != null && humidity != null && soilMoisture != null) {
     sensorData.temperature = temperature;
     sensorData.humidity = humidity;
-    console.log(`Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%`);
+    sensorData.soilMoisture = soilMoisture;
+    console.log(`Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%, Soil Moisture: ${soilMoisture}%`);
     res.json({ message: 'Sensor data updated successfully' });
   } else {
     res.status(400).json({ error: 'Invalid data' });
   }
 });
 
-// Эндпоинт для переключения первого реле (Пин 5)
-app.post('/toggleRelay1', (req, res) => {
-  sensorData.relayState1 = !sensorData.relayState1;
-  console.log(`Relay 1 toggled to ${sensorData.relayState1 ? 'ON' : 'OFF'}`);
-  res.json({ relayState1: sensorData.relayState1 });
-});
 // Переменная для режима
 let currentMode = 'auto';  // Стартовый режим - автоматический
 
@@ -165,12 +150,6 @@ app.post('/setMode', (req, res) => {
   } else {
     res.status(400).json({ error: 'Invalid mode' });
   }
-});
-// Эндпоинт для переключения второго реле (Пин 18)
-app.post('/toggleRelay2', (req, res) => {
-  sensorData.relayState2 = !sensorData.relayState2;
-  console.log(`Relay 2 toggled to ${sensorData.relayState2 ? 'ON' : 'OFF'}`);
-  res.json({ relayState2: sensorData.relayState2 });
 });
 
 // Запуск сервера
