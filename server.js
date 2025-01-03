@@ -32,19 +32,23 @@ app.get('/', (req, res) => {
         <script>
   let currentMode = 'auto'; // Начальный режим
 
-  function toggleRelay(relayNumber) {
+ function toggleRelay(relayNumber) {
   if (currentMode === 'manual') {
     fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
       .then(data => {
-        document.getElementById(`relayState${relayNumber}`).textContent = 
-          data[`relayState${relayNumber}`] ? 'Включено' : 'Выключено';
+        const relayState = data[`relayState${relayNumber}`];
+        document.getElementById(`relayState${relayNumber}`).textContent = relayState ? 'Включено' : 'Выключено';
       })
       .catch(error => console.error('Error toggling relay:', error));
   } else {
     alert('Реле можно переключать только в ручном режиме!');
   }
 }
+
 
   function toggleMode() {
     fetch('/setMode', {
