@@ -4,10 +4,11 @@ const port = process.env.PORT || 80;
 
 // Хранение данных для реле и датчиков
 let sensorData = {
-  relayState1: false, // Состояние первого реле (пин 5)
-  relayState2: false, // Состояние второго реле (пин 18)
-  temperature: 0,     // Температура
-  humidity: 0         // Влажность
+  relayState1: false,
+  relayState2: false,
+  temperature: 0,
+  humidity: 0,
+  soilMoisture: 0 // Влажность почвы
 };
 
 // Для обработки JSON запросов
