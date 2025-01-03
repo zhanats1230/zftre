@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
             fetch('/toggleRelay1', { method: 'POST' })
               .then(response => response.json())
               .then(data => {
-                document.getElementById('relayState1').textContent = data.relayState1 ? 'Включено' : 'Выключено';
+                document.getElementById('relayState1').textContent = data.relayState1 ? 'Выключено' : 'Включено';
               })
               .catch(error => console.error('Error toggling relay 1:', error));
           }
@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
             fetch('/toggleRelay2', { method: 'POST' })
               .then(response => response.json())
               .then(data => {
-                document.getElementById('relayState2').textContent = data.relayState2 ? 'Включено' : 'Выключено';
+                document.getElementById('relayState2').textContent = data.relayState2 ? 'Выключено' : 'Включено';
               })
               .catch(error => console.error('Error toggling relay 2:', error));
           }
@@ -51,8 +51,8 @@ app.get('/', (req, res) => {
             fetch('/getRelayState')
               .then(response => response.json())
               .then(data => {
-                document.getElementById('relayState1').textContent = data.relayState1 ? 'Включено' : 'Выключено';
-                document.getElementById('relayState2').textContent = data.relayState2 ? 'Включено' : 'Выключено';
+                document.getElementById('relayState1').textContent = data.relayState1 ? 'Выключено' : 'Включено';
+                document.getElementById('relayState2').textContent = data.relayState2 ? 'Выключено' : 'Включено';
               });
           }
 
