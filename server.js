@@ -33,18 +33,18 @@ app.get('/', (req, res) => {
   let currentMode = 'auto'; // Начальный режим
 
   function toggleRelay(relayNumber) {
-    if (currentMode === 'manual') {
-      fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById(`relayState${relayNumber}`).textContent = 
-            data[`relayState${relayNumber}`] ? 'Включено' : 'Выключено';
-        })
-        .catch(error => console.error('Error toggling relay:', error));
-    } else {
-      alert('Реле можно переключать только в ручном режиме!');
-    }
+  if (currentMode === 'manual') {
+    fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById(`relayState${relayNumber}`).textContent = 
+          data[`relayState${relayNumber}`] ? 'Включено' : 'Выключено';
+      })
+      .catch(error => console.error('Error toggling relay:', error));
+  } else {
+    alert('Реле можно переключать только в ручном режиме!');
   }
+}
 
   function toggleMode() {
     fetch('/setMode', {
