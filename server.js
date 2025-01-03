@@ -15,6 +15,7 @@ let sensorData = {
 app.use(express.json());
 
 // Главная страница с интерфейсом
+// Главная страница с интерфейсом
 app.get('/', (req, res) => {
   res.send(`
     <html>
@@ -29,7 +30,7 @@ app.get('/', (req, res) => {
           .data { font-size: 18px; margin-top: 20px; }
         </style>
         <script>
-          let currentMode = 'auto'; // Инициализация режима
+          let currentMode = 'auto'; // Начальный режим
 
           function toggleRelay(relayNumber) {
             fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
@@ -69,6 +70,7 @@ app.get('/', (req, res) => {
             .then(data => {
               currentMode = data.mode;
               document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+              toggleRelayButtons(); // Обновляем кнопки переключения реле
             })
             .catch(error => console.error('Error toggling mode:', error));
           }
@@ -79,8 +81,17 @@ app.get('/', (req, res) => {
               .then(data => {
                 currentMode = data.mode;
                 document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+                toggleRelayButtons(); // Обновляем кнопки переключения реле
               })
               .catch(error => console.error('Error fetching mode:', error));
+          }
+
+          function toggleRelayButtons() {
+            // Если в режиме авто - заблокируем кнопки реле
+            const relayButtons = document.querySelectorAll('.relay-button');
+            relayButtons.forEach(button => {
+              button.disabled = currentMode === 'auto'; // Блокируем кнопки в автоматическом режиме
+            });
           }
 
           setInterval(updateRelayState, 1000);
@@ -91,9 +102,9 @@ app.get('/', (req, res) => {
         <div class="container">
           <h1>Управление реле и датчиками</h1>
           <p>Состояние реле 1 (Пин 5): <span id="relayState1">—</span></p>
-          <button class="button" onclick="toggleRelay(1)">Переключить реле 1</button>
+          <button class="button relay-button" onclick="toggleRelay(1)">Переключить реле 1</button>
           <p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
-          <button class="button" onclick="toggleRelay(2)">Переключить реле 2</button>
+          <button class="button relay-button" onclick="toggleRelay(2)">Переключить реле 2</button>
           <p>Режим работы: <span id="mode">—</span></p>
           <button class="button" onclick="toggleMode()">Переключить режим</button>
           <div class="data">
@@ -106,6 +117,7 @@ app.get('/', (req, res) => {
     </html>
   `);
 });
+
 
 // Эндпоинт для получения состояния реле
 app.get('/getRelayState', (req, res) => {
