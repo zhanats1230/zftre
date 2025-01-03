@@ -57,13 +57,15 @@ app.get('/', (req, res) => {
           }
 
           function updateSensorData() {
-            fetch('/getSensorData')
-              .then(response => response.json())
-              .then(data => {
-                document.getElementById('temperature').textContent = 'Температура: ' + data.temperature + '°C';
-                document.getElementById('humidity').textContent = 'Влажность: ' + data.humidity + '%';
-              });
-          }
+  fetch('/getSensorData')
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('temperature').textContent = 'Температура: ' + data.temperature + '°C';
+      document.getElementById('humidity').textContent = 'Влажность: ' + data.humidity + '%';
+      document.getElementById('soilMoisture').textContent = 'Влажность почвы: ' + data.soilMoisture + '%';
+    });
+}
+
 
           setInterval(updateRelayState, 1000);
           setInterval(updateSensorData, 1000);
@@ -79,6 +81,7 @@ app.get('/', (req, res) => {
           <div class="data">
             <p id="temperature">Температура: —</p>
             <p id="humidity">Влажность: —</p>
+            <p id="soilMoisture">Влажность почвы: —</p>
           </div>
         </div>
       </body>
