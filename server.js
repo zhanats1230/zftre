@@ -27,6 +27,7 @@ app.get('/', (req, res) => {
           .button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; font-size: 18px; }
           .button:hover { background-color: #45a049; }
           .data { font-size: 18px; margin-top: 20px; }
+          .disabled { background-color: #ccc; cursor: not-allowed; }
         </style>
         <script>
           let currentMode = 'auto'; // Начальный режим
@@ -94,7 +95,13 @@ app.get('/', (req, res) => {
           function toggleRelayButtons() {
             const relayButtons = document.querySelectorAll('.relay-button');
             relayButtons.forEach(button => {
-              button.disabled = currentMode === 'auto'; // Если режим авто, то кнопки реле блокируются
+              if (currentMode === 'auto') {
+                button.classList.add('disabled');
+                button.disabled = true;
+              } else {
+                button.classList.remove('disabled');
+                button.disabled = false;
+              }
             });
           }
 
