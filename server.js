@@ -58,30 +58,33 @@ app.get('/', (req, res) => {
           }
 
           function toggleMode() {
-            fetch('/setMode', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ mode: currentMode === 'auto' ? 'manual' : 'auto' })
-            })
-            .then(response => response.json())
-            .then(data => {
-              currentMode = data.mode;
-              document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-            })
-            .catch(error => console.error('Error toggling mode:', error));
-          }
+  // Отправляем запрос для переключения режима
+  fetch('/setMode', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode: currentMode === 'auto' ? 'manual' : 'auto' })
+  })
+  .then(response => response.json())
+  .then(data => {
+    currentMode = data.mode;
+    document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+  })
+  .catch(error => console.error('Error toggling mode:', error));
+}
 
-          function updateMode() {
-            fetch('/getMode')
-              .then(response => response.json())
-              .then(data => {
-                document.getElementById('mode').textContent = data.mode === 'auto' ? 'Автоматический' : 'Ручной';
-              });
-          }
+function updateMode() {
+  // Обновляем UI с текущим состоянием режима
+  fetch('/getMode')
+    .then(response => response.json())
+    .then(data => {
+      currentMode = data.mode; // Обновляем текущий режим
+      document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+    })
+    .catch(error => console.error('Error fetching mode:', error));
+}
 
           setInterval(updateRelayState, 1000);
           setInterval(updateSensorData, 1000);
-          setInterval(updateMode, 1000); // Обновление режима каждую секунду
         </script>
       </head>
       <body>
