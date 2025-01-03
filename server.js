@@ -15,7 +15,6 @@ let sensorData = {
 app.use(express.json());
 
 // Главная страница с интерфейсом
-// Главная страница с интерфейсом
 app.get('/', (req, res) => {
   res.send(`
     <html>
@@ -32,6 +31,7 @@ app.get('/', (req, res) => {
         <script>
           let currentMode = 'auto'; // Начальный режим
 
+          // Функция для переключения состояния реле
           function toggleRelay(relayNumber) {
             fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
               .then(response => response.json())
@@ -41,6 +41,7 @@ app.get('/', (req, res) => {
               .catch(error => console.error('Error toggling relay:', error));
           }
 
+          // Функция для обновления состояния реле
           function updateRelayState() {
             fetch('/getRelayState')
               .then(response => response.json())
@@ -50,6 +51,7 @@ app.get('/', (req, res) => {
               });
           }
 
+          // Функция для обновления данных с датчиков
           function updateSensorData() {
             fetch('/getSensorData')
               .then(response => response.json())
@@ -60,6 +62,7 @@ app.get('/', (req, res) => {
               });
           }
 
+          // Функция для переключения между режимами
           function toggleMode() {
             fetch('/setMode', {
               method: 'POST',
@@ -75,6 +78,7 @@ app.get('/', (req, res) => {
             .catch(error => console.error('Error toggling mode:', error));
           }
 
+          // Функция для обновления текущего режима
           function updateMode() {
             fetch('/getMode')
               .then(response => response.json())
@@ -86,11 +90,11 @@ app.get('/', (req, res) => {
               .catch(error => console.error('Error fetching mode:', error));
           }
 
+          // Функция для включения/выключения кнопок реле
           function toggleRelayButtons() {
-            // Если в режиме авто - заблокируем кнопки реле
             const relayButtons = document.querySelectorAll('.relay-button');
             relayButtons.forEach(button => {
-              button.disabled = currentMode === 'auto'; // Блокируем кнопки в автоматическом режиме
+              button.disabled = currentMode === 'auto'; // Если режим авто, то кнопки реле блокируются
             });
           }
 
@@ -117,7 +121,6 @@ app.get('/', (req, res) => {
     </html>
   `);
 });
-
 
 // Эндпоинт для получения состояния реле
 app.get('/getRelayState', (req, res) => {
