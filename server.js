@@ -67,6 +67,30 @@ app.get('/', (req, res) => {
 }
 
 
+function toggleMode() {
+    fetch('/setMode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: currentMode === 'auto' ? 'manual' : 'auto' })
+    })
+    .then(response => response.json())
+    .then(data => {
+      currentMode = data.mode;
+      document.getElementById('mode').textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+    })
+    .catch(error => console.error('Error toggling mode:', error));
+  }
+
+  function updateMode() {
+    fetch('/getMode')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('mode').textContent = data.mode === 'auto' ? 'Автоматический' : 'Ручной';
+      });
+  }
+
+  setInterval(updateMode, 1000);  // Обновление режима каждую секунду
+
           setInterval(updateRelayState, 1000);
           setInterval(updateSensorData, 1000);
         </script>
@@ -78,6 +102,8 @@ app.get('/', (req, res) => {
           <button class="button" onclick="toggleRelay1()">Переключить реле 1</button>
           <p>Состояние реле 2 (Пин 18): <span id="relayState2">—</span></p>
           <button class="button" onclick="toggleRelay2()">Переключить реле 2</button>
+          <p>Режим работы: <span id="mode">—</span></p>
+          <button class="button" onclick="toggleMode()">Переключить режим</button>
           <div class="data">
             <p id="temperature">Температура: —</p>
             <p id="humidity">Влажность: —</p>
@@ -121,7 +147,25 @@ app.post('/toggleRelay1', (req, res) => {
   console.log(`Relay 1 toggled to ${sensorData.relayState1 ? 'ON' : 'OFF'}`);
   res.json({ relayState1: sensorData.relayState1 });
 });
+// Переменная для режима
+let currentMode = 'auto';  // Стартовый режим - автоматический
 
+// Эндпоинт для получения текущего режима
+app.get('/getMode', (req, res) => {
+  res.json({ mode: currentMode });
+});
+
+// Эндпоинт для изменения режима
+app.post('/setMode', (req, res) => {
+  const { mode } = req.body;
+  if (mode === 'auto' || mode === 'manual') {
+    currentMode = mode;
+    console.log(`Mode changed to ${currentMode}`);
+    res.json({ mode: currentMode });
+  } else {
+    res.status(400).json({ error: 'Invalid mode' });
+  }
+});
 // Эндпоинт для переключения второго реле (Пин 18)
 app.post('/toggleRelay2', (req, res) => {
   sensorData.relayState2 = !sensorData.relayState2;
