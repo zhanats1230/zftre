@@ -83,7 +83,7 @@ app.get('/', (req, res) => {
           let currentMode = 'auto';
           let relay2State = false;
 
-          function toggleRelay(relayNumber) {
+ function toggleRelay(relayNumber) {
   if (currentMode === 'manual') {
     fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
       .then((response) => {
@@ -100,6 +100,7 @@ app.get('/', (req, res) => {
     alert('Реле можно переключать только в ручном режиме!');
   }
 }
+
 
 
           function toggleMode() {
