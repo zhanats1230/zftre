@@ -11,6 +11,18 @@ let sensorData = {
   soilMoisture: 0, // Влажность почвы
 };
 
+// Переменная для режима
+let currentMode = 'auto'; // Стартовый режим - автоматический
+
+// Новые переменные для времени работы и паузы освещения
+let lightingSettings = {
+  onDuration: 30, // Время горения света в секундах
+  offDuration: 60, // Время паузы между включениями света в секундах
+};
+
+// Таймер для автоматического управления освещением
+let lightingTimer = null;
+
 // Для обработки JSON запросов
 app.use(express.json());
 
@@ -61,20 +73,25 @@ app.get('/', (req, res) => {
           .relay-button {
             margin-bottom: 10px;
           }
+          .input-field {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+          }
         </style>
         <script>
           let currentMode = 'auto'; // Начальный режим
 
           function toggleRelay(relayNumber) {
             if (currentMode === 'manual') {
-              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
+              fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
                 .then((response) => {
                   if (!response.ok) throw new Error('Network response was not ok');
                   return response.json();
                 })
                 .then((data) => {
-                  const relayState = data[\`relayState\${relayNumber}\`];
-                  document.getElementById(\`relayState\${relayNumber}\`).textContent =
+                  const relayState = data[`relayState${relayNumber}`];
+                  document.getElementById(`relayState${relayNumber}`).textContent =
                     relayState ? 'Выключено' : 'Включено';
                 })
                 .catch((error) => console.error('Error toggling relay:', error));
@@ -130,15 +147,39 @@ app.get('/', (req, res) => {
             fetch('/getSensorData')
               .then((response) => response.json())
               .then((data) => {
-                document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
-                document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
-                document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
+                document.getElementById('temperature').textContent = `Температура: ${data.temperature}°C`;
+                document.getElementById('humidity').textContent = `Влажность: ${data.humidity}%`;
+                document.getElementById('soilMoisture').textContent = `Влажность почвы: ${data.soilMoisture}%`;
               })
               .catch((error) => console.error('Error fetching sensor data:', error));
           }
 
+          function updateLightingSettings() {
+            const onDuration = parseInt(document.getElementById('onDuration').value, 10);
+            const offDuration = parseInt(document.getElementById('offDuration').value, 10);
+            fetch('/updateLightingSettings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ onDuration, offDuration }),
+            })
+              .then((response) => response.json())
+              .then((data) => alert(data.message || 'Настройки обновлены'))
+              .catch((error) => console.error('Error updating lighting settings:', error));
+          }
+
+          function fetchLightingSettings() {
+            fetch('/getLightingSettings')
+              .then((response) => response.json())
+              .then((data) => {
+                document.getElementById('onDuration').value = data.onDuration;
+                document.getElementById('offDuration').value = data.offDuration;
+              })
+              .catch((error) => console.error('Error fetching lighting settings:', error));
+          }
+
           setInterval(updateSensorData, 1000); // Обновление данных каждые 1 секунду
           setInterval(updateMode, 1000); // Обновление режима каждые 1 секунду
+          window.onload = fetchLightingSettings;
         </script>
       </head>
       <body>
@@ -156,6 +197,16 @@ app.get('/', (req, res) => {
             <p id="humidity">Влажность: —</p>
             <p id="soilMoisture">Влажность почвы: —</p>
           </div>
+
+          <div class="input-field">
+            <label>Время горения света (секунды):</label>
+            <input type="number" id="onDuration" min="1" />
+          </div>
+          <div class="input-field">
+            <label>Время паузы (секунды):</label>
+            <input type="number" id="offDuration" min="1" />
+          </div>
+          <button class="button" onclick="updateLightingSettings()">Сохранить настройки</button>
         </div>
       </body>
     </html>
@@ -194,9 +245,6 @@ app.post('/updateSensorData', (req, res) => {
     res.status(400).json({ error: 'Invalid data' });
   }
 });
-
-// Переменная для режима
-let currentMode = 'auto'; // Стартовый режим - автоматический
 
 // Эндпоинт для получения текущего режима
 app.get('/getMode', (req, res) => {
