@@ -82,78 +82,126 @@ app.get('/', (req, res) => {
             flex-direction: column;
           }
         </style>
-        <script>
-          let currentMode = 'auto'; // Начальный режим
-          let relay2State = false; // Состояние реле вентилятора
+       <script>
+  let currentMode = 'auto'; // Начальный режим
+  let relay2State = false; // Состояние реле вентилятора
 
-          function toggleRelay(relayNumber) {
-            if (currentMode === 'manual') {
-              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
-                .then(response => {
-                  if (!response.ok) throw new Error('Network response was not ok');
-                  return response.json();
-                })
-                .then(data => {
-                  const relayState = data[\`relayState\${relayNumber}\`];
-                  document.getElementById(\`relayState\${relayNumber}\`).textContent =
-                    relayState ? 'Включено' : 'Выключено';
+  function toggleRelay(relayNumber) {
+    if (currentMode === 'manual') {
+      fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+        })
+        .then(data => {
+          const relayState = data[`relayState${relayNumber}`];
+          document.getElementById(`relayState${relayNumber}`).textContent =
+            relayState ? 'Включено' : 'Выключено';
 
-                  if (relayNumber === 2) {
-                    relay2State = relayState;
-                    updateInputState(); // Обновляем доступность полей ввода
-                  }
-                })
-                .catch(error => console.error('Error toggling relay:', error));
-            } else {
-              alert('Реле можно переключать только в ручном режиме!');
-            }
+          if (relayNumber === 2) {
+            relay2State = relayState;
+            updateInputState(); // Обновляем доступность полей ввода
           }
+        })
+        .catch(error => console.error('Error toggling relay:', error));
+    } else {
+      alert('Реле можно переключать только в ручном режиме!');
+    }
+  }
 
-          function toggleMode() {
-            fetch('/setMode', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                mode: currentMode === 'auto' ? 'manual' : 'auto',
-              }),
-            })
-              .then(response => response.json())
-              .then(data => {
-                currentMode = data.mode;
-                document.getElementById('mode').textContent =
-                  currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-                updateInputState(); // Обновляем доступность полей ввода
-              })
-              .catch(error => console.error('Error toggling mode:', error));
-          }
+  function toggleMode() {
+    fetch('/setMode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: currentMode === 'auto' ? 'manual' : 'auto',
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        currentMode = data.mode;
+        document.getElementById('mode').textContent =
+          currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+        updateInputState(); // Обновляем доступность полей ввода
+      })
+      .catch(error => console.error('Error toggling mode:', error));
+  }
 
-          function updateInputState() {
-            const inputs = document.querySelectorAll('.input-field input');
-            const isManualAndRelayOn = currentMode === 'manual' && relay2State;
+  function updateInputState() {
+    const inputs = document.querySelectorAll('.input-field input');
+    const isManualAndRelayOn = currentMode === 'manual' && relay2State;
 
-            inputs.forEach(input => {
-              input.disabled = !isManualAndRelayOn;
-            });
+    inputs.forEach(input => {
+      input.disabled = !isManualAndRelayOn;
+    });
 
-            const saveButton = document.querySelector('.save-settings');
-            saveButton.disabled = !isManualAndRelayOn;
-          }
+    const saveButton = document.querySelector('.save-settings');
+    saveButton.disabled = !isManualAndRelayOn;
+  }
 
-          document.addEventListener('DOMContentLoaded', () => {
-            setInterval(() => {
-              fetch('/getSensorData')
-                .then(response => response.json())
-                .then(data => {
-                  document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
-                  document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
-                  document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
-                })
-                .catch(error => console.error('Error updating sensor data:', error));
-            }, 1000);
+  function saveLightingSettings() {
+    // Получаем значения из полей ввода
+    const fanTemperatureThreshold = parseFloat(
+      document.getElementById("fanTemperatureThreshold").value
+    );
+    const lightOnDuration = parseInt(
+      document.getElementById("lightOnDuration").value
+    );
+    const lightIntervalManual = parseInt(
+      document.getElementById("lightIntervalManual").value
+    );
 
-            updateInputState(); // Убедиться, что поля правильно инициализированы
-          });
-        </script>
+    // Проверка, что данные валидны
+    if (isNaN(fanTemperatureThreshold) || isNaN(lightOnDuration) || isNaN(lightIntervalManual)) {
+      alert("Пожалуйста, заполните все поля корректными значениями.");
+      return;
+    }
+
+    // Создаем объект для отправки
+    const settings = {
+      fanTemperatureThreshold,
+      lightOnDuration,
+      lightIntervalManual,
+    };
+
+    // Отправляем данные на ESP32
+    fetch("/updateSettings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(settings),
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("Ошибка при отправке настроек.");
+        return response.json();
+      })
+      .then((data) => {
+        alert("Настройки успешно сохранены!");
+        console.log(data);
+      })
+      .catch((error) => {
+        console.error("Ошибка:", error);
+        alert("Не удалось сохранить настройки.");
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setInterval(() => {
+      fetch('/getSensorData')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('temperature').textContent = `Температура: ${data.temperature}°C`;
+          document.getElementById('humidity').textContent = `Влажность: ${data.humidity}%`;
+          document.getElementById('soilMoisture').textContent = `Влажность почвы: ${data.soilMoisture}%`;
+        })
+        .catch(error => console.error('Error updating sensor data:', error));
+    }, 1000);
+
+    updateInputState(); // Убедиться, что поля правильно инициализированы
+  });
+</script>
+
       </head>
       <body>
         <div class="container">
@@ -172,17 +220,17 @@ app.get('/', (req, res) => {
           </div>
 
           <div class="input-field">
-            <label for="fanTemperatureThreshold">Порог температуры для кулера (°C):</label>
-            <input type="number" id="fanTemperatureThreshold" disabled>
+  <label for="fanTemperatureThreshold">Порог температуры для кулера (°C):</label>
+  <input type="number" id="fanTemperatureThreshold">
 
-            <label for="lightOnDuration">Время работы света (мс):</label>
-            <input type="number" id="lightOnDuration" disabled>
+  <label for="lightOnDuration">Время работы света (мс):</label>
+  <input type="number" id="lightOnDuration">
 
-            <label for="lightIntervalManual">Интервал для переключения света (мс):</label>
-            <input type="number" id="lightIntervalManual" disabled>
+  <label for="lightIntervalManual">Интервал для переключения света (мс):</label>
+  <input type="number" id="lightIntervalManual">
 
-            <button class="button save-settings" onclick="saveLightingSettings()" disabled>Сохранить настройки</button>
-          </div>
+  <button class="button save-settings" onclick="saveLightingSettings()">Сохранить настройки</button>
+</div>
         </div>
       </body>
     </html>
