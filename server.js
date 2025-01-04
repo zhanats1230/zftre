@@ -36,172 +36,121 @@ app.get('/', (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Управление реле</title>
         <style>
-          body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-          }
-          .container {
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          }
-          h1 {
-            text-align: center;
-          }
-          .button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            margin-top: 10px;
-          }
-          .button:hover {
-            background-color: #45a049;
-          }
-          .data {
-            font-size: 18px;
-            margin-top: 20px;
-          }
-          .disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-          }
-          .relay-button {
-            margin-bottom: 10px;
-          }
-          .input-field {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-          }
+          /* Ваш CSS */
         </style>
-       <script>
-  let currentMode = 'auto'; // Начальный режим
-  let relay2State = false; // Состояние реле вентилятора
+        <script>
+          let currentMode = 'auto'; // Начальный режим
+          let relay2State = false; // Состояние реле вентилятора
 
-  function toggleRelay(relayNumber) {
-    if (currentMode === 'manual') {
-      fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
-        .then(response => {
-          if (!response.ok) throw new Error('Network response was not ok');
-          return response.json();
-        })
-        .then(data => {
-          const relayState = data[`relayState${relayNumber}`];
-          document.getElementById(`relayState${relayNumber}`).textContent =
-            relayState ? 'Включено' : 'Выключено';
+          function toggleRelay(relayNumber) {
+            if (currentMode === 'manual') {
+              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
+                .then(response => {
+                  if (!response.ok) throw new Error('Network response was not ok');
+                  return response.json();
+                })
+                .then(data => {
+                  const relayState = data[\`relayState\${relayNumber}\`];
+                  document.getElementById(\`relayState\${relayNumber}\`).textContent =
+                    relayState ? 'Включено' : 'Выключено';
 
-          if (relayNumber === 2) {
-            relay2State = relayState;
-            updateInputState(); // Обновляем доступность полей ввода
+                  if (relayNumber === 2) {
+                    relay2State = relayState;
+                    updateInputState(); // Обновляем доступность полей ввода
+                  }
+                })
+                .catch(error => console.error('Error toggling relay:', error));
+            } else {
+              alert('Реле можно переключать только в ручном режиме!');
+            }
           }
-        })
-        .catch(error => console.error('Error toggling relay:', error));
-    } else {
-      alert('Реле можно переключать только в ручном режиме!');
-    }
-  }
 
-  function toggleMode() {
-    fetch('/setMode', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        mode: currentMode === 'auto' ? 'manual' : 'auto',
-      }),
-    })
-      .then(response => response.json())
-      .then(data => {
-        currentMode = data.mode;
-        document.getElementById('mode').textContent =
-          currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-        updateInputState(); // Обновляем доступность полей ввода
-      })
-      .catch(error => console.error('Error toggling mode:', error));
-  }
+          function toggleMode() {
+            fetch('/setMode', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                mode: currentMode === 'auto' ? 'manual' : 'auto',
+              }),
+            })
+              .then(response => response.json())
+              .then(data => {
+                currentMode = data.mode;
+                document.getElementById('mode').textContent =
+                  currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+                updateInputState(); // Обновляем доступность полей ввода
+              })
+              .catch(error => console.error('Error toggling mode:', error));
+          }
 
-  function updateInputState() {
-    const inputs = document.querySelectorAll('.input-field input');
-    const isManualAndRelayOn = currentMode === 'manual' && relay2State;
+          function updateInputState() {
+            const inputs = document.querySelectorAll('.input-field input');
+            const isManualAndRelayOn = currentMode === 'manual' && relay2State;
 
-    inputs.forEach(input => {
-      input.disabled = !isManualAndRelayOn;
-    });
+            inputs.forEach(input => {
+              input.disabled = !isManualAndRelayOn;
+            });
 
-    const saveButton = document.querySelector('.save-settings');
-    saveButton.disabled = !isManualAndRelayOn;
-  }
+            const saveButton = document.querySelector('.save-settings');
+            saveButton.disabled = !isManualAndRelayOn;
+          }
 
-  function saveLightingSettings() {
-    // Получаем значения из полей ввода
-    const fanTemperatureThreshold = parseFloat(
-      document.getElementById("fanTemperatureThreshold").value
-    );
-    const lightOnDuration = parseInt(
-      document.getElementById("lightOnDuration").value
-    );
-    const lightIntervalManual = parseInt(
-      document.getElementById("lightIntervalManual").value
-    );
+          function saveLightingSettings() {
+            const fanTemperatureThreshold = parseFloat(
+              document.getElementById("fanTemperatureThreshold").value
+            );
+            const lightOnDuration = parseInt(
+              document.getElementById("lightOnDuration").value
+            );
+            const lightIntervalManual = parseInt(
+              document.getElementById("lightIntervalManual").value
+            );
 
-    // Проверка, что данные валидны
-    if (isNaN(fanTemperatureThreshold) || isNaN(lightOnDuration) || isNaN(lightIntervalManual)) {
-      alert("Пожалуйста, заполните все поля корректными значениями.");
-      return;
-    }
+            if (isNaN(fanTemperatureThreshold) || isNaN(lightOnDuration) || isNaN(lightIntervalManual)) {
+              alert("Пожалуйста, заполните все поля корректными значениями.");
+              return;
+            }
 
-    // Создаем объект для отправки
-    const settings = {
-      fanTemperatureThreshold,
-      lightOnDuration,
-      lightIntervalManual,
-    };
+            const settings = {
+              fanTemperatureThreshold,
+              lightOnDuration,
+              lightIntervalManual,
+            };
 
-    // Отправляем данные на ESP32
-    fetch("/updateSettings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(settings),
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error("Ошибка при отправке настроек.");
-        return response.json();
-      })
-      .then((data) => {
-        alert("Настройки успешно сохранены!");
-        console.log(data);
-      })
-      .catch((error) => {
-        console.error("Ошибка:", error);
-        alert("Не удалось сохранить настройки.");
-      });
-  }
+            fetch("/updateSettings", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(settings),
+            })
+              .then((response) => {
+                if (!response.ok) throw new Error("Ошибка при отправке настроек.");
+                return response.json();
+              })
+              .then((data) => {
+                alert("Настройки успешно сохранены!");
+                console.log(data);
+              })
+              .catch((error) => {
+                console.error("Ошибка:", error);
+                alert("Не удалось сохранить настройки.");
+              });
+          }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    setInterval(() => {
-      fetch('/getSensorData')
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById('temperature').textContent = `Температура: ${data.temperature}°C`;
-          document.getElementById('humidity').textContent = `Влажность: ${data.humidity}%`;
-          document.getElementById('soilMoisture').textContent = `Влажность почвы: ${data.soilMoisture}%`;
-        })
-        .catch(error => console.error('Error updating sensor data:', error));
-    }, 1000);
+          document.addEventListener('DOMContentLoaded', () => {
+            setInterval(() => {
+              fetch('/getSensorData')
+                .then(response => response.json())
+                .then(data => {
+                  document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
+                  document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
+                  document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
+                })
+                .catch(error => console.error('Error updating sensor data:', error));
+            }, 1000);
 
-    updateInputState(); // Убедиться, что поля правильно инициализированы
-  });
-</script>
-
+            updateInputState();
+          });
+        </script>
       </head>
       <body>
         <div class="container">
@@ -236,6 +185,7 @@ app.get('/', (req, res) => {
     </html>
   `);
 });
+
 
 
 // Остальные эндпоинты аналогичны, никаких сокращений не применено.
