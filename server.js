@@ -75,7 +75,7 @@ app.get('/', (req, res) => {
                 .then((data) => {
                   const relayState = data[\`relayState\${relayNumber}\`];
                   document.getElementById(\`relayState\${relayNumber}\`).textContent =
-                    relayState ? 'Включено' : 'Выключено';
+                    relayState ? 'Выключено' : 'Включено';
                 })
                 .catch((error) => console.error('Error toggling relay:', error));
             } else {
