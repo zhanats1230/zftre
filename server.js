@@ -94,8 +94,8 @@ app.get('/', (req, res) => {
           return response.json();
         })
         .then(data => {
-          const relayState = data[`relayState${relayNumber}`];
-          document.getElementById(`relayState${relayNumber}`).textContent =
+          const relayState = data[\`relayState\${relayNumber}\`];
+          document.getElementById(\`relayState\${relayNumber}\`).textContent =
             relayState ? 'Включено' : 'Выключено';
 
           // Обновить состояние реле вентилятора
@@ -179,9 +179,9 @@ app.get('/', (req, res) => {
       fetch('/getSensorData')
         .then(response => response.json())
         .then(data => {
-          document.getElementById('temperature').textContent = `Температура: ${data.temperature}°C`;
-          document.getElementById('humidity').textContent = `Влажность: ${data.humidity}%`;
-          document.getElementById('soilMoisture').textContent = `Влажность почвы: ${data.soilMoisture}%`;
+          document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
+          document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
+          document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
         })
         .catch(error => console.error('Error updating sensor data:', error));
     }, 1000);
@@ -218,7 +218,7 @@ app.get('/', (req, res) => {
     </div>
   </div>
 </body>
-    </html>
+</html>
   `);
 });
 
