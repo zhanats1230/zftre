@@ -84,27 +84,23 @@ app.get('/', (req, res) => {
           let relay2State = false;
 
           function toggleRelay(relayNumber) {
-            if (currentMode === 'manual') {
-              fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
-                .then((response) => {
-                  if (!response.ok) throw new Error('Network response was not ok');
-                  return response.json();
-                })
-                .then((data) => {
-                  const relayState = data[`relayState${relayNumber}`];
-                  document.getElementById(`relayState${relayNumber}`).textContent =
-                    relayState ? 'Включено' : 'Выключено';
+  if (currentMode === 'manual') {
+    fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
+      .then((response) => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then((data) => {
+        const relayState = data[`relayState${relayNumber}`];
+        document.getElementById(`relayState${relayNumber}`).textContent =
+          relayState ? 'Включено' : 'Выключено';
+      })
+      .catch((error) => console.error('Error toggling relay:', error));
+  } else {
+    alert('Реле можно переключать только в ручном режиме!');
+  }
+}
 
-                  if (relayNumber === 2) {
-                    relay2State = relayState;
-                    updateInputState();
-                  }
-                })
-                .catch((error) => console.error('Error toggling relay:', error));
-            } else {
-              alert('Реле можно переключать только в ручном режиме!');
-            }
-          }
 
           function toggleMode() {
             fetch('/setMode', {
