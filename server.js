@@ -83,112 +83,141 @@ app.get('/', (req, res) => {
           }
         </style>
         <script>
-          let currentMode = 'auto'; // Начальный режим
-          let relay2State = false; // Состояние реле вентилятора
+  let currentMode = 'auto'; // Начальный режим
+  let relay2State = false; // Состояние реле вентилятора
 
-          function toggleRelay(relayNumber) {
-            if (currentMode === 'manual') {
-              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
-                .then(response => {
-                  if (!response.ok) throw new Error('Network response was not ok');
-                  return response.json();
-                })
-                .then(data => {
-                  const relayState = data[\`relayState\${relayNumber}\`];
-                  document.getElementById(\`relayState\${relayNumber}\`).textContent =
-                    relayState ? 'Включено' : 'Выключено';
+  function toggleRelay(relayNumber) {
+    if (currentMode === 'manual') {
+      fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+        })
+        .then(data => {
+          const relayState = data[`relayState${relayNumber}`];
+          document.getElementById(`relayState${relayNumber}`).textContent =
+            relayState ? 'Включено' : 'Выключено';
 
-                  // Обновить состояние реле вентилятора
-                  if (relayNumber === 2) {
-                    relay2State = relayState;
-                    updateInputState(); // Обновляем доступность полей ввода
-                  }
-                })
-                .catch(error => console.error('Error toggling relay:', error));
-            } else {
-              alert('Реле можно переключать только в ручном режиме!');
-            }
+          // Обновить состояние реле вентилятора
+          if (relayNumber === 2) {
+            relay2State = relayState;
+            updateInputState(); // Обновляем доступность полей ввода
           }
+        })
+        .catch(error => console.error('Error toggling relay:', error));
+    } else {
+      alert('Реле можно переключать только в ручном режиме!');
+    }
+  }
 
-          function toggleMode() {
-            fetch('/setMode', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                mode: currentMode === 'auto' ? 'manual' : 'auto',
-              }),
-            })
-              .then(response => response.json())
-              .then(data => {
-                currentMode = data.mode;
-                document.getElementById('mode').textContent =
-                  currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-                updateInputState(); // Обновляем доступность полей ввода
-              })
-              .catch(error => console.error('Error toggling mode:', error));
-          }
+  function toggleMode() {
+    fetch('/setMode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: currentMode === 'auto' ? 'manual' : 'auto',
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        currentMode = data.mode;
+        document.getElementById('mode').textContent =
+          currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+        updateInputState(); // Обновляем доступность полей ввода
+      })
+      .catch(error => console.error('Error toggling mode:', error));
+  }
 
-          function updateInputState() {
-            const inputs = document.querySelectorAll('.input-field input');
-            const isManualAndRelayOn = currentMode === 'manual' && relay2State;
+  function updateInputState() {
+    const inputs = document.querySelectorAll('.input-field input');
+    const isManualAndRelayOn = currentMode === 'manual' && relay2State;
 
-            inputs.forEach(input => {
-              input.disabled = !isManualAndRelayOn;
-            });
+    inputs.forEach(input => {
+      input.disabled = !isManualAndRelayOn;
+    });
 
-            const saveButton = document.querySelector('.save-settings');
-            saveButton.disabled = !isManualAndRelayOn;
-          }
+    const saveButton = document.querySelector('.save-settings');
+    saveButton.disabled = !isManualAndRelayOn;
+  }
 
-          function fetchInitialState() {
-            fetch('/getMode')
-              .then(response => response.json())
-              .then(data => {
-                currentMode = data.mode;
-                document.getElementById('mode').textContent =
-                  currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-                return fetch('/getSensorData');
-              })
-              .then(response => response.json())
-              .then(data => {
-                relay2State = data.relayState2;
-                updateInputState();
-              })
-              .catch(error => console.error('Error fetching initial state:', error));
-          }
+  function fetchLightingSettings() {
+    fetch('/getLightingSettings')
+      .then(response => response.json())
+      .then(data => {
+        // Обновляем поля с текущими настройками
+        document.getElementById('fanTemperatureThreshold').value = data.fanTemperatureThreshold;
+        document.getElementById('lightOnDuration').value = data.lightOnDuration;
+        document.getElementById('lightIntervalManual').value = data.lightIntervalManual;
+      })
+      .catch(error => console.error('Error fetching lighting settings:', error));
+  }
 
-          document.addEventListener('DOMContentLoaded', () => {
-            fetchInitialState();
-            setInterval(() => {
-              fetch('/getSensorData')
-                .then(response => response.json())
-                .then(data => {
-                  document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
-                  document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
-                  document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
-                })
-                .catch(error => console.error('Error updating sensor data:', error));
-            }, 1000);
-          });
-        </script>
-      </head>
-      <body>
-        <div class="container">
-          <h1>Управление реле и датчиками</h1>
-          <p>Освещение в теплице: <span id="relayState1">—</span></p>
-          <button class="button relay-button" onclick="toggleRelay(1)">Переключить</button>
-          <p>Вентиляция в теплице: <span id="relayState2">—</span></p>
-          <button class="button relay-button" onclick="toggleRelay(2)">Переключить</button>
-          <p>Режим работы: <span id="mode">—</span></p>
-          <button class="button" onclick="toggleMode()">Переключить режим</button>
+  function saveLightingSettings() {
+    const fanTemperatureThreshold = parseFloat(document.getElementById('fanTemperatureThreshold').value);
+    const lightOnDuration = parseInt(document.getElementById('lightOnDuration').value);
+    const lightIntervalManual = parseInt(document.getElementById('lightIntervalManual').value);
 
-          <div class="data">
-            <p id="temperature">Температура: —</p>
-            <p id="humidity">Влажность: —</p>
-            <p id="soilMoisture">Влажность почвы: —</p>
-          </div>
-        </div>
-      </body>
+    fetch('/updateLightingSettings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fanTemperatureThreshold,
+        lightOnDuration,
+        lightIntervalManual,
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        alert('Настройки обновлены');
+      })
+      .catch(error => console.error('Error saving lighting settings:', error));
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchLightingSettings();
+    setInterval(() => {
+      fetch('/getSensorData')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('temperature').textContent = `Температура: ${data.temperature}°C`;
+          document.getElementById('humidity').textContent = `Влажность: ${data.humidity}%`;
+          document.getElementById('soilMoisture').textContent = `Влажность почвы: ${data.soilMoisture}%`;
+        })
+        .catch(error => console.error('Error updating sensor data:', error));
+    }, 1000);
+  });
+</script>
+
+<body>
+  <div class="container">
+    <h1>Управление реле и датчиками</h1>
+    <p>Освещение в теплице: <span id="relayState1">—</span></p>
+    <button class="button relay-button" onclick="toggleRelay(1)">Переключить</button>
+    <p>Вентиляция в теплице: <span id="relayState2">—</span></p>
+    <button class="button relay-button" onclick="toggleRelay(2)">Переключить</button>
+    <p>Режим работы: <span id="mode">—</span></p>
+    <button class="button" onclick="toggleMode()">Переключить режим</button>
+
+    <div class="data">
+      <p id="temperature">Температура: —</p>
+      <p id="humidity">Влажность: —</p>
+      <p id="soilMoisture">Влажность почвы: —</p>
+    </div>
+
+    <div class="input-field">
+      <label for="fanTemperatureThreshold">Порог температуры для кулера (°C):</label>
+      <input type="number" id="fanTemperatureThreshold" disabled>
+
+      <label for="lightOnDuration">Время работы света (мс):</label>
+      <input type="number" id="lightOnDuration" disabled>
+
+      <label for="lightIntervalManual">Интервал для переключения света (мс):</label>
+      <input type="number" id="lightIntervalManual" disabled>
+
+      <button class="button save-settings" onclick="saveLightingSettings()" disabled>Сохранить настройки</button>
+    </div>
+  </div>
+</body>
     </html>
   `);
 });
@@ -267,8 +296,38 @@ app.post('/toggleRelay/:relayNumber', (req, res) => {
 });
 
 
-// Запуск сервера
-// Запуск сервера
+// Новые переменные для кулера и света
+let lightingSettings = {
+  onDuration: 30, // Время горения света в секундах
+  offDuration: 60, // Время паузы между включениями света в секундах
+  fanTemperatureThreshold: 31.0, // Порог температуры для включения кулера
+  lightOnDuration: 60000, // Время работы света в миллисекундах
+  lightIntervalManual: 60000, // Интервал для переключения света в миллисекундах
+};
+
+// Эндпоинт для получения настроек (в том числе для ручного управления)
+app.get('/getLightingSettings', (req, res) => {
+  res.json(lightingSettings);
+});
+
+// Эндпоинт для обновления настроек (в том числе для ручного управления)
+app.post('/updateLightingSettings', (req, res) => {
+  const { fanTemperatureThreshold, lightOnDuration, lightIntervalManual } = req.body;
+  if (fanTemperatureThreshold != null && lightOnDuration != null && lightIntervalManual != null) {
+    lightingSettings.fanTemperatureThreshold = fanTemperatureThreshold;
+    lightingSettings.lightOnDuration = lightOnDuration;
+    lightingSettings.lightIntervalManual = lightIntervalManual;
+
+    console.log(`Lighting settings updated: 
+      fanTemperatureThreshold: ${fanTemperatureThreshold}, 
+      lightOnDuration: ${lightOnDuration}, 
+      lightIntervalManual: ${lightIntervalManual}`);
+    
+    res.json({ message: 'Lighting settings updated successfully' });
+  } else {
+    res.status(400).json({ error: 'Invalid data' });
+  }
+});// Запуск сервера
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
