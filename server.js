@@ -297,13 +297,12 @@ app.post('/toggleRelay/:relayNumber', (req, res) => {
 
 
 // Новые переменные для кулера и света
-let lightingSettings = {
-  onDuration: 30, // Время горения света в секундах
-  offDuration: 60, // Время паузы между включениями света в секундах
-  fanTemperatureThreshold: 31.0, // Порог температуры для включения кулера
-  lightOnDuration: 60000, // Время работы света в миллисекундах
-  lightIntervalManual: 60000, // Интервал для переключения света в миллисекундах
-};
+// Используйте существующую переменную для настройки освещения:
+lightingSettings.onDuration = 30; // Обновите настройки, если это нужно
+lightingSettings.offDuration = 60;
+lightingSettings.fanTemperatureThreshold = 31.0;
+lightingSettings.lightOnDuration = 60000;
+lightingSettings.lightIntervalManual = 60000;
 
 // Эндпоинт для получения настроек (в том числе для ручного управления)
 app.get('/getLightingSettings', (req, res) => {
