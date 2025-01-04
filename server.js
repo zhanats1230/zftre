@@ -140,45 +140,44 @@ app.get('/', (req, res) => {
           }
 
           function saveLightingSettings() {
-            const fanTemperatureThreshold = parseFloat(
-              document.getElementById("fanTemperatureThreshold").value
-            );
-            const lightOnDuration = parseInt(
-              document.getElementById("lightOnDuration").value
-            );
-            const lightIntervalManual = parseInt(
-              document.getElementById("lightIntervalManual").value
-            );
+  const fanTemperatureThreshold = parseFloat(document.getElementById("fanTemperatureThreshold").value);
+  const lightOnDuration = parseInt(document.getElementById("lightOnDuration").value);
+  const lightIntervalManual = parseInt(document.getElementById("lightIntervalManual").value);
 
-            if (isNaN(fanTemperatureThreshold) || isNaN(lightOnDuration) || isNaN(lightIntervalManual)) {
-              alert("Пожалуйста, заполните все поля корректными значениями.");
-              return;
-            }
+  if (isNaN(fanTemperatureThreshold) || isNaN(lightOnDuration) || isNaN(lightIntervalManual)) {
+    alert("Пожалуйста, заполните все поля корректными значениями.");
+    return;
+  }
 
-            const settings = {
-              fanTemperatureThreshold,
-              lightOnDuration,
-              lightIntervalManual,
-            };
+  const settings = {
+    fanTemperatureThreshold,
+    lightOnDuration,
+    lightIntervalManual
+  };
 
-            fetch("/updateSettings", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(settings),
-            })
-              .then((response) => {
-                if (!response.ok) throw new Error("Ошибка при отправке настроек.");
-                return response.json();
-              })
-              .then((data) => {
-                alert("Настройки успешно сохранены!");
-                console.log(data);
-              })
-              .catch((error) => {
-                console.error("Ошибка:", error);
-                alert("Не удалось сохранить настройки.");
-              });
-          }
+  fetch("/updateLightingSettings", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(settings)
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Ошибка при отправке настроек.");
+      }
+      return response.json();
+    })
+    .then(data => {
+      alert("Настройки успешно сохранены!");
+      console.log(data);
+    })
+    .catch((error) => {
+      console.error("Ошибка:", error);
+      alert("Не удалось сохранить настройки.");
+    });
+}
+
 
           document.addEventListener('DOMContentLoaded', () => {
             setInterval(() => {
@@ -320,8 +319,10 @@ app.get('/getLightingSettings', (req, res) => {
 });
 
 // Эндпоинт для обновления настроек (в том числе для ручного управления)
+// Эндпоинт для обновления настроек освещения
 app.post('/updateLightingSettings', (req, res) => {
   const { fanTemperatureThreshold, lightOnDuration, lightIntervalManual } = req.body;
+
   if (fanTemperatureThreshold != null && lightOnDuration != null && lightIntervalManual != null) {
     lightingSettings.fanTemperatureThreshold = fanTemperatureThreshold;
     lightingSettings.lightOnDuration = lightOnDuration;
@@ -336,6 +337,8 @@ app.post('/updateLightingSettings', (req, res) => {
   } else {
     res.status(400).json({ error: 'Invalid data' });
   }
+});
+
 });// Запуск сервера
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
