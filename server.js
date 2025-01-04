@@ -221,9 +221,7 @@ app.post('/updateSensorData', (req, res) => {
     sensorData.humidity = humidity;
     sensorData.soilMoisture = soilMoisture;
     console.log(
-      console.log(
-  `Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%, Soil Moisture: ${soilMoisture}%`
-);
+      `Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%, Soil Moisture: ${soilMoisture}%`
     );
     res.json({ message: 'Sensor data updated successfully' });
   } else {
