@@ -84,14 +84,14 @@ app.get('/', (req, res) => {
 
           function toggleRelay(relayNumber) {
             if (currentMode === 'manual') {
-              fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
+              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
                 .then((response) => {
                   if (!response.ok) throw new Error('Network response was not ok');
                   return response.json();
                 })
                 .then((data) => {
-                  const relayState = data[`relayState${relayNumber}`];
-                  document.getElementById(`relayState${relayNumber}`).textContent =
+                  const relayState = data[\`relayState\${relayNumber}\`];
+                  document.getElementById(\`relayState\${relayNumber}\`).textContent =
                     relayState ? 'Выключено' : 'Включено';
                 })
                 .catch((error) => console.error('Error toggling relay:', error));
@@ -147,9 +147,9 @@ app.get('/', (req, res) => {
             fetch('/getSensorData')
               .then((response) => response.json())
               .then((data) => {
-                document.getElementById('temperature').textContent = `Температура: ${data.temperature}°C`;
-                document.getElementById('humidity').textContent = `Влажность: ${data.humidity}%`;
-                document.getElementById('soilMoisture').textContent = `Влажность почвы: ${data.soilMoisture}%`;
+                document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
+                document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
+                document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
               })
               .catch((error) => console.error('Error fetching sensor data:', error));
           }
