@@ -320,9 +320,9 @@ app.get('/getLightingSettings', (req, res) => {
 
 // Эндпоинт для обновления настроек (в том числе для ручного управления)
 // Эндпоинт для обновления настроек освещения
+// Эндпоинт для обновления настроек освещения
 app.post('/updateLightingSettings', (req, res) => {
   const { fanTemperatureThreshold, lightOnDuration, lightIntervalManual } = req.body;
-
   if (fanTemperatureThreshold != null && lightOnDuration != null && lightIntervalManual != null) {
     lightingSettings.fanTemperatureThreshold = fanTemperatureThreshold;
     lightingSettings.lightOnDuration = lightOnDuration;
@@ -337,9 +337,11 @@ app.post('/updateLightingSettings', (req, res) => {
   } else {
     res.status(400).json({ error: 'Invalid data' });
   }
-
-
-});// Запуск сервера
+});
+app.get('/getLightingSettings', (req, res) => {
+  res.json(lightingSettings);
+});
+// Запуск сервера
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
