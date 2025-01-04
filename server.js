@@ -178,15 +178,21 @@ app.get('/', (req, res) => {
             saveButton.disabled = !isManualAndRelayOn;
           }
 
-          function saveLightingSettings() {
+         function saveLightingSettings() {
+  // Получаем значения, введенные пользователем (в минутах)
   const fanTemperatureThreshold = parseFloat(document.getElementById("fanTemperatureThreshold").value);
-  const lightOnDuration = parseInt(document.getElementById("lightOnDuration").value);
-  const lightIntervalManual = parseInt(document.getElementById("lightIntervalManual").value);
+  const lightOnDurationMinutes = parseFloat(document.getElementById("lightOnDuration").value); // в минутах
+  const lightIntervalManualMinutes = parseFloat(document.getElementById("lightIntervalManual").value); // в минутах
 
-  if (isNaN(fanTemperatureThreshold) || isNaN(lightOnDuration) || isNaN(lightIntervalManual)) {
+  // Проверяем, что все значения корректны
+  if (isNaN(fanTemperatureThreshold) || isNaN(lightOnDurationMinutes) || isNaN(lightIntervalManualMinutes)) {
     alert("Пожалуйста, заполните все поля корректными значениями.");
     return;
   }
+
+  // Переводим время в миллисекунды
+  const lightOnDuration = lightOnDurationMinutes * 60000;  // Преобразуем минуты в миллисекунды
+  const lightIntervalManual = lightIntervalManualMinutes * 60000;  // Преобразуем минуты в миллисекунды
 
   const settings = {
     fanTemperatureThreshold,
@@ -194,6 +200,7 @@ app.get('/', (req, res) => {
     lightIntervalManual
   };
 
+  // Отправляем данные на сервер
   fetch("/updateLightingSettings", {
     method: "POST",
     headers: {
@@ -216,6 +223,7 @@ app.get('/', (req, res) => {
       alert("Не удалось сохранить настройки.");
     });
 }
+
 
 
           document.addEventListener('DOMContentLoaded', () => {
@@ -254,14 +262,15 @@ app.get('/', (req, res) => {
   <label for="fanTemperatureThreshold">Порог температуры для кулера (°C):</label>
   <input type="number" id="fanTemperatureThreshold" placeholder="Введите порог температуры">
 
-  <label for="lightOnDuration">Время работы света (мс):</label>
-  <input type="number" id="lightOnDuration" placeholder="Введите время работы света">
+  <label for="lightOnDuration">Время работы света (мин):</label>
+  <input type="number" id="lightOnDuration" placeholder="Введите время работы света в минутах">
 
-  <label for="lightIntervalManual">Интервал для переключения света (мс):</label>
-  <input type="number" id="lightIntervalManual" placeholder="Введите интервал переключения света">
+  <label for="lightIntervalManual">Интервал для переключения света (мин):</label>
+  <input type="number" id="lightIntervalManual" placeholder="Введите интервал переключения света в минутах">
 
   <button class="button save-settings" onclick="saveLightingSettings()">Сохранить настройки</button>
 </div>
+
 
       </body>
     </html>
