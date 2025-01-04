@@ -36,52 +36,91 @@ app.get('/', (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Управление реле</title>
 <style>
-          body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-          }
-          .container {
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          }
-          h1 {
-            text-align: center;
-          }
-          .button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            margin-top: 10px;
-          }
-          .button:hover {
-            background-color: #45a049;
-          }
-          .data {
-            font-size: 18px;
-            margin-top: 20px;
-          }
-          .disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-          }
-          .relay-button {
-            margin-bottom: 10px;
-          }
-          .input-field {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-          }
-        </style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  h1 {
+    text-align: center;
+    font-size: 2em;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  .button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    margin-top: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  .button:hover {
+    background-color: #45a049;
+  }
+  .data {
+    font-size: 18px;
+    margin-top: 20px;
+    color: #555;
+  }
+  .disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  .relay-button {
+    margin-bottom: 10px;
+  }
+  .input-field {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .input-field label {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #555;
+  }
+  .input-field input {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-bottom: 15px;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .input-field input:focus {
+    border-color: #4CAF50;
+  }
+  .input-field button {
+    align-self: flex-end;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  .input-field button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+</style>
+
         <script>
           let currentMode = 'auto'; // Начальный режим
           let relay2State = false; // Состояние реле вентилятора
@@ -213,17 +252,17 @@ app.get('/', (req, res) => {
 
           <div class="input-field">
   <label for="fanTemperatureThreshold">Порог температуры для кулера (°C):</label>
-  <input type="number" id="fanTemperatureThreshold">
+  <input type="number" id="fanTemperatureThreshold" placeholder="Введите порог температуры">
 
   <label for="lightOnDuration">Время работы света (мс):</label>
-  <input type="number" id="lightOnDuration">
+  <input type="number" id="lightOnDuration" placeholder="Введите время работы света">
 
   <label for="lightIntervalManual">Интервал для переключения света (мс):</label>
-  <input type="number" id="lightIntervalManual">
+  <input type="number" id="lightIntervalManual" placeholder="Введите интервал переключения света">
 
   <button class="button save-settings" onclick="saveLightingSettings()">Сохранить настройки</button>
 </div>
-        </div>
+
       </body>
     </html>
   `);
