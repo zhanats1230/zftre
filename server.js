@@ -88,17 +88,16 @@ app.get('/', (req, res) => {
 
   function toggleRelay(relayNumber) {
     if (currentMode === 'manual') {
-      fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
+      fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
         .then(response => {
           if (!response.ok) throw new Error('Network response was not ok');
           return response.json();
         })
         .then(data => {
-          const relayState = data[\`relayState\${relayNumber}\`];
-          document.getElementById(\`relayState\${relayNumber}\`).textContent =
+          const relayState = data[`relayState${relayNumber}`];
+          document.getElementById(`relayState${relayNumber}`).textContent =
             relayState ? 'Включено' : 'Выключено';
 
-          // Обновить состояние реле вентилятора
           if (relayNumber === 2) {
             relay2State = relayState;
             updateInputState(); // Обновляем доступность полей ввода
@@ -140,53 +139,23 @@ app.get('/', (req, res) => {
     saveButton.disabled = !isManualAndRelayOn;
   }
 
-  function fetchLightingSettings() {
-    fetch('/getLightingSettings')
-      .then(response => response.json())
-      .then(data => {
-        // Обновляем поля с текущими настройками
-        document.getElementById('fanTemperatureThreshold').value = data.fanTemperatureThreshold;
-        document.getElementById('lightOnDuration').value = data.lightOnDuration;
-        document.getElementById('lightIntervalManual').value = data.lightIntervalManual;
-      })
-      .catch(error => console.error('Error fetching lighting settings:', error));
-  }
-
-  function saveLightingSettings() {
-    const fanTemperatureThreshold = parseFloat(document.getElementById('fanTemperatureThreshold').value);
-    const lightOnDuration = parseInt(document.getElementById('lightOnDuration').value);
-    const lightIntervalManual = parseInt(document.getElementById('lightIntervalManual').value);
-
-    fetch('/updateLightingSettings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fanTemperatureThreshold,
-        lightOnDuration,
-        lightIntervalManual,
-      }),
-    })
-      .then(response => response.json())
-      .then(data => {
-        alert('Настройки обновлены');
-      })
-      .catch(error => console.error('Error saving lighting settings:', error));
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
     fetchLightingSettings();
     setInterval(() => {
       fetch('/getSensorData')
         .then(response => response.json())
         .then(data => {
-          document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
-          document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
-          document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
+          document.getElementById('temperature').textContent = `Температура: ${data.temperature}°C`;
+          document.getElementById('humidity').textContent = `Влажность: ${data.humidity}%`;
+          document.getElementById('soilMoisture').textContent = `Влажность почвы: ${data.soilMoisture}%`;
         })
         .catch(error => console.error('Error updating sensor data:', error));
     }, 1000);
+
+    updateInputState(); // Убедиться, что поля правильно инициализированы
   });
 </script>
+
 
 <body>
   <div class="container">
