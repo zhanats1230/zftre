@@ -80,107 +80,86 @@ app.get('/', (req, res) => {
           }
         </style>
         <script>
-          let currentMode = 'auto'; // Начальный режим
+  let currentMode = 'auto'; // Начальный режим
+  let relay2State = false; // Состояние реле вентилятора
 
-          function toggleRelay(relayNumber) {
-            if (currentMode === 'manual') {
-              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
-                .then((response) => {
-                  if (!response.ok) throw new Error('Network response was not ok');
-                  return response.json();
-                })
-                .then((data) => {
-                  const relayState = data[\`relayState\${relayNumber}\`];
-                  document.getElementById(\`relayState\${relayNumber}\`).textContent =
-                    relayState ? 'Выключено' : 'Включено';
-                })
-                .catch((error) => console.error('Error toggling relay:', error));
-            } else {
-              alert('Реле можно переключать только в ручном режиме!');
-            }
+  function toggleRelay(relayNumber) {
+    if (currentMode === 'manual') {
+      fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
+        .then((response) => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+        })
+        .then((data) => {
+          const relayState = data[`relayState${relayNumber}`];
+          document.getElementById(`relayState${relayNumber}`).textContent =
+            relayState ? 'Включено' : 'Выключено';
+
+          // Обновить состояние реле вентилятора
+          if (relayNumber === 2) {
+            relay2State = relayState;
+            updateInputState(); // Обновляем доступность полей ввода
           }
+        })
+        .catch((error) => console.error('Error toggling relay:', error));
+    } else {
+      alert('Реле можно переключать только в ручном режиме!');
+    }
+  }
 
-          function toggleMode() {
-            fetch('/setMode', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                mode: currentMode === 'auto' ? 'manual' : 'auto',
-              }),
-            })
-              .then((response) => response.json())
-              .then((data) => {
-                currentMode = data.mode;
-                document.getElementById('mode').textContent =
-                  currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-                updateButtonState();
-              })
-              .catch((error) => console.error('Error toggling mode:', error));
-          }
+  function toggleMode() {
+    fetch('/setMode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: currentMode === 'auto' ? 'manual' : 'auto',
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        currentMode = data.mode;
+        document.getElementById('mode').textContent =
+          currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+        updateInputState(); // Обновляем доступность полей ввода
+      })
+      .catch((error) => console.error('Error toggling mode:', error));
+  }
 
-          function updateButtonState() {
-            const relayButtons = document.querySelectorAll('.relay-button');
-            relayButtons.forEach((button) => {
-              if (currentMode === 'auto') {
-                button.disabled = true;
-                button.classList.add('disabled');
-              } else {
-                button.disabled = false;
-                button.classList.remove('disabled');
-              }
-            });
-          }
+  function updateInputState() {
+    const inputs = document.querySelectorAll('.input-field input');
+    const isManualAndRelayOn = currentMode === 'manual' && relay2State;
 
-          function updateMode() {
-            fetch('/getMode')
-              .then((response) => response.json())
-              .then((data) => {
-                currentMode = data.mode;
-                document.getElementById('mode').textContent =
-                  currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-                updateButtonState();
-              })
-              .catch((error) => console.error('Error fetching mode:', error));
-          }
+    inputs.forEach((input) => {
+      input.disabled = !isManualAndRelayOn;
+    });
 
-          function updateSensorData() {
-            fetch('/getSensorData')
-              .then((response) => response.json())
-              .then((data) => {
-                document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
-                document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
-                document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
-              })
-              .catch((error) => console.error('Error fetching sensor data:', error));
-          }
+    const saveButton = document.querySelector('.save-settings');
+    saveButton.disabled = !isManualAndRelayOn;
+  }
 
-          function updateLightingSettings() {
-            const onDuration = parseInt(document.getElementById('onDuration').value, 10);
-            const offDuration = parseInt(document.getElementById('offDuration').value, 10);
-            fetch('/updateLightingSettings', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ onDuration, offDuration }),
-            })
-              .then((response) => response.json())
-              .then((data) => alert(data.message || 'Настройки обновлены'))
-              .catch((error) => console.error('Error updating lighting settings:', error));
-          }
+  function fetchInitialState() {
+    fetch('/getMode')
+      .then((response) => response.json())
+      .then((data) => {
+        currentMode = data.mode;
+        document.getElementById('mode').textContent =
+          currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+        return fetch('/getSensorData');
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        relay2State = data.relayState2;
+        updateInputState();
+      })
+      .catch((error) => console.error('Error fetching initial state:', error));
+  }
 
-          function fetchLightingSettings() {
-            fetch('/getLightingSettings')
-              .then((response) => response.json())
-              .then((data) => {
-                document.getElementById('onDuration').value = data.onDuration;
-                document.getElementById('offDuration').value = data.offDuration;
-              })
-              .catch((error) => console.error('Error fetching lighting settings:', error));
-          }
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchInitialState();
+    setInterval(updateSensorData, 1000);
+  });
+</script>
 
-          setInterval(updateSensorData, 1000); // Обновление данных каждые 1 секунду
-          setInterval(updateMode, 1000); // Обновление режима каждые 1 секунду
-          window.onload = fetchLightingSettings;
-        </script>
       </head>
       <body>
         <div class="container">
@@ -199,14 +178,17 @@ app.get('/', (req, res) => {
           </div>
 
           <div class="input-field">
-            <label>Время горения света (секунды):</label>
-            <input type="number" id="onDuration" min="1" />
-          </div>
-          <div class="input-field">
-            <label>Время паузы (секунды):</label>
-            <input type="number" id="offDuration" min="1" />
-          </div>
-          <button class="button" onclick="updateLightingSettings()">Сохранить настройки</button>
+  <label>Время горения света (секунды):</label>
+  <input type="number" id="onDuration" min="1" disabled />
+</div>
+<div class="input-field">
+  <label>Время паузы (секунды):</label>
+  <input type="number" id="offDuration" min="1" disabled />
+</div>
+<button class="button save-settings" onclick="updateLightingSettings()" disabled>
+  Сохранить настройки
+</button>
+
         </div>
       </body>
     </html>
