@@ -35,8 +35,52 @@ app.get('/', (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Управление реле</title>
-        <style>
-          /* Ваш CSS */
+<style>
+          body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+          }
+          .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          }
+          h1 {
+            text-align: center;
+          }
+          .button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 10px;
+          }
+          .button:hover {
+            background-color: #45a049;
+          }
+          .data {
+            font-size: 18px;
+            margin-top: 20px;
+          }
+          .disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+          }
+          .relay-button {
+            margin-bottom: 10px;
+          }
+          .input-field {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+          }
         </style>
         <script>
           let currentMode = 'auto'; // Начальный режим
