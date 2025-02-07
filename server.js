@@ -4,8 +4,9 @@ const port = process.env.PORT || 80;
 
 // Хранение данных для реле и датчиков
 let sensorData = {
-  relayState1: false,
-  relayState2: false,
+  relayState1: false, // Освещение
+  relayState2: false, // Вентиляция
+  relayState3: false, // Помпа
   temperature: 0,
   humidity: 0,
   soilMoisture: 0, // Влажность почвы
@@ -127,14 +128,14 @@ app.get('/', (req, res) => {
 
           function toggleRelay(relayNumber) {
             if (currentMode === 'manual') {
-              fetch(\/toggleRelay/\${relayNumber}\, { method: 'POST' })
+              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
                 .then(response => {
                   if (!response.ok) throw new Error('Network response was not ok');
                   return response.json();
                 })
                 .then(data => {
-                  const relayState = data[\relayState\${relayNumber}\];
-                  document.getElementById(\relayState\${relayNumber}\).textContent =
+                  const relayState = data[\`relayState\${relayNumber}\`];
+                  document.getElementById(\`relayState\${relayNumber}\`).textContent =
                     relayState ? 'Включено' : 'Выключено';
 
                   if (relayNumber === 2) {
@@ -231,9 +232,9 @@ app.get('/', (req, res) => {
               fetch('/getSensorData')
                 .then(response => response.json())
                 .then(data => {
-                  document.getElementById('temperature').textContent = `Температура: ${data.temperature}°C`;
-                  document.getElementById('humidity').textContent = `Влажность: ${data.humidity}%`;
-                  document.getElementById('soilMoisture').textContent = `Влажность почвы: ${data.soilMoisture}%`;
+                  document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
+                  document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
+                  document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
                 })
                 .catch(error => console.error('Error updating sensor data:', error));
             }, 1000);
@@ -243,14 +244,14 @@ app.get('/', (req, res) => {
         </script>
       </head>
       <body>
-        <div class="container">
-          <h1>Управление реле и датчиками</h1>
-          <p>Освещение в теплице: <span id="relayState1">—</span></p>
-          <button class="button relay-button" onclick="toggleRelay(1)">Переключить</button>
-          <p>Вентиляция в теплице: <span id="relayState2">—</span></p>
-          <button class="button relay-button" onclick="toggleRelay(2)">Переключить</button>
-          <p>Режим работы: <span id="mode">—</span></p>
-          <button class="button" onclick="toggleMode()">Переключить режим</button>
+         <div class="container">
+          <h1>Управление теплицей</h1>
+          <p>Освещение: <span id="relayState1">—</span></p>
+          <button class="button" onclick="toggleRelay(1)">Переключить</button>
+          <p>Вентиляция: <span id="relayState2">—</span></p>
+          <button class="button" onclick="toggleRelay(2)">Переключить</button>
+          <p>Помпа: <span id="relayState3">—</span></p>
+          <button class="button" onclick="toggleRelay(3)">Переключить</button>
 
           <div class="data">
             <p id="temperature">Температура: —</p>
@@ -314,7 +315,6 @@ app.post('/updateSensorData', (req, res) => {
     res.status(400).json({ error: 'Invalid data' });
   }
 });
-
 
 // Эндпоинт для получения текущего режима
 app.get('/getMode', (req, res) => {
