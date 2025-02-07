@@ -386,7 +386,10 @@ app.post('/updateLightingSettings', (req, res) => {
     res.status(400).json({ error: 'Invalid data' });
   }
 });
+app.get('/getLightingSettings', (req, res) => {
+  res.json(lightingSettings);
+});
 // Запуск сервера
 app.listen(port, () => {
-  console.log(Server running on port ${port});
+  console.log(`Server running on port ${port}`);
 });
