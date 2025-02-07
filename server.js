@@ -307,13 +307,14 @@ app.post('/updateSensorData', (req, res) => {
     sensorData.humidity = humidity;
     sensorData.soilMoisture = soilMoisture;
     console.log(
-      Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%, Soil Moisture: ${soilMoisture}%
+      `Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%, Soil Moisture: ${soilMoisture}%`
     );
     res.json({ message: 'Sensor data updated successfully' });
   } else {
     res.status(400).json({ error: 'Invalid data' });
   }
 });
+
 
 // Эндпоинт для получения текущего режима
 app.get('/getMode', (req, res) => {
