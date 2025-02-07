@@ -325,7 +325,7 @@ app.post('/setMode', (req, res) => {
   const { mode } = req.body;
   if (mode === 'auto' || mode === 'manual') {
     currentMode = mode;
-    console.log(Mode changed to ${currentMode});
+    console.log(`Mode changed to ${currentMode}`);
     res.json({ mode: currentMode });
   } else {
     res.status(400).json({ error: 'Invalid mode' });
