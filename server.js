@@ -231,9 +231,9 @@ app.get('/', (req, res) => {
               fetch('/getSensorData')
                 .then(response => response.json())
                 .then(data => {
-                  document.getElementById('temperature').textContent = \Температура: \${data.temperature}°C\;
-                  document.getElementById('humidity').textContent = \Влажность: \${data.humidity}%\;
-                  document.getElementById('soilMoisture').textContent = \Влажность почвы: \${data.soilMoisture}%\;
+                  document.getElementById('temperature').textContent = `Температура: ${data.temperature}°C`;
+                  document.getElementById('humidity').textContent = `Влажность: ${data.humidity}%`;
+                  document.getElementById('soilMoisture').textContent = `Влажность почвы: ${data.soilMoisture}%`;
                 })
                 .catch(error => console.error('Error updating sensor data:', error));
             }, 1000);
