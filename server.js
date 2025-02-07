@@ -37,28 +37,28 @@ app.get('/', (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Управление реле</title>
 <style>
-  /* General body styles */
+ /* General body styles */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Updated font-family for better aesthetics */
-    background-color: #e9ecef; /* Slightly lighter background for a softer look */
+    background-color: #f8f9fa; /* Softer background color for a more inviting look */
     margin: 0;
     padding: 0;
 }
 
 /* Main container styling */
 .container {
-    max-width: 800px; /* Maximum width for larger screens */
+    max-width: 900px; /* Slightly increased maximum width */
     margin: 50px auto; /* Centered with margin */
     padding: 30px; /* Increased padding for better spacing */
     background: #ffffff; /* White background for the container */
     border-radius: 12px; /* Rounded corners */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Enhanced shadow for depth */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Deeper shadow for depth */
 }
 
 /* Heading styles */
 h1 {
     text-align: center;
-    font-size: 2.5em; /* Increased font size for better visibility */
+    font-size: 3em; /* Larger font size for better visibility */
     color: #343a40; /* Darker color for contrast */
     margin-bottom: 30px; /* Increased margin for spacing */
 }
@@ -66,7 +66,7 @@ h1 {
 /* Button styles */
 .button {
     padding: 12px 24px; /* Larger button for better touch area */
-    background-color: #007bff; /* Bootstrap primary blue */
+    background-color: #28a745; /* Bootstrap success green */
     color: white;
     border: none;
     cursor: pointer;
@@ -77,7 +77,7 @@ h1 {
 }
 
 .button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
+    background-color: #218838; /* Darker green on hover */
     transform: translateY(-2px); /* Lift effect on hover */
 }
 
@@ -126,15 +126,15 @@ h1 {
 
 /* Input focus styles */
 .input-field input:focus {
-    border-color: #007bff; /* Blue border on focus */
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Subtle shadow effect */
+    border-color: #28a745; /* Green border on focus */
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5); /* Subtle shadow effect */
 }
 
 /* Button in input field styles */
 .input-field button {
     align-self: flex-end;
     padding: 12px 24px; /* Larger button size */
-    background-color: #007bff; /* Consistent blue color */
+    background-color: #007bff; /* Bootstrap primary blue */
     color: white;
     border: none;
     cursor: pointer;
@@ -148,6 +148,33 @@ h1 {
     cursor: not-allowed;
 }
 
+/* Workstation card styles */
+.workstation-card {
+    background: #ffffff; /* White background for cards */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    padding: 20px; /* Padding for content */
+    margin: 15px 0; /* Margin for separation */
+    transition: transform 0.3s; /* Transition for hover effect */
+}
+
+.workstation-card:hover {
+    transform: translateY(-5px); /* Lift effect on hover */
+}
+
+/* Workstation title styles */
+.workstation-title {
+    font-size: 1.5em; /* Larger title font size */
+    color: #343a40; /* Dark title color */
+    margin-bottom: 10px; /* Spacing below title */
+}
+
+/* Workstation description styles */
+.workstation-description {
+    font-size: 1em; /* Regular font size for descriptions */
+    color: #6c757d; /* Muted color for descriptions */
+}
+
 /* Responsive design */
 @media (max-width: 600px) {
     .container {
@@ -155,7 +182,7 @@ h1 {
     }
 
     h1 {
-        font-size: 2em; /* Responsive font size for smaller screens */
+        font-size: 2.5em; /* Responsive font size for smaller screens */
     }
 
     .button, .input-field button {
@@ -165,6 +192,11 @@ h1 {
 
     .input-field input {
         font-size: 14px; /* Smaller input font size */
+    }
+
+    /* Adjust workstation card layout for mobile */
+    .workstation-card {
+        margin: 10px 0; /* Increased margin for better separation */
     }
 }
 </style>
