@@ -336,12 +336,12 @@ app.post('/setMode', (req, res) => {
 // Эндпоинт для переключения состояния реле
 app.post('/toggleRelay/:relayNumber', (req, res) => {
   const relayNumber = parseInt(req.params.relayNumber, 10);
-  const relayStateKey = relayState${relayNumber};
+  const relayStateKey = `relayState${relayNumber}`;
   if (!Number.isNaN(relayNumber) && sensorData[relayStateKey] != null) {
     if (currentMode === 'manual') {
       sensorData[relayStateKey] = !sensorData[relayStateKey];
       console.log(
-        Relay ${relayNumber} toggled to ${sensorData[relayStateKey] ? 'ON' : 'OFF'}
+        `Relay ${relayNumber} toggled to ${sensorData[relayStateKey] ? 'ON' : 'OFF'}`
       );
       res.json({ [relayStateKey]: sensorData[relayStateKey] });
     } else {
