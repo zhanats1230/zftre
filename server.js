@@ -28,7 +28,7 @@ app.use(express.json());
 
 // Главная страница с интерфейсом
 app.get('/', (req, res) => {
-  res.send(
+  res.send(`
     <!DOCTYPE html>
     <html lang="ru">
       <head>
