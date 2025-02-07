@@ -376,18 +376,15 @@ app.post('/updateLightingSettings', (req, res) => {
     lightingSettings.lightOnDuration = lightOnDuration;
     lightingSettings.lightIntervalManual = lightIntervalManual;
 
-    console.log(Lighting settings updated: 
+    console.log(`Lighting settings updated: 
       fanTemperatureThreshold: ${fanTemperatureThreshold}, 
       lightOnDuration: ${lightOnDuration}, 
-      lightIntervalManual: ${lightIntervalManual});
+      lightIntervalManual: ${lightIntervalManual}`);
     
     res.json({ message: 'Lighting settings updated successfully' });
   } else {
     res.status(400).json({ error: 'Invalid data' });
   }
-});
-app.get('/getLightingSettings', (req, res) => {
-  res.json(lightingSettings);
 });
 // Запуск сервера
 app.listen(port, () => {
