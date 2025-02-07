@@ -4,8 +4,8 @@ const port = process.env.PORT || 80;
 
 // Хранение данных для реле и датчиков
 let sensorData = {
-  relayState1: false, // Освещение
-  relayState2: false, // Вентиляция
+  relayState1: false,
+  relayState2: false,
   temperature: 0,
   humidity: 0,
   soilMoisture: 0, // Влажность почвы
@@ -28,7 +28,7 @@ app.use(express.json());
 
 // Главная страница с интерфейсом
 app.get('/', (req, res) => {
-  res.send(`
+  res.send(
     <!DOCTYPE html>
     <html lang="ru">
       <head>
@@ -127,14 +127,14 @@ app.get('/', (req, res) => {
 
           function toggleRelay(relayNumber) {
             if (currentMode === 'manual') {
-              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
+              fetch(\/toggleRelay/\${relayNumber}\, { method: 'POST' })
                 .then(response => {
                   if (!response.ok) throw new Error('Network response was not ok');
                   return response.json();
                 })
                 .then(data => {
-                  const relayState = data[\`relayState\${relayNumber}\`];
-                  document.getElementById(\`relayState\${relayNumber}\`).textContent =
+                  const relayState = data[\relayState\${relayNumber}\];
+                  document.getElementById(\relayState\${relayNumber}\).textContent =
                     relayState ? 'Включено' : 'Выключено';
 
                   if (relayNumber === 2) {
@@ -231,9 +231,9 @@ app.get('/', (req, res) => {
               fetch('/getSensorData')
                 .then(response => response.json())
                 .then(data => {
-                  document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
-                  document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
-                  document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
+                  document.getElementById('temperature').textContent = \Температура: \${data.temperature}°C\;
+                  document.getElementById('humidity').textContent = \Влажность: \${data.humidity}%\;
+                  document.getElementById('soilMoisture').textContent = \Влажность почвы: \${data.soilMoisture}%\;
                 })
                 .catch(error => console.error('Error updating sensor data:', error));
             }, 1000);
@@ -243,13 +243,14 @@ app.get('/', (req, res) => {
         </script>
       </head>
       <body>
-         <div class="container">
-          <h1>Управление теплицей</h1>
-          <p>Освещение: <span id="relayState1">—</span></p>
-          <button class="button" onclick="toggleRelay(1)">Переключить</button>
-          <p>Вентиляция: <span id="relayState2">—</span></p>
-          <button class="button" onclick="toggleRelay(2)">Переключить</button>
-
+        <div class="container">
+          <h1>Управление реле и датчиками</h1>
+          <p>Освещение в теплице: <span id="relayState1">—</span></p>
+          <button class="button relay-button" onclick="toggleRelay(1)">Переключить</button>
+          <p>Вентиляция в теплице: <span id="relayState2">—</span></p>
+          <button class="button relay-button" onclick="toggleRelay(2)">Переключить</button>
+          <p>Режим работы: <span id="mode">—</span></p>
+          <button class="button" onclick="toggleMode()">Переключить режим</button>
 
           <div class="data">
             <p id="temperature">Температура: —</p>
@@ -273,7 +274,7 @@ app.get('/', (req, res) => {
 
       </body>
     </html>
-  `);
+  );
 });
 
 
@@ -306,7 +307,7 @@ app.post('/updateSensorData', (req, res) => {
     sensorData.humidity = humidity;
     sensorData.soilMoisture = soilMoisture;
     console.log(
-      `Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%, Soil Moisture: ${soilMoisture}%`
+      Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%, Soil Moisture: ${soilMoisture}%
     );
     res.json({ message: 'Sensor data updated successfully' });
   } else {
@@ -324,7 +325,7 @@ app.post('/setMode', (req, res) => {
   const { mode } = req.body;
   if (mode === 'auto' || mode === 'manual') {
     currentMode = mode;
-    console.log(`Mode changed to ${currentMode}`);
+    console.log(Mode changed to ${currentMode});
     res.json({ mode: currentMode });
   } else {
     res.status(400).json({ error: 'Invalid mode' });
@@ -335,12 +336,12 @@ app.post('/setMode', (req, res) => {
 // Эндпоинт для переключения состояния реле
 app.post('/toggleRelay/:relayNumber', (req, res) => {
   const relayNumber = parseInt(req.params.relayNumber, 10);
-  const relayStateKey = `relayState${relayNumber}`;
+  const relayStateKey = relayState${relayNumber};
   if (!Number.isNaN(relayNumber) && sensorData[relayStateKey] != null) {
     if (currentMode === 'manual') {
       sensorData[relayStateKey] = !sensorData[relayStateKey];
       console.log(
-        `Relay ${relayNumber} toggled to ${sensorData[relayStateKey] ? 'ON' : 'OFF'}`
+        Relay ${relayNumber} toggled to ${sensorData[relayStateKey] ? 'ON' : 'OFF'}
       );
       res.json({ [relayStateKey]: sensorData[relayStateKey] });
     } else {
@@ -375,10 +376,10 @@ app.post('/updateLightingSettings', (req, res) => {
     lightingSettings.lightOnDuration = lightOnDuration;
     lightingSettings.lightIntervalManual = lightIntervalManual;
 
-    console.log(`Lighting settings updated: 
+    console.log(Lighting settings updated: 
       fanTemperatureThreshold: ${fanTemperatureThreshold}, 
       lightOnDuration: ${lightOnDuration}, 
-      lightIntervalManual: ${lightIntervalManual}`);
+      lightIntervalManual: ${lightIntervalManual});
     
     res.json({ message: 'Lighting settings updated successfully' });
   } else {
@@ -390,5 +391,5 @@ app.get('/getLightingSettings', (req, res) => {
 });
 // Запуск сервера
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(Server running on port ${port});
 });
