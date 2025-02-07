@@ -250,7 +250,8 @@ app.get('/', (req, res) => {
           <button class="button" onclick="toggleRelay(1)">Переключить</button>
           <p>Вентиляция: <span id="relayState2">—</span></p>
           <button class="button" onclick="toggleRelay(2)">Переключить</button>
-
+          <p>Режим работы: <span id="mode">—</span></p>
+          <button class="button" onclick="toggleMode()">Переключить режим</button>
 
           <div class="data">
             <p id="temperature">Температура: —</p>
