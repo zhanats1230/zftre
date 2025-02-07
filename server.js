@@ -39,52 +39,54 @@ app.get('/', (req, res) => {
 <style>
  /* General body styles */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Updated font-family for better aesthetics */
-    background-color: #f8f9fa; /* Softer background color for a more inviting look */
+    font-family: 'Arial', sans-serif; /* Updated font-family for a cleaner look */
+    background-color: #f0f4f8; /* Light grayish-blue background for a calm appearance */
     margin: 0;
     padding: 0;
 }
 
 /* Main container styling */
 .container {
-    max-width: 900px; /* Slightly increased maximum width */
-    margin: 50px auto; /* Centered with margin */
-    padding: 30px; /* Increased padding for better spacing */
+    max-width: 950px; /* Increased maximum width for more space */
+    margin: 60px auto; /* Centered with more margin for emphasis */
+    padding: 40px; /* Increased padding for better spacing */
     background: #ffffff; /* White background for the container */
-    border-radius: 12px; /* Rounded corners */
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Deeper shadow for depth */
+    border-radius: 15px; /* Slightly more rounded corners */
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15); /* Deeper shadow for more depth */
 }
 
 /* Heading styles */
 h1 {
     text-align: center;
-    font-size: 3em; /* Larger font size for better visibility */
+    font-size: 3.5em; /* Larger font size for better visibility */
     color: #343a40; /* Darker color for contrast */
-    margin-bottom: 30px; /* Increased margin for spacing */
+    margin-bottom: 40px; /* Increased margin for spacing */
+    font-weight: bold; /* Bold font for emphasis */
 }
 
 /* Button styles */
 .button {
-    padding: 12px 24px; /* Larger button for better touch area */
-    background-color: #28a745; /* Bootstrap success green */
+    padding: 15px 30px; /* Larger button for better touch area */
+    background-color: #007bff; /* Bootstrap primary blue */
     color: white;
     border: none;
     cursor: pointer;
-    font-size: 18px;
-    margin-top: 10px; 
-    border-radius: 6px;
-    transition: background-color 0.4s, transform 0.2s; /* Added transform for a subtle effect */
+    font-size: 20px; /* Increased font size for better readability */
+    margin-top: 15px; 
+    border-radius: 8px; /* Slightly larger border radius for a softer look */
+    transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s; /* Added box-shadow on hover */
 }
 
 .button:hover {
-    background-color: #218838; /* Darker green on hover */
+    background-color: #0056b3; /* Darker blue on hover */
     transform: translateY(-2px); /* Lift effect on hover */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Shadow effect on hover */
 }
 
 /* Data text styling */
 .data {
     font-size: 18px;
-    margin-top: 20px;
+    margin-top: 25px;
     color: #495057; /* Slightly darker for better readability */
 }
 
@@ -94,84 +96,63 @@ h1 {
     cursor: not-allowed;
 }
 
-/* Relay button margin */
-.relay-button {
-    margin-bottom: 15px; /* Added margin for spacing */
-}
-
 /* Input field styles */
 .input-field {
-    margin-top: 20px;
+    margin-top: 30px; /* Increased margin for separation */
     display: flex;
     flex-direction: column;
 }
 
 /* Label styles */
 .input-field label {
-    font-size: 16px;
-    margin-bottom: 8px;
+    font-size: 18px; /* Increased font size for better readability */
+    margin-bottom: 10px;
     color: #495057; /* Darker color for better readability */
 }
 
 /* Input styles */
 .input-field input {
-    padding: 12px; /* Increased padding for input fields */
+    padding: 15px; /* Increased padding for input fields */
     font-size: 16px;
-    border-radius: 6px; /* Rounded corners */
+    border-radius: 8px; /* Rounded corners */
     border: 1px solid #ced4da; /* Lighter border color */
-    margin-bottom: 15px;
+    margin-bottom: 20px; /* Increased bottom margin */
     outline: none;
     transition: border-color 0.3s, box-shadow 0.3s; /* Added box-shadow transition */
 }
 
 /* Input focus styles */
 .input-field input:focus {
-    border-color: #28a745; /* Green border on focus */
-    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5); /* Subtle shadow effect */
-}
-
-/* Button in input field styles */
-.input-field button {
-    align-self: flex-end;
-    padding: 12px 24px; /* Larger button size */
-    background-color: #007bff; /* Bootstrap primary blue */
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    border-radius: 6px;
-    transition: background-color 0.4s, transform 0.2s; /* Added transform effect */
-}
-
-.input-field button:disabled {
-    background-color: #d6d6d6; /* Consistent disabled color */
-    cursor: not-allowed;
+    border-color: #007bff; /* Blue border on focus */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Subtle shadow effect */
 }
 
 /* Workstation card styles */
 .workstation-card {
     background: #ffffff; /* White background for cards */
-    border-radius: 10px; /* Rounded corners */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-    padding: 20px; /* Padding for content */
-    margin: 15px 0; /* Margin for separation */
-    transition: transform 0.3s; /* Transition for hover effect */
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    padding: 25px; /* Padding for content */
+    margin: 20px 0; /* Margin for separation */
+    transition: transform 0.3s, box-shadow 0.3s; /* Transition for hover effect */
 }
 
 .workstation-card:hover {
     transform: translateY(-5px); /* Lift effect on hover */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
 }
 
 /* Workstation title styles */
 .workstation-title {
-    font-size: 1.5em; /* Larger title font size */
+    font-size: 1.8em; /* Larger title font size */
     color: #343a40; /* Dark title color */
-    margin-bottom: 10px; /* Spacing below title */
+    margin-bottom: 15px; /* Spacing below title */
+    font-weight: bold; /* Bold font for emphasis */
 }
 
 /* Workstation description styles */
 .workstation-description {
-    font-size: 1em; /* Regular font size for descriptions */
+    font-size: 1.1em; /* Slightly larger font size for descriptions */
     color: #6c757d; /* Muted color for descriptions */
 }
 
@@ -196,7 +177,17 @@ h1 {
 
     /* Adjust workstation card layout for mobile */
     .workstation-card {
-        margin: 10px 0; /* Increased margin for better separation */
+        margin: 15px 0; /* Increased margin for better separation */
+    }
+
+    /* Workstation title responsiveness */
+    .workstation-title {
+        font-size: 1.5em; /* Responsive font size for titles */
+    }
+
+    /* Workstation description responsiveness */
+    .workstation-description {
+        font-size: 1em; /* Responsive font size for descriptions */
     }
 }
 </style>
