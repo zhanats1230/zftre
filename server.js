@@ -250,8 +250,7 @@ app.get('/', (req, res) => {
           <button class="button" onclick="toggleRelay(1)">Переключить</button>
           <p>Вентиляция: <span id="relayState2">—</span></p>
           <button class="button" onclick="toggleRelay(2)">Переключить</button>
-          <p>Помпа: <span id="relayState3">—</span></p>
-          <button class="button" onclick="toggleRelay(3)">Переключить</button>
+
 
           <div class="data">
             <p id="temperature">Температура: —</p>
