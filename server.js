@@ -128,7 +128,7 @@ app.get('/', (req, res) => {
 
   function toggleRelay(relayNumber) {
     if (currentMode === 'manual') {
-      fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' });
+      fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
         .then(response => {
           if (!response.ok) throw new Error('Network response was not ok');
           return response.json();
