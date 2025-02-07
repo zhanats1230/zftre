@@ -37,89 +37,136 @@ app.get('/', (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Управление реле</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+  /* General body styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Updated font-family for better aesthetics */
+    background-color: #e9ecef; /* Slightly lighter background for a softer look */
     margin: 0;
     padding: 0;
-  }
-  .container {
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  h1 {
+}
+
+/* Main container styling */
+.container {
+    max-width: 800px; /* Maximum width for larger screens */
+    margin: 50px auto; /* Centered with margin */
+    padding: 30px; /* Increased padding for better spacing */
+    background: #ffffff; /* White background for the container */
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Enhanced shadow for depth */
+}
+
+/* Heading styles */
+h1 {
     text-align: center;
-    font-size: 2em;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  .button {
-    padding: 10px 20px;
-    background-color: #4CAF50;
+    font-size: 2.5em; /* Increased font size for better visibility */
+    color: #343a40; /* Darker color for contrast */
+    margin-bottom: 30px; /* Increased margin for spacing */
+}
+
+/* Button styles */
+.button {
+    padding: 12px 24px; /* Larger button for better touch area */
+    background-color: #007bff; /* Bootstrap primary blue */
     color: white;
     border: none;
     cursor: pointer;
     font-size: 18px;
-    margin-top: 10px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-  }
-  .button:hover {
-    background-color: #45a049;
-  }
-  .data {
+    margin-top: 10px; 
+    border-radius: 6px;
+    transition: background-color 0.4s, transform 0.2s; /* Added transform for a subtle effect */
+}
+
+.button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    transform: translateY(-2px); /* Lift effect on hover */
+}
+
+/* Data text styling */
+.data {
     font-size: 18px;
     margin-top: 20px;
-    color: #555;
-  }
-  .disabled {
-    background-color: #ccc;
+    color: #495057; /* Slightly darker for better readability */
+}
+
+/* Disabled button styles */
+.disabled {
+    background-color: #d6d6d6; /* Lighter gray for disabled buttons */
     cursor: not-allowed;
-  }
-  .relay-button {
-    margin-bottom: 10px;
-  }
-  .input-field {
+}
+
+/* Relay button margin */
+.relay-button {
+    margin-bottom: 15px; /* Added margin for spacing */
+}
+
+/* Input field styles */
+.input-field {
     margin-top: 20px;
     display: flex;
     flex-direction: column;
-  }
-  .input-field label {
+}
+
+/* Label styles */
+.input-field label {
     font-size: 16px;
     margin-bottom: 8px;
-    color: #555;
-  }
-  .input-field input {
-    padding: 10px;
+    color: #495057; /* Darker color for better readability */
+}
+
+/* Input styles */
+.input-field input {
+    padding: 12px; /* Increased padding for input fields */
     font-size: 16px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+    border-radius: 6px; /* Rounded corners */
+    border: 1px solid #ced4da; /* Lighter border color */
     margin-bottom: 15px;
     outline: none;
-    transition: border-color 0.3s;
-  }
-  .input-field input:focus {
-    border-color: #4CAF50;
-  }
-  .input-field button {
+    transition: border-color 0.3s, box-shadow 0.3s; /* Added box-shadow transition */
+}
+
+/* Input focus styles */
+.input-field input:focus {
+    border-color: #007bff; /* Blue border on focus */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Subtle shadow effect */
+}
+
+/* Button in input field styles */
+.input-field button {
     align-self: flex-end;
-    padding: 10px 20px;
-    background-color: #4CAF50;
+    padding: 12px 24px; /* Larger button size */
+    background-color: #007bff; /* Consistent blue color */
     color: white;
     border: none;
     cursor: pointer;
     font-size: 16px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-  }
-  .input-field button:disabled {
-    background-color: #ccc;
+    border-radius: 6px;
+    transition: background-color 0.4s, transform 0.2s; /* Added transform effect */
+}
+
+.input-field button:disabled {
+    background-color: #d6d6d6; /* Consistent disabled color */
     cursor: not-allowed;
-  }
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px; /* Reduced padding on mobile */
+    }
+
+    h1 {
+        font-size: 2em; /* Responsive font size for smaller screens */
+    }
+
+    .button, .input-field button {
+        width: 100%; /* Full width buttons on mobile */
+        padding: 15px; /* Increased padding for easier tapping */
+    }
+
+    .input-field input {
+        font-size: 14px; /* Smaller input font size */
+    }
+}
 </style>
 
         <script>
