@@ -312,6 +312,44 @@ h1 {
             updateInputState();
           });
         </script>
+        <script>
+function savePumpSettings() {
+  const pumpStartHour = parseInt(document.getElementById("pumpStartHour").value);
+  const pumpStartMinute = parseInt(document.getElementById("pumpStartMinute").value);
+  const pumpDuration = parseInt(document.getElementById("pumpDuration").value);
+  const pumpInterval = parseInt(document.getElementById("pumpInterval").value);
+
+  if (isNaN(pumpStartHour) || isNaN(pumpStartMinute) || isNaN(pumpDuration) || isNaN(pumpInterval)) {
+    alert("Заполните все поля!");
+    return;
+  }
+
+  fetch("/updatePumpSettings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      pumpStartHour,
+      pumpStartMinute,
+      pumpDuration,
+      pumpInterval
+    })
+  })
+    .then(response => response.json())
+    .then(data => alert(data.message))
+    .catch(error => console.error("Ошибка:", error));
+}
+
+// Загружаем текущие настройки при загрузке страницы
+fetch("/getPumpSettings")
+  .then(response => response.json())
+  .then(data => {
+    document.getElementById("pumpStartHour").value = data.pumpStartHour;
+    document.getElementById("pumpStartMinute").value = data.pumpStartMinute;
+    document.getElementById("pumpDuration").value = data.pumpDuration;
+    document.getElementById("pumpInterval").value = data.pumpInterval;
+  })
+  .catch(error => console.error("Ошибка загрузки настроек:", error));
+</script>
       </head>
       <body>
          <div class="container">
@@ -328,7 +366,23 @@ h1 {
             <p id="humidity">Влажность: —</p>
             <p id="soilMoisture">Влажность почвы: —</p>
           </div>
+<div class="container">
+  <h2>Настройки насоса</h2>
+  
+  <label for="pumpStartHour">Час включения:</label>
+  <input type="number" id="pumpStartHour" min="0" max="23">
 
+  <label for="pumpStartMinute">Минуты включения:</label>
+  <input type="number" id="pumpStartMinute" min="0" max="59">
+
+  <label for="pumpDuration">Время работы (сек):</label>
+  <input type="number" id="pumpDuration" min="1">
+
+  <label for="pumpInterval">Интервал между включениями (мин):</label>
+  <input type="number" id="pumpInterval" min="1">
+
+  <button onclick="savePumpSettings()">Сохранить</button>
+</div>
           <div class="input-field">
   <label for="fanTemperatureThreshold">Порог температуры для кулера (°C):</label>
   <input type="number" id="fanTemperatureThreshold" placeholder="Введите порог температуры">
@@ -422,6 +476,51 @@ app.post('/toggleRelay/:relayNumber', (req, res) => {
     res.status(400).json({ error: 'Invalid relay number' });
   }
 });
+
+
+let pumpSettings = {
+  pumpStartHour: 18,   // Час включения
+  pumpStartMinute: 0,  // Минуты включения
+  pumpDuration: 60,    // Длительность работы (секунды)
+  pumpInterval: 120,   // Интервал между включениями (минуты)
+};
+
+// Эндпоинт для получения настроек насоса
+app.get('/getPumpSettings', (req, res) => {
+  res.json(pumpSettings);
+});
+
+// Эндпоинт для обновления настроек насоса
+app.post('/updatePumpSettings', (req, res) => {
+  const { pumpStartHour, pumpStartMinute, pumpDuration, pumpInterval } = req.body;
+
+  if (
+    pumpStartHour != null &&
+    pumpStartMinute != null &&
+    pumpDuration != null &&
+    pumpInterval != null
+  ) {
+    pumpSettings.pumpStartHour = pumpStartHour;
+    pumpSettings.pumpStartMinute = pumpStartMinute;
+    pumpSettings.pumpDuration = pumpDuration;
+    pumpSettings.pumpInterval = pumpInterval;
+
+    console.log("Настройки насоса обновлены:", pumpSettings);
+    res.json({ message: "Настройки обновлены!" });
+  } else {
+    res.status(400).json({ error: "Некорректные данные" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
 
 
 // Новые переменные для кулера и света
