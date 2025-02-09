@@ -298,9 +298,16 @@ fetch("/getPumpSettings")
         <div class="section">
             <h2>Реле</h2>
             <div class="controls">
-                <button class="button" onclick="toggleRelay(1)">Освещение</button>
-                <button class="button" onclick="toggleRelay(2)">Вентиляция</button>
-                <button class="button" onclick="toggleMode()">Переключить режим</button>
+            <p>Освещение: <span id="relayState1">—</span></p>
+          <button class="button" onclick="toggleRelay(1)">Освещение</button>
+          <p>Вентиляция: <span id="relayState2">—</span></p>
+          <button class="button" onclick="toggleRelay(2)">Вентиляция</button>
+          <p>Режим работы: <span id="mode">—</span></p>
+          <button class="button" onclick="toggleMode()">Переключить режим</button>
+          
+                //<button class="button" onclick="toggleRelay(1)">Освещение</button>
+                //<button class="button" onclick="toggleRelay(2)">Вентиляция</button>
+                //<button class="button" onclick="toggleMode()">Переключить режим</button>
             </div>
         </div>
         
