@@ -44,7 +44,79 @@ body {
     margin: 0;
     padding: 0;
 }
+ copy
+css
 
+/* General body styles */
+body {
+    font-family: 'Arial', sans-serif; /* Clean and modern font */
+    background-color: #f8f9fa; /* Light gray background for a soft appearance */
+    margin: 0;
+    padding: 0;
+}
+
+/* Main container styling */
+.container {
+    max-width: 600px; /* Limit width for better readability */
+    margin: 50px auto; /* Center the container with margin */
+    padding: 30px; /* Padding for inner spacing */
+    background: #ffffff; /* White background for the container */
+    border-radius: 12px; /* Rounded corners for a softer look */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+}
+
+/* Heading styles */
+h2 {
+    text-align: center; /* Center the heading */
+    font-size: 2.5em; /* Larger font size for emphasis */
+    color: #343a40; /* Darker color for contrast */
+    margin-bottom: 30px; /* Space below the heading */
+}
+
+/* Label styles */
+label {
+    font-size: 1.2em; /* Increased font size for labels */
+    color: #495057; /* Darker color for readability */
+    margin-bottom: 5px; /* Space below labels */
+}
+
+/* Input field styles */
+input[type="number"] {
+    width: 100%; /* Full width inputs */
+    padding: 12px; /* Padding for comfort */
+    font-size: 1em; /* Standard font size */
+    border: 1px solid #ced4da; /* Light border color */
+    border-radius: 6px; /* Rounded corners */
+    margin-bottom: 20px; /* Space below inputs */
+    outline: none; /* Remove outline */
+    transition: border-color 0.3s; /* Smooth transition for focus */
+}
+
+/* Input focus styles */
+input[type="number"]:focus {
+    border-color: #007bff; /* Highlight border on focus */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Subtle shadow effect */
+}
+
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px; /* Adjust padding for smaller screens */
+    }
+
+    h2 {
+        font-size: 2em; /* Adjust heading size for smaller screens */
+    }
+
+    button {
+        font-size: 1em; /* Adjust button font size */
+    }
+
+    input[type="number"] {
+        font-size: 1em; /* Standard input font size */
+    }
+}
 /* Main container styling */
 .container {
     max-width: 950px; /* Increased maximum width for more space */
@@ -377,9 +449,6 @@ fetch("/getPumpSettings")
 
   <label for="pumpDuration">Время работы (сек):</label>
   <input type="number" id="pumpDuration" min="1">
-
-  <label for="pumpInterval">Интервал между включениями (мин):</label>
-  <input type="number" id="pumpInterval" min="1">
 
   <button onclick="savePumpSettings()">Сохранить</button>
 </div>
