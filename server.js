@@ -589,8 +589,8 @@ app.post('/toggleRelay/:relayNumber', (req, res) => {
 let pumpSettings = {
   pumpStartHour: 18,   // Час включения
   pumpStartMinute: 0,  // Минуты включения
-  pumpDuration: 60,    // Длительность работы (секунды)
-  pumpInterval: 120,   // Интервал между включениями (минуты)
+  pumpDuration: 10,    // Длительность работы (секунды)
+  pumpInterval: 240,   // Интервал между включениями (минуты)
 };
 
 // Эндпоинт для получения настроек насоса
