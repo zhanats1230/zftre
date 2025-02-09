@@ -204,7 +204,56 @@ app.get('/', (req, res) => {
     color: #555;
     transition: color 0.3s;
 }
+#passwordOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.password-box {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.password-box input {
+    margin-top: 10px;
+    padding: 8px;
+    width: 80%;
+    border: 1px solid #ccc;
+}
+
+.password-box button {
+    margin-top: 10px;
+    padding: 10px;
+    background: green;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
     </style>
+<script>
+    function checkPassword() {
+        let password = "1234"; // Установи свой пароль
+        let input = document.getElementById("passwordInput").value;
+        let errorText = document.getElementById("errorText");
+
+        if (input === password) {
+            document.getElementById("passwordOverlay").style.display = "none";
+        } else {
+            errorText.style.display = "block";
+        }
+    }
+</script>
 
         <script>
           let currentMode = 'auto'; // Начальный режим
@@ -428,6 +477,15 @@ fetch('/getSensorData')
 </script>
       </head>
       <body>
+      <div id="passwordOverlay">
+    <div class="password-box">
+        <h2>Введите пароль</h2>
+        <input type="password" id="passwordInput" placeholder="Пароль">
+        <button onclick="checkPassword()">Войти</button>
+        <p id="errorText" style="color:red; display:none;">Неверный пароль</p>
+    </div>
+</div>
+
     <div class="container">
         <h1>Управление теплицей</h1>
         
