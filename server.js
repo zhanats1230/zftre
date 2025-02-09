@@ -419,8 +419,11 @@ function updateSensors(data) {
     soilIcon.style.color = data.soilMoisture < 40 ? "brown" : "green";
 }
 
-// Тестовый вызов
-updateSensors(22, 50, 35);
+// Пример вызова с данными, как они приходят
+fetch('/getSensorData')
+    .then(response => response.json())
+    .then(data => updateSensors(data))
+    .catch(error => console.error('Ошибка получения данных датчиков:', error));
 
 </script>
       </head>
