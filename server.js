@@ -35,234 +35,102 @@ app.get('/', (req, res) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Управление реле</title>
-<style>
- /* General body styles */
-body {
-    font-family: 'Arial', sans-serif; /* Updated font-family for a cleaner look */
-    background-color: #f0f4f8; /* Light grayish-blue background for a calm appearance */
-    margin: 0;
-    padding: 0;
-}
- copy
-css
-
-/* General body styles */
-body {
-    font-family: 'Arial', sans-serif; /* Clean and modern font */
-    background-color: #f8f9fa; /* Light gray background for a soft appearance */
-    margin: 0;
-    padding: 0;
-}
-
-/* Main container styling */
-.container {
-    max-width: 600px; /* Limit width for better readability */
-    margin: 50px auto; /* Center the container with margin */
-    padding: 30px; /* Padding for inner spacing */
-    background: #ffffff; /* White background for the container */
-    border-radius: 12px; /* Rounded corners for a softer look */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-}
-
-/* Heading styles */
-h2 {
-    text-align: center; /* Center the heading */
-    font-size: 2.5em; /* Larger font size for emphasis */
-    color: #343a40; /* Darker color for contrast */
-    margin-bottom: 30px; /* Space below the heading */
-}
-
-/* Label styles */
-label {
-    font-size: 1.2em; /* Increased font size for labels */
-    color: #495057; /* Darker color for readability */
-    margin-bottom: 5px; /* Space below labels */
-}
-
-/* Input field styles */
-input[type="number"] {
-    width: 100%; /* Full width inputs */
-    padding: 12px; /* Padding for comfort */
-    font-size: 1em; /* Standard font size */
-    border: 1px solid #ced4da; /* Light border color */
-    border-radius: 6px; /* Rounded corners */
-    margin-bottom: 20px; /* Space below inputs */
-    outline: none; /* Remove outline */
-    transition: border-color 0.3s; /* Smooth transition for focus */
-}
-
-/* Input focus styles */
-input[type="number"]:focus {
-    border-color: #007bff; /* Highlight border on focus */
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Subtle shadow effect */
-}
-
-
-/* Responsive design */
-@media (max-width: 600px) {
-    .container {
-        padding: 20px; /* Adjust padding for smaller screens */
-    }
-
-    h2 {
-        font-size: 2em; /* Adjust heading size for smaller screens */
-    }
-
-    button {
-        font-size: 1em; /* Adjust button font size */
-    }
-
-    input[type="number"] {
-        font-size: 1em; /* Standard input font size */
-    }
-}
-/* Main container styling */
-.container {
-    max-width: 950px; /* Increased maximum width for more space */
-    margin: 60px auto; /* Centered with more margin for emphasis */
-    padding: 40px; /* Increased padding for better spacing */
-    background: #ffffff; /* White background for the container */
-    border-radius: 15px; /* Slightly more rounded corners */
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15); /* Deeper shadow for more depth */
-}
-
-/* Heading styles */
-h1 {
-    text-align: center;
-    font-size: 3.5em; /* Larger font size for better visibility */
-    color: #343a40; /* Darker color for contrast */
-    margin-bottom: 40px; /* Increased margin for spacing */
-    font-weight: bold; /* Bold font for emphasis */
-}
-
-/* Button styles */
-.button {
-    padding: 15px 30px; /* Larger button for better touch area */
-    background-color: #007bff; /* Bootstrap primary blue */
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 20px; /* Increased font size for better readability */
-    margin-top: 15px; 
-    border-radius: 8px; /* Slightly larger border radius for a softer look */
-    transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s; /* Added box-shadow on hover */
-}
-
-.button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
-    transform: translateY(-2px); /* Lift effect on hover */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Shadow effect on hover */
-}
-
-/* Data text styling */
-.data {
-    font-size: 18px;
-    margin-top: 25px;
-    color: #495057; /* Slightly darker for better readability */
-}
-
-/* Disabled button styles */
-.disabled {
-    background-color: #d6d6d6; /* Lighter gray for disabled buttons */
-    cursor: not-allowed;
-}
-
-/* Input field styles */
-.input-field {
-    margin-top: 30px; /* Increased margin for separation */
-    display: flex;
-    flex-direction: column;
-}
-
-/* Label styles */
-.input-field label {
-    font-size: 18px; /* Increased font size for better readability */
-    margin-bottom: 10px;
-    color: #495057; /* Darker color for better readability */
-}
-
-/* Input styles */
-.input-field input {
-    padding: 15px; /* Increased padding for input fields */
-    font-size: 16px;
-    border-radius: 8px; /* Rounded corners */
-    border: 1px solid #ced4da; /* Lighter border color */
-    margin-bottom: 20px; /* Increased bottom margin */
-    outline: none;
-    transition: border-color 0.3s, box-shadow 0.3s; /* Added box-shadow transition */
-}
-
-/* Input focus styles */
-.input-field input:focus {
-    border-color: #007bff; /* Blue border on focus */
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Subtle shadow effect */
-}
-
-/* Workstation card styles */
-.workstation-card {
-    background: #ffffff; /* White background for cards */
-    border-radius: 12px; /* Rounded corners */
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-    padding: 25px; /* Padding for content */
-    margin: 20px 0; /* Margin for separation */
-    transition: transform 0.3s, box-shadow 0.3s; /* Transition for hover effect */
-}
-
-.workstation-card:hover {
-    transform: translateY(-5px); /* Lift effect on hover */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
-}
-
-/* Workstation title styles */
-.workstation-title {
-    font-size: 1.8em; /* Larger title font size */
-    color: #343a40; /* Dark title color */
-    margin-bottom: 15px; /* Spacing below title */
-    font-weight: bold; /* Bold font for emphasis */
-}
-
-/* Workstation description styles */
-.workstation-description {
-    font-size: 1.1em; /* Slightly larger font size for descriptions */
-    color: #6c757d; /* Muted color for descriptions */
-}
-
-/* Responsive design */
-@media (max-width: 600px) {
-    .container {
-        padding: 20px; /* Reduced padding on mobile */
-    }
-
-    h1 {
-        font-size: 2.5em; /* Responsive font size for smaller screens */
-    }
-
-    .button, .input-field button {
-        width: 100%; /* Full width buttons on mobile */
-        padding: 15px; /* Increased padding for easier tapping */
-    }
-
-    .input-field input {
-        font-size: 14px; /* Smaller input font size */
-    }
-
-    /* Adjust workstation card layout for mobile */
-    .workstation-card {
-        margin: 15px 0; /* Increased margin for better separation */
-    }
-
-    /* Workstation title responsiveness */
-    .workstation-title {
-        font-size: 1.5em; /* Responsive font size for titles */
-    }
-
-    /* Workstation description responsiveness */
-    .workstation-description {
-        font-size: 1em; /* Responsive font size for descriptions */
-    }
-}
-</style>
+       <title>Управление теплицей</title>
+    <style>
+        /* Reset styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        /* Body styling */
+        body {
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        /* Container styling */
+        .container {
+            width: 90%;
+            max-width: 900px;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        .section {
+            padding: 20px;
+            border-radius: 10px;
+            background: #f9f9f9;
+            margin-bottom: 20px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .button {
+            background: #607d8b;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .button:hover {
+            background: #455a64;
+            transform: translateY(-2px);
+        }
+        
+        .data p {
+            font-size: 18px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #b0bec5;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-top: 5px;
+            background: #ffffff;
+            color: #333;
+            outline: none;
+        }
+        
+        input::placeholder {
+            color: #aaa;
+        }
+        
+        .settings button {
+            width: 100%;
+            margin-top: 15px;
+        }
+    </style>
 
         <script>
           let currentMode = 'auto'; // Начальный режим
@@ -424,52 +292,50 @@ fetch("/getPumpSettings")
 </script>
       </head>
       <body>
-         <div class="container">
-          <h1>Управление теплицей</h1>
-          <p>Освещение: <span id="relayState1">—</span></p>
-          <button class="button" onclick="toggleRelay(1)">Переключить</button>
-          <p>Вентиляция: <span id="relayState2">—</span></p>
-          <button class="button" onclick="toggleRelay(2)">Переключить</button>
-          <p>Режим работы: <span id="mode">—</span></p>
-          <button class="button" onclick="toggleMode()">Переключить режим</button>
-
-          <div class="data">
+    <div class="container">
+        <h1>Управление теплицей</h1>
+        
+        <div class="section">
+            <h2>Реле</h2>
+            <div class="controls">
+                <button class="button" onclick="toggleRelay(1)">Освещение</button>
+                <button class="button" onclick="toggleRelay(2)">Вентиляция</button>
+                <button class="button" onclick="toggleMode()">Переключить режим</button>
+            </div>
+        </div>
+        
+        <div class="section data">
+            <h2>Датчики</h2>
             <p id="temperature">Температура: —</p>
             <p id="humidity">Влажность: —</p>
             <p id="soilMoisture">Влажность почвы: —</p>
-          </div>
-<div class="container">
-  <h2>Настройки насоса</h2>
-  
-  <label for="pumpStartHour">Час включения:</label>
-  <input type="number" id="pumpStartHour" min="0" max="23">
-
-  <label for="pumpStartMinute">Минуты включения:</label>
-  <input type="number" id="pumpStartMinute" min="0" max="59">
-
-  <label for="pumpDuration">Время работы (сек):</label>
-  <input type="number" id="pumpDuration" min="1">
-
- <label for="pumpInterval">Интервал между включениями (мин):</label>
-  <input type="number" id="pumpInterval" min="1">
-
-  <button onclick="savePumpSettings()">Сохранить</button>
-</div>
-          <div class="input-field">
-  <label for="fanTemperatureThreshold">Порог температуры для кулера (°C):</label>
-  <input type="number" id="fanTemperatureThreshold" placeholder="Введите порог температуры">
-
-  <label for="lightOnDuration">Время работы света (мин):</label>
-  <input type="number" id="lightOnDuration" placeholder="Введите время работы света в минутах">
-
-  <label for="lightIntervalManual">Интервал для переключения света (мин):</label>
-  <input type="number" id="lightIntervalManual" placeholder="Введите интервал переключения света в минутах">
-
-  <button class="button save-settings" onclick="saveLightingSettings()">Сохранить настройки</button>
-</div>
-
-
-      </body>
+        </div>
+        
+        <div class="section settings">
+            <h2>Настройки насоса</h2>
+            <label>Час включения:</label>
+            <input type="number" id="pumpStartHour" min="0" max="23" placeholder="Введите час">
+            <label>Минуты включения:</label>
+            <input type="number" id="pumpStartMinute" min="0" max="59" placeholder="Введите минуты">
+            <label>Время работы (сек):</label>
+            <input type="number" id="pumpDuration" min="1" placeholder="Введите время">
+            <label>Интервал (мин):</label>
+            <input type="number" id="pumpInterval" min="1" placeholder="Введите интервал">
+            <button class="button" onclick="savePumpSettings()">Сохранить</button>
+        </div>
+        
+        <div class="section settings">
+            <h2>Настройки освещения</h2>
+            <label>Порог температуры (°C):</label>
+            <input type="number" id="fanTemperatureThreshold" placeholder="Введите порог">
+            <label>Время работы света (мин):</label>
+            <input type="number" id="lightOnDuration" placeholder="Введите время">
+            <label>Интервал переключения света (мин):</label>
+            <input type="number" id="lightIntervalManual" placeholder="Введите интервал">
+            <button class="button" onclick="saveLightingSettings()">Сохранить</button>
+        </div>
+    </div>
+</body>
     </html>
   `);
 });
