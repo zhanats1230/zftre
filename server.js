@@ -37,6 +37,56 @@ app.get('/', (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
        <title>Управление теплицей</title>
     <style>
+
+    .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.icon-container {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-container i {
+    font-size: 30px;
+    transition: 0.3s;
+}
+
+.off {
+    color: #bbb;
+}
+
+.on {
+    color: #f1c40f;
+}
+
+.fan-rotate {
+    animation: spin 1s linear infinite;
+    color: #4CAF50;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
         /* Reset styles */
         * {
             margin: 0;
@@ -146,6 +196,21 @@ app.get('/', (req, res) => {
           let relay2State = false; // Состояние реле вентилятора
 
           function toggleRelay(relayNumber) {
+let relayState = document.getElementById(\`relayState\${relay}\`);
+    let icon = relay === 1 ? document.getElementById("lightIcon") : document.getElementById("fanIcon");
+
+    if (relayState.innerText === "Вкл") {
+        relayState.innerText = "Выкл";
+        icon.classList.remove("on", "fan-rotate");
+        icon.classList.add("off");
+    } else {
+        relayState.innerText = "Вкл";
+        icon.classList.remove("off");
+        icon.classList.add(relay === 1 ? "on" : "fan-rotate");
+    }
+
+
+          
             if (currentMode === 'manual') {
               fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
                 .then(response => {
@@ -169,6 +234,16 @@ app.get('/', (req, res) => {
           }
 
           function toggleMode() {
+          let modeState = document.getElementById("mode");
+    let modeIcon = document.getElementById("modeIcon");
+
+    if (modeState.innerText === "Ручной") {
+        modeState.innerText = "Авто";
+        modeIcon.style.color = "#555";
+    } else {
+        modeState.innerText = "Ручной";
+        modeIcon.style.color = "#e74c3c";
+    }
             fetch('/setMode', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -307,13 +382,31 @@ fetch("/getPumpSettings")
         <div class="section">
             <h2>Реле</h2>
             <div class="controls">
-            <p>Освещение: <span id="relayState1">—</span></p>
-          <button class="button" onclick="toggleRelay(1)">Освещение</button>
-          <p>Вентиляция: <span id="relayState2">—</span></p>
-          <button class="button" onclick="toggleRelay(2)">Вентиляция</button>
-          <p>Режим работы: <span id="mode">—</span></p>
-          <button class="button" onclick="toggleMode()">Переключить режим</button>
-            </div>
+    <div class="status">
+        <p>Освещение: <span id="relayState1">—</span></p>
+        <div class="icon-container">
+            <i id="lightIcon" class="fas fa-lightbulb off"></i>
+        </div>
+        <button class="button" onclick="toggleRelay(1)">Освещение</button>
+    </div>
+    
+    <div class="status">
+        <p>Вентиляция: <span id="relayState2">—</span></p>
+        <div class="icon-container">
+            <i id="fanIcon" class="fas fa-fan off"></i>
+        </div>
+        <button class="button" onclick="toggleRelay(2)">Вентиляция</button>
+    </div>
+
+    <div class="status">
+        <p>Режим работы: <span id="mode">—</span></p>
+        <div class="icon-container">
+            <i id="modeIcon" class="fas fa-cogs"></i>
+        </div>
+        <button class="button" onclick="toggleMode()">Переключить режим</button>
+    </div>
+</div>
+
         </div>
         
         <div class="section data">
