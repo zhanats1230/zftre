@@ -242,12 +242,20 @@ app.get('/', (req, res) => {
 
     </style>
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Проверяем, сохранён ли вход
+        if (localStorage.getItem("auth") === "true") {
+            document.getElementById("passwordOverlay").style.display = "none";
+        }
+    });
+
     function checkPassword() {
         let password = "1234"; // Установи свой пароль
         let input = document.getElementById("passwordInput").value;
         let errorText = document.getElementById("errorText");
 
         if (input === password) {
+            localStorage.setItem("auth", "true"); // Запоминаем вход
             document.getElementById("passwordOverlay").style.display = "none";
         } else {
             errorText.style.display = "block";
@@ -485,6 +493,7 @@ fetch('/getSensorData')
         <p id="errorText" style="color:red; display:none;">Неверный пароль</p>
     </div>
 </div>
+
 
     <div class="container">
         <h1>Управление теплицей</h1>
