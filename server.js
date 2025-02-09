@@ -196,7 +196,7 @@ app.get('/', (req, res) => {
           let relay2State = false; // Состояние реле вентилятора
 
           function toggleRelay(relayNumber) {
-let relayState = document.getElementById(\`relayState\${relay}\`);
+let relayState = document.getElementById(\`relayState\${relayNumber}\`);
     let icon = relay === 1 ? document.getElementById("lightIcon") : document.getElementById("fanIcon");
 
     if (relayState.innerText === "Вкл") {
