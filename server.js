@@ -190,6 +190,20 @@ app.get('/', (req, res) => {
             width: 100%;
             margin-top: 15px;
         }
+        .sensor {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.sensor i {
+    font-size: 24px;
+    color: #555;
+    transition: color 0.3s;
+}
     </style>
 
         <script>
@@ -377,6 +391,43 @@ fetch("/getPumpSettings")
     document.getElementById("pumpInterval").value = data.pumpInterval;
   })
   .catch(error => console.error("Ошибка загрузки настроек:", error));
+
+
+
+
+  function updateSensors(temp, humidity, soil) {
+    let tempElement = document.getElementById("temperature");
+    let tempIcon = document.getElementById("tempIcon");
+
+    let humidityElement = document.getElementById("humidity");
+    let humidityIcon = document.getElementById("humidityIcon");
+
+    let soilElement = document.getElementById("soilMoisture");
+    let soilIcon = document.getElementById("soilIcon");
+
+    tempElement.textContent = \`Температура: \${temp}°C\`;
+    humidityElement.textContent = \`Влажность: \${humidity}%\`;
+    soilElement.textContent = \`Влажность почвы: \${soil}%\`;
+
+    // Изменяем цвет термометра
+    if (temp < 10) {
+        tempIcon.style.color = "blue";
+    } else if (temp >= 10 && temp <= 25) {
+        tempIcon.style.color = "green";
+    } else {
+        tempIcon.style.color = "red";
+    }
+
+    // Изменяем цвет влажности
+    humidityIcon.style.color = humidity < 30 ? "orange" : "blue";
+
+    // Изменяем цвет значка почвы
+    soilIcon.style.color = soil < 40 ? "brown" : "green";
+}
+
+// Тестовый вызов
+updateSensors(22, 50, 35);
+
 </script>
       </head>
       <body>
@@ -414,11 +465,24 @@ fetch("/getPumpSettings")
         </div>
         
         <div class="section data">
-            <h2>Датчики</h2>
-            <p id="temperature">Температура: —</p>
-            <p id="humidity">Влажность: —</p>
-            <p id="soilMoisture">Влажность почвы: —</p>
-        </div>
+    <h2>Датчики</h2>
+    
+    <div class="sensor">
+        <i id="tempIcon" class="fas fa-thermometer-half"></i>
+        <p id="temperature">Температура: —</p>
+    </div>
+
+    <div class="sensor">
+        <i id="humidityIcon" class="fas fa-tint"></i>
+        <p id="humidity">Влажность: —</p>
+    </div>
+
+    <div class="sensor">
+        <i id="soilIcon" class="fas fa-seedling"></i>
+        <p id="soilMoisture">Влажность почвы: —</p>
+    </div>
+</div>
+
         
         <div class="section settings">
             <h2>Настройки насоса</h2>
