@@ -196,17 +196,17 @@ app.get('/', (req, res) => {
           let relay2State = false; // Состояние реле вентилятора
 
 function toggleRelay(relayNumber) {
-    let relayStateElement = document.getElementById(`relayState${relayNumber}`);
+    let relayStateElement = document.getElementById(\`relayState$\{relayNumber}\`);
     let icon = relayNumber === 1 ? document.getElementById("lightIcon") : document.getElementById("fanIcon");
 
     if (currentMode === 'manual') {
-        fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
+              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
             .then(response => {
                 if (!response.ok) throw new Error('Network response was not ok');
                 return response.json();
             })
             .then(data => {
-                let relayState = data[`relayState${relayNumber}`];
+                let relayState = data[\`relayState$\{relayNumber}\`];
                 relayStateElement.textContent = relayState ? 'Включено' : 'Выключено';
 
                 // Обновляем иконки
