@@ -395,7 +395,7 @@ fetch("/getPumpSettings")
 
 
 
-  function updateSensors(temp, humidity, soil) {
+function updateSensors(data) {
     let tempElement = document.getElementById("temperature");
     let tempIcon = document.getElementById("tempIcon");
 
@@ -405,24 +405,18 @@ fetch("/getPumpSettings")
     let soilElement = document.getElementById("soilMoisture");
     let soilIcon = document.getElementById("soilIcon");
 
-    tempElement.textContent = \`Температура: \${temp}°C\`;
-    humidityElement.textContent = \`Влажность: \${humidity}%\`;
-    soilElement.textContent = \`Влажность почвы: \${soil}%\`;
+    // Обновление текста
+    tempElement.textContent = \`Температура:\${data.temperature}°C\`;
+    humidityElement.textContent = \`Влажность: \${data.humidity}%\`;
+    soilElement.textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
 
-    // Изменяем цвет термометра
-    if (temp < 10) {
-        tempIcon.style.color = "blue";
-    } else if (temp >= 10 && temp <= 25) {
-        tempIcon.style.color = "green";
-    } else {
-        tempIcon.style.color = "red";
-    }
+    // Изменение цвета значков в зависимости от значений
+    tempIcon.style.color = data.temperature < 10 ? "blue" :
+                           data.temperature <= 25 ? "green" : "red";
 
-    // Изменяем цвет влажности
-    humidityIcon.style.color = humidity < 30 ? "orange" : "blue";
+    humidityIcon.style.color = data.humidity < 30 ? "orange" : "blue";
 
-    // Изменяем цвет значка почвы
-    soilIcon.style.color = soil < 40 ? "brown" : "green";
+    soilIcon.style.color = data.soilMoisture < 40 ? "brown" : "green";
 }
 
 // Тестовый вызов
