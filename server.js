@@ -248,7 +248,18 @@ function toggleMode() {
 
         // Изменяем цвет иконки
         modeIcon.style.color = currentMode === 'auto' ? "#555" : "#e74c3c";
+         // Если включен авто-режим, сбрасываем состояния реле
+        if (currentMode === 'auto') {
+            document.getElementById("relayState1").textContent = "Выключено";
+            document.getElementById("relayState2").textContent = "Выключено";
 
+            // Обновляем иконки реле
+            document.getElementById("lightIcon").classList.remove("on");
+            document.getElementById("lightIcon").classList.add("off");
+
+            document.getElementById("fanIcon").classList.remove("fan-rotate");
+            document.getElementById("fanIcon").classList.add("off");
+        }
         updateInputState();
     })
     .catch(error => console.error('Ошибка при переключении режима:', error));
