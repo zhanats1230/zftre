@@ -195,67 +195,60 @@ app.get('/', (req, res) => {
           let currentMode = 'auto'; // Начальный режим
           let relay2State = false; // Состояние реле вентилятора
 
-          function toggleRelay(relayNumber) {
-let relayState = document.getElementById(\`relayState\${relayNumber}\`);
-    let icon = relay === 1 ? document.getElementById("lightIcon") : document.getElementById("fanIcon");
+function toggleRelay(relayNumber) {
+    let relayStateElement = document.getElementById(`relayState${relayNumber}`);
+    let icon = relayNumber === 1 ? document.getElementById("lightIcon") : document.getElementById("fanIcon");
 
-    if (relayState.innerText === "Вкл") {
-        relayState.innerText = "Выкл";
-        icon.classList.remove("on", "fan-rotate");
-        icon.classList.add("off");
-    } else {
-        relayState.innerText = "Вкл";
-        icon.classList.remove("off");
-        icon.classList.add(relay === 1 ? "on" : "fan-rotate");
-    }
+    if (currentMode === 'manual') {
+        fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                let relayState = data[`relayState${relayNumber}`];
+                relayStateElement.textContent = relayState ? 'Включено' : 'Выключено';
 
+                // Обновляем иконки
+                if (relayState) {
+                    icon.classList.remove("off");
+                    icon.classList.add(relayNumber === 1 ? "on" : "fan-rotate");
+                } else {
+                    icon.classList.remove("on", "fan-rotate");
+                    icon.classList.add("off");
+                }
 
-          
-            if (currentMode === 'manual') {
-              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
-                .then(response => {
-                  if (!response.ok) throw new Error('Network response was not ok');
-                  return response.json();
-                })
-                .then(data => {
-                  const relayState = data[\`relayState\${relayNumber}\`];
-                  document.getElementById(\`relayState\${relayNumber}\`).textContent =
-                    relayState ? 'Включено' : 'Выключено';
-
-                  if (relayNumber === 2) {
+                // Если реле 2 (вентиляция), обновляем глобальную переменную
+                if (relayNumber === 2) {
                     relay2State = relayState;
                     updateInputState(); // Обновляем доступность полей ввода
-                  }
-                })
-                .catch(error => console.error('Error toggling relay:', error));
-            } else {
-              alert('Реле можно переключать только в ручном режиме!');
-            }
-          }
+                }
+            })
+            .catch(error => console.error('Ошибка при переключении реле:', error));
+    } else {
+        alert('Реле можно переключать только в ручном режиме!');
+    }
+}
 
-          function toggleMode() {
-          let modeState = document.getElementById("mode");
+function toggleMode() {
+    let modeStateElement = document.getElementById("mode");
     let modeIcon = document.getElementById("modeIcon");
 
-    if (modeState.innerText === "Ручной") {
-        modeState.innerText = "Авто";
-        modeIcon.style.color = "#555";
-    } else {
-        modeState.innerText = "Ручной";
-        modeIcon.style.color = "#e74c3c";
-    }
-            fetch('/setMode', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                mode: currentMode === 'auto' ? 'manual' : 'auto',
-              }),
-            })
-              .then(response => response.json())
-              .then(data => {
-                currentMode = data.mode;
-                document.getElementById('mode').textContent =
-                  currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+    fetch('/setMode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            mode: currentMode === 'auto' ? 'manual' : 'auto',
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        currentMode = data.mode;
+        modeStateElement.textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
+
+        // Обновляем иконку режима
+        modeIcon.style.color = currentMode === 'auto' ? "#555" : "#e74c3c";
+
                 updateInputState(); // Обновляем доступность полей ввода
               })
               .catch(error => console.error('Error toggling mode:', error));
