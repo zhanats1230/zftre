@@ -185,7 +185,9 @@ app.get('/', (req, res) => {
         input::placeholder {
             color: #aaa;
         }
-        
+        .settings {
+    display: none;
+}
         .settings button {
             width: 100%;
             margin-top: 15px;
@@ -316,7 +318,12 @@ function toggleMode() {
     .then(data => {
         currentMode = data.mode;
         modeStateElement.textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-
+// Обновляем отображение настроек
+        if (currentMode === 'manual') {
+            settingsBlock.style.display = "block";  // Показываем
+        } else {
+            settingsBlock.style.display = "none";   // Скрываем
+        }
         // Изменяем цвет иконки
         modeIcon.style.color = currentMode === 'auto' ? "#555" : "#e74c3c";
          // Если включен авто-режим, сбрасываем состояния реле
@@ -527,6 +534,21 @@ fetch('/getSensorData')
 </div>
 
         </div>
+
+<div class="section settings">
+            <h2>Настройки ручного режима</h2>
+            <label>Порог температуры (°C):</label>
+            <input type="number" id="fanTemperatureThreshold" placeholder="Введите порог">
+            <label>Время работы света (мин):</label>
+            <input type="number" id="lightOnDuration" placeholder="Введите время">
+            <label>Интервал переключения света (мин):</label>
+            <input type="number" id="lightIntervalManual" placeholder="Введите интервал">
+            <button class="button" onclick="saveLightingSettings()">Сохранить</button>
+        </div>
+
+
+
+
         
         <div class="section data">
     <h2>Датчики</h2>
@@ -561,16 +583,7 @@ fetch('/getSensorData')
             <button class="button" onclick="savePumpSettings()">Сохранить</button>
         </div>
         
-        <div class="section settings">
-            <h2>Настройки освещения</h2>
-            <label>Порог температуры (°C):</label>
-            <input type="number" id="fanTemperatureThreshold" placeholder="Введите порог">
-            <label>Время работы света (мин):</label>
-            <input type="number" id="lightOnDuration" placeholder="Введите время">
-            <label>Интервал переключения света (мин):</label>
-            <input type="number" id="lightIntervalManual" placeholder="Введите интервал">
-            <button class="button" onclick="saveLightingSettings()">Сохранить</button>
-        </div>
+        
     </div>
 </body>
     </html>
