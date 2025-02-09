@@ -306,7 +306,7 @@ function toggleRelay(relayNumber) {
 function toggleMode() {
     let modeStateElement = document.getElementById("mode");
     let modeIcon = document.getElementById("modeIcon");
-
+    let settingsBlock = document.querySelector(".settings"); // Получаем блок настроек
     fetch('/setMode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
