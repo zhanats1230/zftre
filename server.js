@@ -33,6 +33,7 @@ app.get('/', (req, res) => {
     <!DOCTYPE html>
     <html lang="ru">
       <head>
+       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
        <title>Управление теплицей</title>
@@ -201,27 +202,26 @@ function toggleRelay(relayNumber) {
 
     if (currentMode === 'manual') {
               fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
+             .then(response => {
+                if (!response.ok) throw new Error('Ошибка сети');
                 return response.json();
             })
             .then(data => {
-                let relayState = data[\`relayState$\{relayNumber}\`];
+                let relayState = data[\`relayState\${relayNumber}\`];
                 relayStateElement.textContent = relayState ? 'Включено' : 'Выключено';
 
                 // Обновляем иконки
+                icon.classList.remove("off", "on", "fan-rotate");
                 if (relayState) {
-                    icon.classList.remove("off");
                     icon.classList.add(relayNumber === 1 ? "on" : "fan-rotate");
                 } else {
-                    icon.classList.remove("on", "fan-rotate");
                     icon.classList.add("off");
                 }
 
-                // Если реле 2 (вентиляция), обновляем глобальную переменную
+                // Обновляем состояние вентиляции
                 if (relayNumber === 2) {
                     relay2State = relayState;
-                    updateInputState(); // Обновляем доступность полей ввода
+                    updateInputState();
                 }
             })
             .catch(error => console.error('Ошибка при переключении реле:', error));
@@ -246,13 +246,13 @@ function toggleMode() {
         currentMode = data.mode;
         modeStateElement.textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
 
-        // Обновляем иконку режима
+        // Изменяем цвет иконки
         modeIcon.style.color = currentMode === 'auto' ? "#555" : "#e74c3c";
 
-                updateInputState(); // Обновляем доступность полей ввода
-              })
-              .catch(error => console.error('Error toggling mode:', error));
-          }
+        updateInputState();
+    })
+    .catch(error => console.error('Ошибка при переключении режима:', error));
+}
 
           function updateInputState() {
             const inputs = document.querySelectorAll('.input-field input');
