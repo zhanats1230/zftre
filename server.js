@@ -544,6 +544,7 @@ fetch('/getSensorData')
             <label>Интервал переключения света (мин):</label>
             <input type="number" id="lightIntervalManual" placeholder="Введите интервал">
             <button class="button" onclick="saveLightingSettings()">Сохранить</button>
+            
         </div>
 
 
@@ -568,10 +569,8 @@ fetch('/getSensorData')
         <p id="soilMoisture">Влажность почвы: —</p>
     </div>
 </div>
-
-        
-        <div class="section settings">
-            <h2>Настройки насоса</h2>
+<div class="section data">
+        <h2>Настройки насоса</h2>
             <label>Час включения:</label>
             <input type="number" id="pumpStartHour" min="0" max="23" placeholder="Введите час">
             <label>Минуты включения:</label>
