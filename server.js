@@ -450,6 +450,7 @@ fetch("/getPumpSettings")
   <label for="pumpDuration">Время работы (сек):</label>
   <input type="number" id="pumpDuration" min="1">
 
+ <label for="pumpInterval">Интервал между включениями (мин):</label>
   <input type="number" id="pumpInterval" min="1">
 
   <button onclick="savePumpSettings()">Сохранить</button>
