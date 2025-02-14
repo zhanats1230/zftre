@@ -270,23 +270,35 @@ app.get('/', (req, res) => {
 function saveState() {
     localStorage.setItem("relayState1", document.getElementById("relayState1").innerText);
     localStorage.setItem("relayState2", document.getElementById("relayState2").innerText);
-    localStorage.setItem("mode", currentMode); // Сохраняем в виде 'manual' или 'auto'
+    localStorage.setItem("mode", currentMode); // Сохраняем 'manual' или 'auto'
 }
 
 // Функция для загрузки сохраненного состояния
 function loadState() {
-    if (localStorage.getItem("relayState1")) {
-        document.getElementById("relayState1").innerText = localStorage.getItem("relayState1");
-        updateIcon("lightIcon", localStorage.getItem("relayState1"));
-    }
-    if (localStorage.getItem("relayState2")) {
-        document.getElementById("relayState2").innerText = localStorage.getItem("relayState2");
-        updateIcon("fanIcon", localStorage.getItem("relayState2"));
-    }
-    if (localStorage.getItem("mode")) {
-        currentMode = localStorage.getItem("mode"); // Загружаем режим (manual / auto)
-        document.getElementById("mode").innerText = (currentMode === "manual") ? "Ручной" : "Автоматический";
-    }
+    // Загружаем состояние реле
+    let relayState1 = localStorage.getItem("relayState1") || "Выключено";
+    let relayState2 = localStorage.getItem("relayState2") || "Выключено";
+
+    document.getElementById("relayState1").innerText = relayState1;
+    document.getElementById("relayState2").innerText = relayState2;
+    
+    // Обновляем иконки
+    updateIcon("lightIcon", relayState1);
+    updateIcon("fanIcon", relayState2);
+
+    // Загружаем режим работы
+    currentMode = localStorage.getItem("mode") || "auto";
+    document.getElementById("mode").innerText = currentMode === "manual" ? "Ручной" : "Автоматический";
+
+    // Обновляем интерфейс
+    document.querySelector(".settings").style.display = currentMode === "manual" ? "block" : "none";
+    document.getElementById("modeIcon").style.color = currentMode === "auto" ? "#555" : "#e74c3c";
+
+    // Устанавливаем состояние реле вентилятора
+    relay2State = relayState2 === "Включено";
+
+    // Обновляем состояние полей ввода
+    updateInputState();
 }
 
 // Инициализируем currentMode при загрузке
@@ -295,8 +307,8 @@ let relay2State = false; // Состояние реле вентилятора
 
 window.onload = function () {
     loadState();
-    updateInputState(); // Обновляем состояние полей ввода
 };
+
 
 function toggleRelay(relayNumber) {
     let relayStateElement = document.getElementById(\`relayState$\{relayNumber}\`);
