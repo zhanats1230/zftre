@@ -266,6 +266,40 @@ app.get('/', (req, res) => {
 </script>
 
         <script>
+// Функция для сохранения состояния реле и режима работы
+function saveState() {
+    localStorage.setItem("relayState1", document.getElementById("relayState1").innerText);
+    localStorage.setItem("relayState2", document.getElementById("relayState2").innerText);
+    localStorage.setItem("mode", document.getElementById("mode").innerText);
+}
+
+// Функция для загрузки сохраненного состояния
+function loadState() {
+    if (localStorage.getItem("relayState1")) {
+        document.getElementById("relayState1").innerText = localStorage.getItem("relayState1");
+        updateIcon("lightIcon", localStorage.getItem("relayState1"));
+    }
+    if (localStorage.getItem("relayState2")) {
+        document.getElementById("relayState2").innerText = localStorage.getItem("relayState2");
+        updateIcon("fanIcon", localStorage.getItem("relayState2"));
+    }
+    if (localStorage.getItem("mode")) {
+        document.getElementById("mode").innerText = localStorage.getItem("mode");
+    }
+}
+window.onload = loadState;
+
+
+
+
+
+
+
+
+
+
+
+        
           let currentMode = 'auto'; // Начальный режим
           let relay2State = false; // Состояние реле вентилятора
 
