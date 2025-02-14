@@ -335,6 +335,7 @@ function toggleRelay(relayNumber) {
     } else {
         alert('Реле можно переключать только в ручном режиме!');
     }
+    saveState(); // Сохраняем состояние после изменения
 }
 
 function toggleMode() {
@@ -375,6 +376,7 @@ function toggleMode() {
         updateInputState();
     })
     .catch(error => console.error('Ошибка при переключении режима:', error));
+    saveState(); // Сохраняем состояние после изменения
 }
 
           function updateInputState() {
