@@ -270,7 +270,7 @@ app.get('/', (req, res) => {
 function saveState() {
     localStorage.setItem("relayState1", document.getElementById("relayState1").innerText);
     localStorage.setItem("relayState2", document.getElementById("relayState2").innerText);
-    localStorage.setItem("mode", document.getElementById("mode").innerText);
+    localStorage.setItem("mode", currentMode); // Сохраняем в виде 'manual' или 'auto'
 }
 
 // Функция для загрузки сохраненного состояния
@@ -284,39 +284,33 @@ function loadState() {
         updateIcon("fanIcon", localStorage.getItem("relayState2"));
     }
     if (localStorage.getItem("mode")) {
-        document.getElementById("mode").innerText = localStorage.getItem("mode");
+        currentMode = localStorage.getItem("mode"); // Загружаем режим
+        document.getElementById("mode").innerText = currentMode === "manual" ? "Ручной" : "Автоматический";
     }
 }
-window.onload = loadState;
 
+// Инициализируем currentMode при загрузке
+let currentMode = localStorage.getItem("mode") || "auto";
+let relay2State = false; // Состояние реле вентилятора
 
-
-
-
-
-
-
-
-
-
-        
-          // Инициализируем currentMode при загрузке
-let currentMode = localStorage.getItem("mode") || "Авто";
-          let relay2State = false; // Состояние реле вентилятора
+window.onload = function () {
+    loadState();
+    updateInputState(); // Обновляем состояние полей ввода
+};
 
 function toggleRelay(relayNumber) {
-    let relayStateElement = document.getElementById(\`relayState$\{relayNumber}\`);
+    let relayStateElement = document.getElementById(`relayState${relayNumber}`);
     let icon = relayNumber === 1 ? document.getElementById("lightIcon") : document.getElementById("fanIcon");
 
-    if (currentMode === 'manual') {
-              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
-             .then(response => {
-                if (!response.ok) throw new Error('Ошибка сети');
+    if (currentMode === "manual") {
+        fetch(`/toggleRelay/${relayNumber}`, { method: "POST" })
+            .then(response => {
+                if (!response.ok) throw new Error("Ошибка сети");
                 return response.json();
             })
             .then(data => {
-                let relayState = data[\`relayState\${relayNumber}\`];
-                relayStateElement.textContent = relayState ? 'Включено' : 'Выключено';
+                let relayState = data[`relayState${relayNumber}`];
+                relayStateElement.textContent = relayState ? "Включено" : "Выключено";
 
                 // Обновляем иконки
                 icon.classList.remove("off", "on", "fan-rotate");
@@ -333,9 +327,9 @@ function toggleRelay(relayNumber) {
                 }
                 saveState(); // Теперь вызываем сохранение в правильном месте
             })
-            .catch(error => console.error('Ошибка при переключении реле:', error));
+            .catch(error => console.error("Ошибка при переключении реле:", error));
     } else {
-        alert('Реле можно переключать только в ручном режиме!');
+        alert("Реле можно переключать только в ручном режиме!");
     }
 }
 
@@ -343,55 +337,69 @@ function toggleMode() {
     let modeStateElement = document.getElementById("mode");
     let modeIcon = document.getElementById("modeIcon");
     let settingsBlock = document.querySelector(".settings"); // Получаем блок настроек
-    fetch('/setMode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+
+    fetch("/setMode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            mode: currentMode === 'auto' ? 'manual' : 'auto',
+            mode: currentMode === "auto" ? "manual" : "auto",
         }),
     })
-    .then(response => response.json())
-    .then(data => {
-        currentMode = data.mode;
-        modeStateElement.textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-// Обновляем отображение настроек
-        if (currentMode === 'manual') {
-            settingsBlock.style.display = "block";  // Показываем
-        } else {
-            settingsBlock.style.display = "none";   // Скрываем
-        }
-        // Изменяем цвет иконки
-        modeIcon.style.color = currentMode === 'auto' ? "#555" : "#e74c3c";
-         // Если включен авто-режим, сбрасываем состояния реле
-        if (currentMode === 'auto') {
-            document.getElementById("relayState1").textContent = "Выключено";
-            document.getElementById("relayState2").textContent = "Выключено";
+        .then(response => response.json())
+        .then(data => {
+            currentMode = data.mode;
+            modeStateElement.textContent = currentMode === "auto" ? "Автоматический" : "Ручной";
 
-            // Обновляем иконки реле
-            document.getElementById("lightIcon").classList.remove("on");
-            document.getElementById("lightIcon").classList.add("off");
+            // Обновляем отображение настроек
+            settingsBlock.style.display = currentMode === "manual" ? "block" : "none";
 
-            document.getElementById("fanIcon").classList.remove("fan-rotate");
-            document.getElementById("fanIcon").classList.add("off");
-        }
-        updateInputState();
-        saveState(); // Сохраняем состояние режима
-    })
-    .catch(error => console.error('Ошибка при переключении режима:', error));
+            // Изменяем цвет иконки
+            modeIcon.style.color = currentMode === "auto" ? "#555" : "#e74c3c";
+
+            // Если включен авто-режим, сбрасываем состояния реле
+            if (currentMode === "auto") {
+                document.getElementById("relayState1").textContent = "Выключено";
+                document.getElementById("relayState2").textContent = "Выключено";
+
+                // Обновляем иконки реле
+                document.getElementById("lightIcon").classList.remove("on");
+                document.getElementById("lightIcon").classList.add("off");
+
+                document.getElementById("fanIcon").classList.remove("fan-rotate");
+                document.getElementById("fanIcon").classList.add("off");
+            }
+
+            updateInputState();
+            saveState(); // Сохраняем состояние режима
+        })
+        .catch(error => console.error("Ошибка при переключении режима:", error));
 }
 
-          function updateInputState() {
-            const inputs = document.querySelectorAll('.input-field input');
-            const isManualAndRelayOn = currentMode === 'manual' && relay2State;
+function updateInputState() {
+    const inputs = document.querySelectorAll(".input-field input");
+    const isManualAndRelayOn = currentMode === "manual" && relay2State;
 
-            inputs.forEach(input => {
-              input.disabled = !isManualAndRelayOn;
-            });
+    inputs.forEach(input => {
+        input.disabled = !isManualAndRelayOn;
+    });
 
-            const saveButton = document.querySelector('.save-settings');
-            saveButton.disabled = !isManualAndRelayOn;
-            saveState(); // Сохраняем состояние режима
-          }
+    const saveButton = document.querySelector(".save-settings");
+    saveButton.disabled = !isManualAndRelayOn;
+    saveState(); // Сохраняем состояние режима
+}
+
+// Функция обновления иконки в зависимости от состояния
+function updateIcon(iconId, state) {
+    let icon = document.getElementById(iconId);
+    if (state === "Включено") {
+        icon.classList.remove("off");
+        icon.classList.add("on");
+    } else {
+        icon.classList.remove("on");
+        icon.classList.add("off");
+    }
+}
+
 
          function saveLightingSettings() {
   // Получаем значения, введенные пользователем (в минутах)
