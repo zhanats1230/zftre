@@ -300,7 +300,8 @@ window.onload = loadState;
 
 
         
-          let currentMode = 'auto'; // Начальный режим
+          // Инициализируем currentMode при загрузке
+let currentMode = localStorage.getItem("mode") || "Авто";
           let relay2State = false; // Состояние реле вентилятора
 
 function toggleRelay(relayNumber) {
@@ -330,12 +331,12 @@ function toggleRelay(relayNumber) {
                     relay2State = relayState;
                     updateInputState();
                 }
+                saveState(); // Теперь вызываем сохранение в правильном месте
             })
             .catch(error => console.error('Ошибка при переключении реле:', error));
     } else {
         alert('Реле можно переключать только в ручном режиме!');
     }
-    saveState(); // Сохраняем состояние после изменения
 }
 
 function toggleMode() {
@@ -374,9 +375,9 @@ function toggleMode() {
             document.getElementById("fanIcon").classList.add("off");
         }
         updateInputState();
+        saveState(); // Сохраняем состояние режима
     })
     .catch(error => console.error('Ошибка при переключении режима:', error));
-    saveState(); // Сохраняем состояние после изменения
 }
 
           function updateInputState() {
@@ -389,6 +390,7 @@ function toggleMode() {
 
             const saveButton = document.querySelector('.save-settings');
             saveButton.disabled = !isManualAndRelayOn;
+            saveState(); // Сохраняем состояние режима
           }
 
          function saveLightingSettings() {
