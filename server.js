@@ -344,6 +344,7 @@ function toggleMode() {
         body: JSON.stringify({
             mode: currentMode === "auto" ? "manual" : "auto",
         }),
+        saveState(); // Теперь вызываем сохранение в правильном месте
     })
         .then(response => response.json())
         .then(data => {
