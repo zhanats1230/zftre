@@ -284,8 +284,8 @@ function loadState() {
         updateIcon("fanIcon", localStorage.getItem("relayState2"));
     }
     if (localStorage.getItem("mode")) {
-        currentMode = localStorage.getItem("mode"); // Загружаем режим
-        document.getElementById("mode").innerText = currentMode === "manual" ? "Ручной" : "Автоматический";
+        currentMode = localStorage.getItem("mode"); // Загружаем режим (manual / auto)
+        document.getElementById("mode").innerText = (currentMode === "manual") ? "Ручной" : "Автоматический";
     }
 }
 
