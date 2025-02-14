@@ -299,17 +299,17 @@ window.onload = function () {
 };
 
 function toggleRelay(relayNumber) {
-    let relayStateElement = document.getElementById(`relayState${relayNumber}`);
+    let relayStateElement = document.getElementById(\`relayState$\{relayNumber}\`);
     let icon = relayNumber === 1 ? document.getElementById("lightIcon") : document.getElementById("fanIcon");
 
-    if (currentMode === "manual") {
-        fetch(`/toggleRelay/${relayNumber}`, { method: "POST" })
-            .then(response => {
-                if (!response.ok) throw new Error("Ошибка сети");
+    if (currentMode === 'manual') {
+              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
+             .then(response => {
+                if (!response.ok) throw new Error('Ошибка сети');
                 return response.json();
             })
             .then(data => {
-                let relayState = data[`relayState${relayNumber}`];
+                let relayState = data[\`relayState\${relayNumber}\`];
                 relayStateElement.textContent = relayState ? "Включено" : "Выключено";
 
                 // Обновляем иконки
