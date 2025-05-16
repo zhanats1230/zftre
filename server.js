@@ -192,7 +192,7 @@ app.get('/', (req, res) => {
     }
     .wave-divider {
       height: 2px;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 20"><path fill="none" stroke="#14b8a6" stroke-width="2" d="M0,10 C360,20 1080,0 1440,10" /></svg>') repeat-x;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 20"><path fill="none" stroke="%2314b8a6" stroke-width="2" d="M0,10 C360,20 1080,0 1440,10" /></svg>') repeat-x;
       margin: 2rem 0;
     }
     .ripple-btn {
@@ -668,11 +668,11 @@ app.get('/', (req, res) => {
         const relay2Control = document.getElementById('relayState2Control');
 
         relay1Badge.textContent = data.relayState1 ? 'ON' : 'OFF';
-        relay1Badge.className = `status-badge ${data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}`;
+        relay1Badge.className = \`status-badge \${data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}\`;
         relay2Badge.textContent = data.relayState2 ? 'ON' : 'OFF';
-        relay2Badge.className = `status-badge ${data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}`;
-        relay1Control.textContent = `Lighting: ${data.relayState1 ? 'ON' : 'OFF'}`;
-        relay2Control.textContent = `Ventilation: ${data.relayState2 ? 'ON' : 'OFF'}`;
+        relay2Badge.className = \`status-badge \${data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}\`;
+        relay1Control.textContent = \`Lighting: \${data.relayState1 ? 'ON' : 'OFF'}\`;
+        relay2Control.textContent = \`Ventilation: \${data.relayState2 ? 'ON' : 'OFF'}\`;
       } catch (error) {
         console.error('Error fetching relay state:', error);
       }
@@ -682,13 +682,13 @@ app.get('/', (req, res) => {
       try {
         const response = await fetch('/getSensorData');
         const data = await response.json();
-        document.getElementById('temperature').textContent = `${data.temperature} °C`;
-        document.getElementById('humidity').textContent = `${data.humidity} %`;
-        document.getElementById('soilMoisture').textContent = `${data.soilMoisture} %`;
+        document.getElementById('temperature').textContent = \`\${data.temperature} °C\`;
+        document.getElementById('humidity').textContent = \`\${data.humidity} %\`;
+        document.getElementById('soilMoisture').textContent = \`\${data.soilMoisture} %\`;
 
-        document.getElementById('temperatureProgress').style.width = `${Math.min((data.temperature / 40) * 100, 100)}%`;
-        document.getElementById('humidityProgress').style.width = `${Math.min(data.humidity, 100)}%`;
-        document.getElementById('soilMoistureProgress').style.width = `${Math.min(data.soilMoisture, 100)}%`;
+        document.getElementById('temperatureProgress').style.width = \`\${Math.min((data.temperature / 40) * 100, 100)}%\`;
+        document.getElementById('humidityProgress').style.width = \`\${Math.min(data.humidity, 100)}%\`;
+        document.getElementById('soilMoistureProgress').style.width = \`\${Math.min(data.soilMoisture, 100)}%\`;
 
         const timestamp = new Date().toLocaleTimeString();
         updateChartData('temperature', timestamp, data.temperature);
@@ -700,7 +700,7 @@ app.get('/', (req, res) => {
     }
 
     function updateChartData(sensor, timestamp, value) {
-      const key = `${sensor}Data`;
+      const key = \`\${sensor}Data\`;
       let storedData = JSON.parse(localStorage.getItem(key)) || { labels: [], values: [] };
       storedData.labels.push(timestamp);
       storedData.values.push(value);
@@ -729,7 +729,7 @@ app.get('/', (req, res) => {
         const data = await response.json();
         const modeBadge = document.getElementById('currentMode');
         modeBadge.textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
-        modeBadge.className = `status-badge ${data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}`;
+        modeBadge.className = \`status-badge \${data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}\`;
       } catch (error) {
         console.error('Error fetching mode:', error);
       }
@@ -773,7 +773,7 @@ app.get('/', (req, res) => {
 
     async function toggleRelay(relayNumber) {
       try {
-        const response = await fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' });
+        const response = await fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' });
         if (response.ok) {
           await updateRelayState();
         } else {
@@ -866,7 +866,7 @@ app.get('/', (req, res) => {
   </script>
 </body>
 </html>
-  `);
+`);
 });
 
 app.get('/getRelayState', (req, res) => {
