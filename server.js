@@ -353,29 +353,30 @@ app.get('/', (req, res) => {
   </div>
 
   <script>
-    // Password handling
+    console.log('Script loaded'); // Debug: Confirm script execution
     const correctPassword = 'admin';
+
     function handleLogin() {
-      console.log('handleLogin called'); // Debug log
+      console.log('handleLogin called');
       const passwordInput = document.getElementById('passwordInput');
       const passwordError = document.getElementById('passwordError');
       const passwordSection = document.getElementById('passwordSection');
       const controlSection = document.getElementById('controlSection');
 
-      if (!passwordInput || !passwordSection || !controlSection) {
-        console.error('DOM elements missing:', { passwordInput, passwordSection, controlSection });
+      if (!passwordInput || !passwordError || !passwordSection || !controlSection) {
+        console.error('DOM elements missing:', { passwordInput, passwordError, passwordSection, controlSection });
         alert('Error: Page elements not found. Please refresh the page.');
         return;
       }
 
       const password = passwordInput.value.trim().toLowerCase();
-      console.log('Password entered:', password); // Debug log
+      console.log('Password entered:', password);
 
       if (password === correctPassword.toLowerCase()) {
         console.log('Password correct, showing control section');
         passwordSection.classList.add('hidden');
         controlSection.classList.remove('hidden');
-        passwordInput.value = ''; // Clear input
+        passwordInput.value = '';
         passwordError.classList.add('hidden');
         initializeApp();
       } else {
@@ -385,29 +386,42 @@ app.get('/', (req, res) => {
       }
     }
 
-    // Ensure button exists before adding listener
-    const submitButton = document.getElementById('submitPassword');
-    if (submitButton) {
-      submitButton.addEventListener('click', () => {
-        console.log('Login button clicked'); // Debug log
-        handleLogin();
-      });
-    } else {
-      console.error('Submit button not found');
+    // Initialize login event listeners
+    function setupLoginListeners() {
+      console.log('Setting up login listeners');
+      const submitButton = document.getElementById('submitPassword');
+      const passwordInput = document.getElementById('passwordInput');
+
+      if (submitButton) {
+        console.log('Submit button found, attaching click listener');
+        submitButton.addEventListener('click', () => {
+          console.log('Login button clicked');
+          handleLogin();
+        });
+      } else {
+        console.error('Submit button not found');
+        alert('Error: Submit button not found. Please refresh the page.');
+      }
+
+      if (passwordInput) {
+        console.log('Password input found, attaching keypress listener');
+        passwordInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            console.log('Enter key pressed');
+            handleLogin();
+          }
+        });
+      } else {
+        console.error('Password input not found');
+        alert('Error: Password input not found. Please refresh the page.');
+      }
     }
 
-    // Enter key support
-    const passwordInput = document.getElementById('passwordInput');
-    if (passwordInput) {
-      passwordInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          console.log('Enter key pressed'); // Debug log
-          handleLogin();
-        }
-      });
-    } else {
-      console.error('Password input not found');
-    }
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM fully loaded');
+      setupLoginListeners();
+    });
 
     // Tab switching
     const tabs = {
@@ -512,7 +526,7 @@ app.get('/', (req, res) => {
 
     document.getElementById('tempChartBtn').addEventListener('click', () => toggleModal('tempModal', true));
     document.getElementById('humidityChartBtn').addEventListener('click', () => toggleModal('humidityModal', true));
- pith document.getElementById('soilMoistureChartBtn').addEventListener('click', () => toggleModal('soilMoistureModal', true));
+    document.getElementById('soilMoistureChartBtn').addEventListener('click', () => toggleModal('soilMoistureModal', true));
     document.getElementById('closeTempModal').addEventListener('click', () => toggleModal('tempModal', false));
     document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
     document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
