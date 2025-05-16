@@ -54,6 +54,8 @@ app.get('/', (req, res) => {
       background: linear-gradient(145deg, #ffffff, #f7f7f9);
       border: 1px solid #e5e7eb;
       border-radius: 16px;
+      position: relative;
+      overflow: hidden;
     }
     .card:hover {
       transform: translateY(-4px);
@@ -61,10 +63,12 @@ app.get('/', (req, res) => {
     }
     .btn {
       transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
+      background: linear-gradient(to right, #14b8a6, #2dd4bf);
     }
     .btn:hover {
       transform: scale(1.05);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      animation: pulse 1.5s infinite;
     }
     .tab {
       transition: background-color 0.3s, color 0.3s;
@@ -111,6 +115,62 @@ app.get('/', (req, res) => {
       padding: 1rem;
       border-radius: 8px 8px 0 0;
       margin: -1.5rem -1.5rem 1.5rem;
+    }
+    .input-container {
+      position: relative;
+      transition: all 0.3s ease;
+      padding: 0.5rem;
+      border-radius: 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+    .input-container:hover {
+      background: #eff6ff;
+      border-color: #14b8a6;
+      box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+    }
+    .input-container input {
+      width: 100%;
+      padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      font-size: 1rem;
+      color: #1f2937;
+      outline: none;
+    }
+    .input-container input:focus {
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.3);
+    }
+    .input-container i {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #14b8a6;
+      font-size: 1.2rem;
+    }
+    .input-label {
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+      color: #4b5563;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .input-label i {
+      margin-right: 0.5rem;
+      color: #14b8a6;
+    }
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #e5e7eb, transparent);
+      margin: 1.5rem 0;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
     }
   </style>
 </head>
@@ -235,46 +295,59 @@ app.get('/', (req, res) => {
     <div id="settingsContent" class="tab-content hidden">
       <!-- Manual Mode Settings -->
       <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
-        <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-sliders mr-2 text-teal-500"></i> Manual Mode Settings</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-gray-600 mb-2">Temperature Threshold (°C):</label>
-            <input id="fanTemperatureThreshold" type="number" step="0.1" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="31.0">
+        <div class="section-header">
+          <h3 class="text-xl font-semibold"><i class="fa-solid fa-sliders mr-2"></i> Manual Mode Settings</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div class="input-container">
+            <label class="input-label"><i class="fa-solid fa-temperature-high"></i> Temperature Threshold (°C)</label>
+            <i class="fa-solid fa-thermometer"></i>
+            <input id="fanTemperatureThreshold" type="number" step="0.1" value="31.0" placeholder="Enter °C">
           </div>
-          <div>
-            <label class="block text-gray-600 mb-2">Light On Duration (min):</label>
-            <input id="lightOnDuration" type="number" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="1">
+          <div class="input-container">
+            <label class="input-label"><i class="fa-solid fa-clock"></i> Light On Duration (min)</label>
+            <i class="fa-solid fa-lightbulb"></i>
+            <input id="lightOnDuration" type="number" value="1" placeholder="Enter minutes">
           </div>
-          <div>
-            <label class="block text-gray-600 mb-2">Light Interval (min):</label>
-            <input id="lightIntervalManual" type="number" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="1">
+          <div class="input-container">
+            <label class="input-label"><i class="fa-solid fa-hourglass"></i> Light Interval (min)</label>
+            <i class="fa-solid fa-clock"></i>
+            <input id="lightIntervalManual" type="number" value="1" placeholder="Enter minutes">
           </div>
         </div>
-        <button id="saveLightingSettings" class="w-full mt-6 bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-save mr-2"></i> Save Settings</button>
+        <div class="divider"></div>
+        <button id="saveLightingSettings" class="w-full mt-4 bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-save mr-2"></i> Save Settings</button>
       </div>
 
       <!-- Pump Settings -->
       <div class="bg-white p-6 rounded-2xl shadow-lg card">
-        <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-water mr-2 text-teal-500"></i> Pump Settings</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <div>
-            <label class="block text-gray-600 mb-2">Start Hour:</label>
-            <input id="pumpStartHour" type="number" min="0" max="23" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="18">
+        <div class="section-header">
+          <h3 class="text-xl font-semibold"><i class="fa-solid fa-water mr-2"></i> Pump Settings</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
+          <div class="input-container">
+            <label class="input-label"><i class="fa-solid fa-clock"></i> Start Hour</label>
+            <i class="fa-solid fa-hourglass-start"></i>
+            <input id="pumpStartHour" type="number" min="0" max="23" value="18" placeholder="0-23">
           </div>
-          <div>
-            <label class="block text-gray-600 mb-2">Start Minute:</label>
-            <input id="pumpStartMinute" type="number" min="0" max="59" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="0">
+          <div class="input-container">
+            <label class="input-label"><i class="fa-solid fa-clock"></i> Start Minute</label>
+            <i class="fa-solid fa-hourglass-end"></i>
+            <input id="pumpStartMinute" type="number" min="0" max="59" value="0" placeholder="0-59">
           </div>
-          <div>
-            <label class="block text-gray-600 mb-2">Duration (sec):</label>
-            <input id="pumpDuration" type="number" min="1" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="10">
+          <div class="input-container">
+            <label class="input-label"><i class="fa-solid fa-stopwatch"></i> Duration (sec)</label>
+            <i class="fa-solid fa-water"></i>
+            <input id="pumpDuration" type="number" min="1" value="10" placeholder="Seconds">
           </div>
-          <div>
-            <label class="block text-gray-600 mb-2">Interval (min):</label>
-            <input id="pumpInterval" type="number" min="1" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="240">
+          <div class="input-container">
+            <label class="input-label"><i class="fa-solid fa-clock"></i> Interval (min)</label>
+            <i class="fa-solid fa-hourglass"></i>
+            <input id="pumpInterval" type="number" min="1" value="240" placeholder="Minutes">
           </div>
         </div>
-        <button id="savePumpSettings" class="w-full mt-6 bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-save mr-2"></i> Save Settings</button>
+        <div class="divider"></div>
+        <button id="savePumpSettings" class="w-full mt-4 bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-save mr-2"></i> Save Settings</button>
       </div>
     </div>
   </div>
@@ -439,7 +512,7 @@ app.get('/', (req, res) => {
 
     document.getElementById('tempChartBtn').addEventListener('click', () => toggleModal('tempModal', true));
     document.getElementById('humidityChartBtn').addEventListener('click', () => toggleModal('humidityModal', true));
-    document.getElementById('soilMoistureChartBtn').addEventListener('click', () => toggleModal('soilMoistureModal', true));
+ pith document.getElementById('soilMoistureChartBtn').addEventListener('click', () => toggleModal('soilMoistureModal', true));
     document.getElementById('closeTempModal').addEventListener('click', () => toggleModal('tempModal', false));
     document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
     document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
