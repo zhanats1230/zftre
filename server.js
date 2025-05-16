@@ -1,752 +1,756 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
-const port = process.env.PORT || 80;
+const port = 80;
 
-// Хранение данных для реле и датчиков
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+let relayState = {
+  relayState1: false,
+  relayState2: false
+};
+
 let sensorData = {
-  relayState1: false, // Освещение
-  relayState2: false, // Вентиляция
-  relayState3: false, // Помпа
   temperature: 0,
   humidity: 0,
-  soilMoisture: 0, // Влажность почвы
+  soilMoisture: 0
 };
 
-// Переменная для режима
-let currentMode = 'auto'; // Стартовый режим - автоматический
+let mode = 'auto';
 
-// Новые переменные для времени работы и паузы освещения
 let lightingSettings = {
-  onDuration: 30, // Время горения света в секундах
-  offDuration: 60, // Время паузы между включениями света в секундах
+  fanTemperatureThreshold: 31.0,
+  lightOnDuration: 60000,
+  lightIntervalManual: 60000
 };
 
-// Таймер для автоматического управления освещением
-let lightingTimer = null;
+let pumpSettings = {
+  pumpStartHour: 18,
+  pumpStartMinute: 0,
+  pumpDuration: 10,
+  pumpInterval: 240
+};
 
-// Для обработки JSON запросов
-app.use(express.json());
-
-// Главная страница с интерфейсом
 app.get('/', (req, res) => {
   res.send(`
-    <!DOCTYPE html>
-    <html lang="ru">
-      <head>
-       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <title>Управление теплицей</title>
-    <style>
-
-    .controls {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.status {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    width: 100%;
-    justify-content: space-between;
-}
-
-.icon-container {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.icon-container i {
-    font-size: 30px;
-    transition: 0.3s;
-}
-
-.off {
-    color: #bbb;
-}
-
-.on {
-    color: #f1c40f;
-}
-
-.fan-rotate {
-    animation: spin 1s linear infinite;
-    color: #4CAF50;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-        /* Reset styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        /* Body styling */
-        body {
-            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: #333;
-        }
-        
-        /* Container styling */
-        .container {
-            width: 90%;
-            max-width: 900px;
-            background: #ffffff;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.08);
-        }
-        
-        h1, h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-weight: 600;
-            color: #444;
-        }
-        
-        .section {
-            padding: 20px;
-            border-radius: 10px;
-            background: #f9f9f9;
-            margin-bottom: 20px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .controls {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-}
-        .controls p {
-    font-size: 18px;
-    font-weight: 500;
-    color: #333;
-    margin: 5px 0;
-}
-        .button {
-            background: #607d8b;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 500;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .button:hover {
-            background: #455a64;
-            transform: translateY(-2px);
-        }
-        
-        .data p {
-            font-size: 18px;
-            text-align: center;
-            font-weight: 500;
-        }
-        
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #b0bec5;
-            border-radius: 6px;
-            font-size: 16px;
-            margin-top: 5px;
-            background: #ffffff;
-            color: #333;
-            outline: none;
-        }
-        
-        input::placeholder {
-            color: #aaa;
-        }
-        .settings {
-    display: none;
-}
-        .settings button {
-            width: 100%;
-            margin-top: 15px;
-        }
-        .sensor {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 18px;
-    font-weight: 500;
-    margin-bottom: 10px;
-}
-
-.sensor i {
-    font-size: 24px;
-    color: #555;
-    transition: color 0.3s;
-}
-#passwordOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.password-box {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-}
-
-.password-box input {
-    margin-top: 10px;
-    padding: 8px;
-    width: 80%;
-    border: 1px solid #ccc;
-}
-
-.password-box button {
-    margin-top: 10px;
-    padding: 10px;
-    background: green;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-    </style>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Проверяем, сохранён ли вход
-        if (localStorage.getItem("auth") === "true") {
-            document.getElementById("passwordOverlay").style.display = "none";
-        }
-    });
-
-    function checkPassword() {
-        let password = "1234"; // Установи свой пароль
-        let input = document.getElementById("passwordInput").value;
-        let errorText = document.getElementById("errorText");
-
-        if (input === password) {
-            localStorage.setItem("auth", "true"); // Запоминаем вход
-            document.getElementById("passwordOverlay").style.display = "none";
-        } else {
-            errorText.style.display = "block";
-        }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Greenhouse Control</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(to bottom, #f9fafb, #e5e7eb);
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
     }
-</script>
-
-        <script>
-          let currentMode = 'auto'; // Начальный режим
-          let relay2State = false; // Состояние реле вентилятора
-
-function toggleRelay(relayNumber) {
-    let relayStateElement = document.getElementById(\`relayState$\{relayNumber}\`);
-    let icon = relayNumber === 1 ? document.getElementById("lightIcon") : document.getElementById("fanIcon");
-
-    if (currentMode === 'manual') {
-              fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
-             .then(response => {
-                if (!response.ok) throw new Error('Ошибка сети');
-                return response.json();
-            })
-            .then(data => {
-                let relayState = data[\`relayState\${relayNumber}\`];
-                relayStateElement.textContent = relayState ? 'Включено' : 'Выключено';
-
-                // Обновляем иконки
-                icon.classList.remove("off", "on", "fan-rotate");
-                if (relayState) {
-                    icon.classList.add(relayNumber === 1 ? "on" : "fan-rotate");
-                } else {
-                    icon.classList.add("off");
-                }
-
-                // Обновляем состояние вентиляции
-                if (relayNumber === 2) {
-                    relay2State = relayState;
-                    updateInputState();
-                }
-            })
-            .catch(error => console.error('Ошибка при переключении реле:', error));
-    } else {
-        alert('Реле можно переключать только в ручном режиме!');
+    .card {
+      transition: transform 0.3s, box-shadow 0.3s;
+      background: linear-gradient(145deg, #ffffff, #f7f7f9);
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
     }
-}
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    }
+    .btn {
+      transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .tab {
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .tab.active {
+      background-color: #14b8a6;
+      color: white;
+      border-radius: 8px;
+    }
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      transition: width 0.5s ease-in-out;
+      background: #14b8a6;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+    }
+    .modal {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    .modal.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .modal-overlay {
+      transition: opacity 0.3s ease;
+    }
+    .section-header {
+      background: linear-gradient(to right, #14b8a6, #2dd4bf);
+      color: white;
+      padding: 1rem;
+      border-radius: 8px 8px 0 0;
+      margin: -1.5rem -1.5rem 1.5rem;
+    }
+  </style>
+</head>
+<body class="font-sans text-gray-900">
+  <!-- Password Section -->
+  <div id="passwordSection" class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-xl card max-w-sm w-full">
+      <h2 class="text-3xl font-bold text-center text-gray-900 mb-6"><i class="fa-solid fa-lock mr-2 text-teal-500"></i> Greenhouse Login</h2>
+      <input id="passwordInput" type="password" class="w-full p-3 border border-gray-200 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Enter Password">
+      <button id="submitPassword" class="w-full bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-sign-in-alt mr-2"></i> Login</button>
+      <p id="passwordError" class="text-red-500 mt-4 text-center hidden">Incorrect Password</p>
+    </div>
+  </div>
 
-function toggleMode() {
-    let modeStateElement = document.getElementById("mode");
-    let modeIcon = document.getElementById("modeIcon");
-    let settingsBlock = document.querySelector(".settings"); // Получаем блок настроек
-    fetch('/setMode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            mode: currentMode === 'auto' ? 'manual' : 'auto',
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        currentMode = data.mode;
-        modeStateElement.textContent = currentMode === 'auto' ? 'Автоматический' : 'Ручной';
-// Обновляем отображение настроек
-        if (currentMode === 'manual') {
-            settingsBlock.style.display = "block";  // Показываем
-        } else {
-            settingsBlock.style.display = "none";   // Скрываем
-        }
-        // Изменяем цвет иконки
-        modeIcon.style.color = currentMode === 'auto' ? "#555" : "#e74c3c";
-         // Если включен авто-режим, сбрасываем состояния реле
-        if (currentMode === 'auto') {
-            document.getElementById("relayState1").textContent = "Выключено";
-            document.getElementById("relayState2").textContent = "Выключено";
+  <!-- Main Control Section (Hidden Initially) -->
+  <div id="controlSection" class="container mx-auto p-6 hidden">
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-4xl font-bold text-gray-900"><i class="fa-solid fa-leaf mr-2 text-teal-500"></i> Greenhouse Control</h1>
+      <button id="toggleMode" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-sync mr-2"></i> Switch Mode</button>
+    </div>
 
-            // Обновляем иконки реле
-            document.getElementById("lightIcon").classList.remove("on");
-            document.getElementById("lightIcon").classList.add("off");
+    <!-- Tabs Navigation -->
+    <div class="flex border-b border-gray-200 mb-8">
+      <button id="tabDashboard" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100 active">Dashboard</button>
+      <button id="tabRelays" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Relays</button>
+      <button id="tabSettings" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Settings</button>
+    </div>
 
-            document.getElementById("fanIcon").classList.remove("fan-rotate");
-            document.getElementById("fanIcon").classList.add("off");
-        }
-        updateInputState();
-    })
-    .catch(error => console.error('Ошибка при переключении режима:', error));
-}
+    <!-- Tab Content -->
+    <div id="dashboardContent" class="tab-content">
+      <!-- System Status -->
+      <div class="mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-lg card">
+          <div class="section-header">
+            <h3 class="text-xl font-semibold"><i class="fa-solid fa-gauge mr-2"></i> System Status</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <p class="mb-3">Mode: <span id="currentMode" class="status-badge bg-gray-100 text-gray-800">—</span></p>
+            <p class="mb-3">Lighting: <span id="relayState1" class="status-badge bg-gray-100 text-gray-800">—</span></p>
+            <p class="mb-3">Ventilation: <span id="relayState2" class="status-badge bg-gray-100 text-gray-800">—</span></p>
+          </div>
+        </div>
+      </div>
 
-          function updateInputState() {
-            const inputs = document.querySelectorAll('.input-field input');
-            const isManualAndRelayOn = currentMode === 'manual' && relay2State;
+      <!-- Sensors -->
+      <div>
+        <div class="section-header" style="margin: 0 0 1.5rem;">
+          <h3 class="text-xl font-semibold"><i class="fa-solid fa-thermometer mr-2"></i> Environmental Sensors</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Temperature -->
+          <div class="bg-white p-6 rounded-2xl shadow-lg card">
+            <h4 class="text-lg font-semibold text-gray-900 mb-3"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Temperature</h4>
+            <p id="temperature" class="text-lg mb-3">— °C</p>
+            <div class="progress-bar"><div id="temperatureProgress" class="progress-bar-fill" style="width: 0%"></div></div>
+            <button id="tempChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
+          </div>
+          <!-- Humidity -->
+          <div class="bg-white p-6 rounded-2xl shadow-lg card">
+            <h4 class="text-lg font-semibold text-gray-900 mb-3"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Humidity</h4>
+            <p id="humidity" class="text-lg mb-3">— %</p>
+            <div class="progress-bar"><div id="humidityProgress" class="progress-bar-fill" style="width: 0%"></div></div>
+            <button id="humidityChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
+          </div>
+          <!-- Soil Moisture -->
+          <div class="bg-white p-6 rounded-2xl shadow-lg card">
+            <h4 class="text-lg font-semibold text-gray-900 mb-3"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Soil Moisture</h4>
+            <p id="soilMoisture" class="text-lg mb-3">— %</p>
+            <div class="progress-bar"><div id="soilMoistureProgress" class="progress-bar-fill" style="width: 0%"></div></div>
+            <button id="soilMoistureChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-            inputs.forEach(input => {
-              input.disabled = !isManualAndRelayOn;
-            });
+    <!-- Chart Modals -->
+    <div id="tempModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
+      <div class="bg-white p-6 rounded-2xl max-w-2xl w-full">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Temperature Trends</h3>
+          <button id="closeTempModal" class="text-gray-600 hover:text-gray-900"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <canvas id="tempChart"></canvas>
+      </div>
+    </div>
+    <div id="humidityModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
+      <div class="bg-white p-6 rounded-2xl max-w-2xl w-full">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Humidity Trends</h3>
+          <button id="closeHumidityModal" class="text-gray-600 hover:text-gray-900"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <canvas id="humidityChart"></canvas>
+      </div>
+    </div>
+    <div id="soilMoistureModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
+      <div class="bg-white p-6 rounded-2xl max-w-2xl w-full">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Soil Moisture Trends</h3>
+          <button id="closeSoilMoistureModal" class="text-gray-600 hover:text-gray-900"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <canvas id="soilMoistureChart"></canvas>
+      </div>
+    </div>
 
-            const saveButton = document.querySelector('.save-settings');
-            saveButton.disabled = !isManualAndRelayOn;
-          }
+    <div id="relaysContent" class="tab-content hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Lighting -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg card">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-lightbulb mr-2 text-teal-500"></i> Lighting</h3>
+          <p id="relayState1Control" class="text-lg mb-4">Lighting: —</p>
+          <button id="toggleRelay1" class="w-full bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-power-off mr-2"></i> Toggle Lighting</button>
+        </div>
+        <!-- Ventilation -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg card">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-fan mr-2 text-teal-500"></i> Ventilation</h3>
+          <p id="relayState2Control" class="text-lg mb-4">Ventilation: —</p>
+          <button id="toggleRelay2" class="w-full bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-power-off mr-2"></i> Toggle Ventilation</button>
+        </div>
+      </div>
+    </div>
 
-         function saveLightingSettings() {
-  // Получаем значения, введенные пользователем (в минутах)
-  const fanTemperatureThreshold = parseFloat(document.getElementById("fanTemperatureThreshold").value);
-  const lightOnDurationMinutes = parseFloat(document.getElementById("lightOnDuration").value); // в минутах
-  const lightIntervalManualMinutes = parseFloat(document.getElementById("lightIntervalManual").value); // в минутах
+    <div id="settingsContent" class="tab-content hidden">
+      <!-- Manual Mode Settings -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-sliders mr-2 text-teal-500"></i> Manual Mode Settings</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-gray-600 mb-2">Temperature Threshold (°C):</label>
+            <input id="fanTemperatureThreshold" type="number" step="0.1" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="31.0">
+          </div>
+          <div>
+            <label class="block text-gray-600 mb-2">Light On Duration (min):</label>
+            <input id="lightOnDuration" type="number" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="1">
+          </div>
+          <div>
+            <label class="block text-gray-600 mb-2">Light Interval (min):</label>
+            <input id="lightIntervalManual" type="number" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="1">
+          </div>
+        </div>
+        <button id="saveLightingSettings" class="w-full mt-6 bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-save mr-2"></i> Save Settings</button>
+      </div>
 
-  // Проверяем, что все значения корректны
-  if (isNaN(fanTemperatureThreshold) || isNaN(lightOnDurationMinutes) || isNaN(lightIntervalManualMinutes)) {
-    alert("Пожалуйста, заполните все поля корректными значениями.");
-    return;
-  }
+      <!-- Pump Settings -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg card">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-water mr-2 text-teal-500"></i> Pump Settings</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-gray-600 mb-2">Start Hour:</label>
+            <input id="pumpStartHour" type="number" min="0" max="23" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="18">
+          </div>
+          <div>
+            <label class="block text-gray-600 mb-2">Start Minute:</label>
+            <input id="pumpStartMinute" type="number" min="0" max="59" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="0">
+          </div>
+          <div>
+            <label class="block text-gray-600 mb-2">Duration (sec):</label>
+            <input id="pumpDuration" type="number" min="1" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="10">
+          </div>
+          <div>
+            <label class="block text-gray-600 mb-2">Interval (min):</label>
+            <input id="pumpInterval" type="number" min="1" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" value="240">
+          </div>
+        </div>
+        <button id="savePumpSettings" class="w-full mt-6 bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-save mr-2"></i> Save Settings</button>
+      </div>
+    </div>
+  </div>
 
-  // Переводим время в миллисекунды
-  const lightOnDuration = lightOnDurationMinutes * 60000;  // Преобразуем минуты в миллисекунды
-  const lightIntervalManual = lightIntervalManualMinutes * 60000;  // Преобразуем минуты в миллисекунды
+  <script>
+    // Password handling
+    const correctPassword = 'admin';
+    function handleLogin() {
+      console.log('handleLogin called'); // Debug log
+      const passwordInput = document.getElementById('passwordInput');
+      const passwordError = document.getElementById('passwordError');
+      const passwordSection = document.getElementById('passwordSection');
+      const controlSection = document.getElementById('controlSection');
 
-  const settings = {
-    fanTemperatureThreshold,
-    lightOnDuration,
-    lightIntervalManual
-  };
-
-  // Отправляем данные на сервер
-  fetch("/updateLightingSettings", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(settings)
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error("Ошибка при отправке настроек.");
+      if (!passwordInput || !passwordSection || !controlSection) {
+        console.error('DOM elements missing:', { passwordInput, passwordSection, controlSection });
+        alert('Error: Page elements not found. Please refresh the page.');
+        return;
       }
-      return response.json();
-    })
-    .then(data => {
-      alert("Настройки успешно сохранены!");
-      console.log(data);
-    })
-    .catch((error) => {
-      console.error("Ошибка:", error);
-      alert("Не удалось сохранить настройки.");
+
+      const password = passwordInput.value.trim().toLowerCase();
+      console.log('Password entered:', password); // Debug log
+
+      if (password === correctPassword.toLowerCase()) {
+        console.log('Password correct, showing control section');
+        passwordSection.classList.add('hidden');
+        controlSection.classList.remove('hidden');
+        passwordInput.value = ''; // Clear input
+        passwordError.classList.add('hidden');
+        initializeApp();
+      } else {
+        console.log('Incorrect password');
+        passwordError.classList.remove('hidden');
+        alert('Incorrect password, please try again.');
+      }
+    }
+
+    // Ensure button exists before adding listener
+    const submitButton = document.getElementById('submitPassword');
+    if (submitButton) {
+      submitButton.addEventListener('click', () => {
+        console.log('Login button clicked'); // Debug log
+        handleLogin();
+      });
+    } else {
+      console.error('Submit button not found');
+    }
+
+    // Enter key support
+    const passwordInput = document.getElementById('passwordInput');
+    if (passwordInput) {
+      passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          console.log('Enter key pressed'); // Debug log
+          handleLogin();
+        }
+      });
+    } else {
+      console.error('Password input not found');
+    }
+
+    // Tab switching
+    const tabs = {
+      dashboard: document.getElementById('dashboardContent'),
+      relays: document.getElementById('relaysContent'),
+      settings: document.getElementById('settingsContent')
+    };
+    const tabButtons = {
+      dashboard: document.getElementById('tabDashboard'),
+      relays: document.getElementById('tabRelays'),
+      settings: document.getElementById('tabSettings')
+    };
+
+    function switchTab(tabName) {
+      Object.values(tabs).forEach(tab => tab.classList.add('hidden'));
+      Object.values(tabButtons).forEach(btn => btn.classList.remove('active'));
+      tabs[tabName].classList.remove('hidden');
+      tabButtons[tabName].classList.add('active');
+    }
+
+    Object.keys(tabButtons).forEach(tabName => {
+      tabButtons[tabName].addEventListener('click', () => switchTab(tabName));
     });
-}
 
+    // Chart initialization
+    let tempChart, humidityChart, soilMoistureChart;
+    const maxDataPoints = 30;
+    function initializeCharts() {
+      const ctxTemp = document.getElementById('tempChart').getContext('2d');
+      const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
+      const ctxSoilMoisture = document.getElementById('soilMoistureChart').getContext('2d');
 
+      tempChart = new Chart(ctxTemp, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Temperature (°C)',
+            data: [],
+            borderColor: '#14b8a6',
+            backgroundColor: 'rgba(20, 184, 166, 0.2)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true, max: 40 } }
+        }
+      });
 
-          document.addEventListener('DOMContentLoaded', () => {
-            setInterval(() => {
-              fetch('/getSensorData')
-                .then(response => response.json())
-                .then(data => {
-                  document.getElementById('temperature').textContent = \`Температура: \${data.temperature}°C\`;
-                  document.getElementById('humidity').textContent = \`Влажность: \${data.humidity}%\`;
-                  document.getElementById('soilMoisture').textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
-                })
-                .catch(error => console.error('Error updating sensor data:', error));
-            }, 1000);
+      humidityChart = new Chart(ctxHumidity, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Humidity (%)',
+            data: [],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true, max: 100 } }
+        }
+      });
 
-            updateInputState();
-          });
-        </script>
-        <script>
-function savePumpSettings() {
-  const pumpStartHour = parseInt(document.getElementById("pumpStartHour").value);
-  const pumpStartMinute = parseInt(document.getElementById("pumpStartMinute").value);
-  const pumpDuration = parseInt(document.getElementById("pumpDuration").value);
-  const pumpInterval = parseInt(document.getElementById("pumpInterval").value);
+      soilMoistureChart = new Chart(ctxSoilMoisture, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Soil Moisture (%)',
+            data: [],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true, max: 100 } }
+        }
+      });
+    }
 
-  if (isNaN(pumpStartHour) || isNaN(pumpStartMinute) || isNaN(pumpDuration) || isNaN(pumpInterval)) {
-    alert("Заполните все поля!");
-    return;
-  }
+    // Modal handling
+    function toggleModal(modalId, show) {
+      const modal = document.getElementById(modalId);
+      if (show) {
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.add('show'), 10);
+      } else {
+        modal.classList.remove('show');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+      }
+    }
 
-  fetch("/updatePumpSettings", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      pumpStartHour,
-      pumpStartMinute,
-      pumpDuration,
-      pumpInterval
-    })
-  })
-    .then(response => response.json())
-    .then(data => alert(data.message))
-    .catch(error => console.error("Ошибка:", error));
-}
+    document.getElementById('tempChartBtn').addEventListener('click', () => toggleModal('tempModal', true));
+    document.getElementById('humidityChartBtn').addEventListener('click', () => toggleModal('humidityModal', true));
+    document.getElementById('soilMoistureChartBtn').addEventListener('click', () => toggleModal('soilMoistureModal', true));
+    document.getElementById('closeTempModal').addEventListener('click', () => toggleModal('tempModal', false));
+    document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
+    document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
 
-// Загружаем текущие настройки при загрузке страницы
-fetch("/getPumpSettings")
-  .then(response => response.json())
-  .then(data => {
-    document.getElementById("pumpStartHour").value = data.pumpStartHour;
-    document.getElementById("pumpStartMinute").value = data.pumpStartMinute;
-    document.getElementById("pumpDuration").value = data.pumpDuration;
-    document.getElementById("pumpInterval").value = data.pumpInterval;
-  })
-  .catch(error => console.error("Ошибка загрузки настроек:", error));
+    // Initialize app
+    function initializeApp() {
+      switchTab('dashboard');
+      initializeCharts();
+      updateRelayState();
+      updateSensorData();
+      updateMode();
+      updateSettings();
 
+      document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
+      document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
+      document.getElementById('toggleMode').addEventListener('click', toggleMode);
+      document.getElementById('saveLightingSettings').addEventListener('click', saveLightingSettings);
+      document.getElementById('savePumpSettings').addEventListener('click', savePumpSettings);
 
+      setInterval(updateSensorData, 5000);
+      setInterval(updateRelayState, 5000);
+      setInterval(updateMode, 5000);
+    }
 
+    // Fetch and display relay states
+    async function updateRelayState() {
+      try {
+        const response = await fetch('/getRelayState');
+        const data = await response.json();
+        const relay1Badge = document.getElementById('relayState1');
+        const relay2Badge = document.getElementById('relayState2');
+        const relay1Control = document.getElementById('relayState1Control');
+        const relay2Control = document.getElementById('relayState2Control');
 
-function updateSensors(data) {
-    let tempElement = document.getElementById("temperature");
-    let tempIcon = document.getElementById("tempIcon");
+        relay1Badge.textContent = data.relayState1 ? 'ON' : 'OFF';
+        relay1Badge.className = \`status-badge \${data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}\`;
+        relay2Badge.textContent = data.relayState2 ? 'ON' : 'OFF';
+        relay2Badge.className = \`status-badge \${data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}\`;
+        relay1Control.textContent = \`Lighting: \${data.relayState1 ? 'ON' : 'OFF'}\`;
+        relay2Control.textContent = \`Ventilation: \${data.relayState2 ? 'ON' : 'OFF'}\`;
+      } catch (error) {
+        console.error('Error fetching relay state:', error);
+      }
+    }
 
-    let humidityElement = document.getElementById("humidity");
-    let humidityIcon = document.getElementById("humidityIcon");
+    // Fetch and display sensor data
+    async function updateSensorData() {
+      try {
+        const response = await fetch('/getSensorData');
+        const data = await response.json();
+        document.getElementById('temperature').textContent = \`\${data.temperature} °C\`;
+        document.getElementById('humidity').textContent = \`\${data.humidity} %\`;
+        document.getElementById('soilMoisture').textContent = \`\${data.soilMoisture} %\`;
 
-    let soilElement = document.getElementById("soilMoisture");
-    let soilIcon = document.getElementById("soilIcon");
+        // Update progress bars
+        document.getElementById('temperatureProgress').style.width = \`\${Math.min((data.temperature / 40) * 100, 100)}%\`;
+        document.getElementById('humidityProgress').style.width = \`\${Math.min(data.humidity, 100)}%\`;
+        document.getElementById('soilMoistureProgress').style.width = \`\${Math.min(data.soilMoisture, 100)}%\`;
 
-    // Обновление текста
-    tempElement.textContent = \`Температура:\${data.temperature}°C\`;
-    humidityElement.textContent = \`Влажность: \${data.humidity}%\`;
-    soilElement.textContent = \`Влажность почвы: \${data.soilMoisture}%\`;
+        // Store data for charts
+        const timestamp = new Date().toLocaleTimeString();
+        updateChartData('temperature', timestamp, data.temperature);
+        updateChartData('humidity', timestamp, data.humidity);
+        updateChartData('soilMoisture', timestamp, data.soilMoisture);
+      } catch (error) {
+        console.error('Error fetching sensor data:', error);
+      }
+    }
 
-    // Изменение цвета значков в зависимости от значений
-    tempIcon.style.color = data.temperature < 10 ? "blue" :
-                           data.temperature <= 25 ? "green" : "red";
+    // Update chart data
+    function updateChartData(sensor, timestamp, value) {
+      const key = \`\${sensor}Data\`;
+      let storedData = JSON.parse(localStorage.getItem(key)) || { labels: [], values: [] };
+      storedData.labels.push(timestamp);
+      storedData.values.push(value);
 
-    humidityIcon.style.color = data.humidity < 30 ? "orange" : "blue";
+      if (storedData.labels.length > maxDataPoints) {
+        storedData.labels.shift();
+        storedData.values.shift();
+      }
 
-    soilIcon.style.color = data.soilMoisture < 40 ? "brown" : "green";
-}
+      localStorage.setItem(key, JSON.stringify(storedData));
 
-// Пример вызова с данными, как они приходят
-fetch('/getSensorData')
-    .then(response => response.json())
-    .then(data => updateSensors(data))
-    .catch(error => console.error('Ошибка получения данных датчиков:', error));
+      const chart = {
+        temperature: tempChart,
+        humidity: humidityChart,
+        soilMoisture: soilMoistureChart
+      }[sensor];
 
-</script>
-      </head>
-      <body>
-      <div id="passwordOverlay">
-    <div class="password-box">
-        <h2>Введите пароль</h2>
-        <input type="password" id="passwordInput" placeholder="Пароль">
-        <button onclick="checkPassword()">Войти</button>
-        <p id="errorText" style="color:red; display:none;">Неверный пароль</p>
-    </div>
-</div>
+      chart.data.labels = storedData.labels;
+      chart.data.datasets[0].data = storedData.values;
+      chart.update();
+    }
 
+    // Fetch and display current mode
+    async function updateMode() {
+      try {
+        const response = await fetch('/getMode');
+        const data = await response.json();
+        const modeBadge = document.getElementById('currentMode');
+        modeBadge.textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
+        modeBadge.className = \`status-badge \${data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}\`;
+      } catch (error) {
+        console.error('Error fetching mode:', error);
+      }
+    }
 
-    <div class="container">
-        <h1>Управление теплицей</h1>
-        
-        <div class="section">
-            <h2>Реле</h2>
-            <div class="controls">
-    <div class="status">
-        <p>Освещение: <span id="relayState1">—</span></p>
-        <div class="icon-container">
-            <i id="lightIcon" class="fas fa-lightbulb off"></i>
-        </div>
-        <button class="button" onclick="toggleRelay(1)">Освещение</button>
-    </div>
-    
-    <div class="status">
-        <p>Вентиляция: <span id="relayState2">—</span></p>
-        <div class="icon-container">
-            <i id="fanIcon" class="fas fa-fan off"></i>
-        </div>
-        <button class="button" onclick="toggleRelay(2)">Вентиляция</button>
-    </div>
+    // Fetch and display settings
+    async function updateSettings() {
+      try {
+        const lightingResponse = await fetch('/getLightingSettings');
+        const lightingData = await lightingResponse.json();
+        document.getElementById('fanTemperatureThreshold').value = lightingData.fanTemperatureThreshold;
+        document.getElementById('lightOnDuration').value = lightingData.lightOnDuration / 60000;
+        document.getElementById('lightIntervalManual').value = lightingData.lightIntervalManual / 60000;
 
-    <div class="status">
-        <p>Режим работы: <span id="mode">—</span></p>
-        <div class="icon-container">
-            <i id="modeIcon" class="fas fa-cogs"></i>
-        </div>
-        <button class="button" onclick="toggleMode()">Переключить режим</button>
-    </div>
-</div>
+        const pumpResponse = await fetch('/getPumpSettings');
+        const pumpData = await pumpResponse.json();
+        document.getElementById('pumpStartHour').value = pumpData.pumpStartHour;
+        document.getElementById('pumpStartMinute').value = pumpData.pumpStartMinute;
+        document.getElementById('pumpDuration').value = pumpData.pumpDuration;
+        document.getElementById('pumpInterval').value = pumpData.pumpInterval;
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      }
+    }
 
-        </div>
+    // Toggle relay state
+    async function toggleRelay(relayNumber) {
+      try {
+        const response = await fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' });
+        if (response.ok) {
+          await updateRelayState();
+        } else {
+          const error = await response.json();
+          alert(error.error || 'Failed to toggle relay');
+        }
+      } catch (error) {
+        console.error('Error toggling relay:', error);
+        alert('Error toggling relay');
+      }
+    }
 
-<div class="section settings">
-            <h2>Настройки ручного режима</h2>
-            <label>Порог температуры (°C):</label>
-            <input type="number" id="fanTemperatureThreshold" placeholder="Введите порог">
-            <label>Время работы света (мин):</label>
-            <input type="number" id="lightOnDuration" placeholder="Введите время">
-            <label>Интервал переключения света (мин):</label>
-            <input type="number" id="lightIntervalManual" placeholder="Введите интервал">
-            <button class="button" onclick="saveLightingSettings()">Сохранить</button>
-            
-        </div>
+    // Toggle mode
+    async function toggleMode() {
+      try {
+        const currentMode = document.getElementById('currentMode').textContent.toLowerCase();
+        const newMode = currentMode.includes('auto') ? 'manual' : 'auto';
+        const response = await fetch('/setMode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: newMode })
+        });
+        if (response.ok) {
+          await updateMode();
+        } else {
+          const error = await response.json();
+          alert(error.error || 'Failed to switch mode');
+        }
+      } catch (error) {
+        console.error('Error switching mode:', error);
+        alert('Error switching mode');
+      }
+    }
 
+    // Save lighting settings
+    async function saveLightingSettings() {
+      try {
+        const settings = {
+          fanTemperatureThreshold: parseFloat(document.getElementById('fanTemperatureThreshold').value),
+          lightOnDuration: parseInt(document.getElementById('lightOnDuration').value) * 60000,
+          lightIntervalManual: parseInt(document.getElementById('lightIntervalManual').value) * 60000
+        };
+        const response = await fetch('/updateLightingSettings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+        if (response.ok) {
+          alert('Lighting settings saved!');
+          await updateSettings();
+        } else {
+          const error = await response.json();
+          alert(error.error || 'Failed to save settings');
+        }
+      } catch (error) {
+        console.error('Error saving lighting settings:', error);
+        alert('Error saving settings');
+      }
+    }
 
-
-
-        
-        <div class="section data">
-    <h2>Датчики</h2>
-    
-    <div class="sensor">
-        <i id="tempIcon" class="fas fa-thermometer-half"></i>
-        <p id="temperature">Температура: —</p>
-    </div>
-
-    <div class="sensor">
-        <i id="humidityIcon" class="fas fa-tint"></i>
-        <p id="humidity">Влажность: —</p>
-    </div>
-
-    <div class="sensor">
-        <i id="soilIcon" class="fas fa-seedling"></i>
-        <p id="soilMoisture">Влажность почвы: —</p>
-    </div>
-</div>
-<div class="section data">
-        <h2>Настройки насоса</h2>
-            <label>Час включения:</label>
-            <input type="number" id="pumpStartHour" min="0" max="23" placeholder="Введите час">
-            <label>Минуты включения:</label>
-            <input type="number" id="pumpStartMinute" min="0" max="59" placeholder="Введите минуты">
-            <label>Время работы (сек):</label>
-            <input type="number" id="pumpDuration" min="1" placeholder="Введите время">
-            <label>Интервал (мин):</label>
-            <input type="number" id="pumpInterval" min="1" placeholder="Введите интервал">
-            <button class="button" onclick="savePumpSettings()">Сохранить</button>
-        </div>
-        
-        
-    </div>
+    // Save pump settings
+    async function savePumpSettings() {
+      try {
+        const settings = {
+          pumpStartHour: parseInt(document.getElementById('pumpStartHour').value),
+          pumpStartMinute: parseInt(document.getElementById('pumpStartMinute').value),
+          pumpDuration: parseInt(document.getElementById('pumpDuration').value),
+          pumpInterval: parseInt(document.getElementById('pumpInterval').value)
+        };
+        const response = await fetch('/updatePumpSettings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+        if (response.ok) {
+          alert('Pump settings saved!');
+          await updateSettings();
+        } else {
+          const error = await response.json();
+          alert(error.error || 'Failed to save settings');
+        }
+      } catch (error) {
+        console.error('Error saving pump settings:', error);
+        alert('Error saving settings');
+      }
+    }
+  </script>
 </body>
-    </html>
+</html>
   `);
 });
 
-
-
-// Остальные эндпоинты аналогичны, никаких сокращений не применено.
-
-
-// Эндпоинт для получения состояния реле
 app.get('/getRelayState', (req, res) => {
-  res.json({
-    relayState1: sensorData.relayState1,
-    relayState2: sensorData.relayState2,
-  });
+  res.json(relayState);
 });
 
-// Эндпоинт для получения данных с датчиков
 app.get('/getSensorData', (req, res) => {
-  res.json({
-    temperature: sensorData.temperature,
-    humidity: sensorData.humidity,
-    soilMoisture: sensorData.soilMoisture,
-  });
+  res.json(sensorData);
 });
 
-// Эндпоинт для обновления данных с датчиков
 app.post('/updateSensorData', (req, res) => {
   const { temperature, humidity, soilMoisture } = req.body;
-  if (temperature != null && humidity != null && soilMoisture != null) {
-    sensorData.temperature = temperature;
-    sensorData.humidity = humidity;
-    sensorData.soilMoisture = soilMoisture;
-    console.log(
-      `Received sensor data: Temperature: ${temperature}°C, Humidity: ${humidity}%, Soil Moisture: ${soilMoisture}%`
-    );
-    res.json({ message: 'Sensor data updated successfully' });
+  if (temperature !== undefined && humidity !== undefined && soilMoisture !== undefined) {
+    sensorData = { temperature, humidity, soilMoisture };
+    console.log('Sensor data updated:', sensorData);
+    res.json({ success: true });
   } else {
-    res.status(400).json({ error: 'Invalid data' });
+    res.status(400).json({ error: 'Invalid sensor data' });
   }
 });
 
-// Эндпоинт для получения текущего режима
 app.get('/getMode', (req, res) => {
-  res.json({ mode: currentMode });
+  res.json({ mode });
 });
 
-// Эндпоинт для изменения режима
 app.post('/setMode', (req, res) => {
-  const { mode } = req.body;
-  if (mode === 'auto' || mode === 'manual') {
-    currentMode = mode;
-    console.log(`Mode changed to ${currentMode}`);
-    res.json({ mode: currentMode });
+  const { mode: newMode } = req.body;
+  if (newMode === 'auto' || newMode === 'manual') {
+    mode = newMode;
+    console.log('Mode set to:', mode);
+    res.json({ success: true });
   } else {
     res.status(400).json({ error: 'Invalid mode' });
   }
 });
 
-
-// Эндпоинт для переключения состояния реле
 app.post('/toggleRelay/:relayNumber', (req, res) => {
-  const relayNumber = parseInt(req.params.relayNumber, 10);
-  const relayStateKey = `relayState${relayNumber}`;
-  if (!Number.isNaN(relayNumber) && sensorData[relayStateKey] != null) {
-    if (currentMode === 'manual') {
-      sensorData[relayStateKey] = !sensorData[relayStateKey];
-      console.log(
-        `Relay ${relayNumber} toggled to ${sensorData[relayStateKey] ? 'ON' : 'OFF'}`
-      );
-      res.json({ [relayStateKey]: sensorData[relayStateKey] });
+  const relayNumber = parseInt(req.params.relayNumber);
+  if (relayNumber === 1 || relayNumber === 2) {
+    if (mode === 'manual') {
+      relayState[`relayState${relayNumber}`] = !relayState[`relayState${relayNumber}`];
+      console.log(`Relay ${relayNumber} toggled to:`, relayState[`relayState${relayNumber}`]);
+      res.json({ success: true });
     } else {
-      res.status(403).json({ error: 'Cannot toggle relay in automatic mode' });
+      res.status(400).json({ error: 'Cannot toggle relay in auto mode' });
     }
   } else {
     res.status(400).json({ error: 'Invalid relay number' });
   }
 });
 
-
-let pumpSettings = {
-  pumpStartHour: 18,   // Час включения
-  pumpStartMinute: 0,  // Минуты включения
-  pumpDuration: 10,    // Длительность работы (секунды)
-  pumpInterval: 240,   // Интервал между включениями (минуты)
-};
-
-// Эндпоинт для получения настроек насоса
 app.get('/getPumpSettings', (req, res) => {
   res.json(pumpSettings);
 });
 
-// Эндпоинт для обновления настроек насоса
 app.post('/updatePumpSettings', (req, res) => {
   const { pumpStartHour, pumpStartMinute, pumpDuration, pumpInterval } = req.body;
-
   if (
-    pumpStartHour != null &&
-    pumpStartMinute != null &&
-    pumpDuration != null &&
-    pumpInterval != null
+    Number.isInteger(pumpStartHour) && pumpStartHour >= 0 && pumpStartHour <= 23 &&
+    Number.isInteger(pumpStartMinute) && pumpStartMinute >= 0 && pumpStartMinute <= 59 &&
+    Number.isInteger(pumpDuration) && pumpDuration > 0 &&
+    Number.isInteger(pumpInterval) && pumpInterval > 0
   ) {
-    pumpSettings.pumpStartHour = pumpStartHour;
-    pumpSettings.pumpStartMinute = pumpStartMinute;
-    pumpSettings.pumpDuration = pumpDuration;
-    pumpSettings.pumpInterval = pumpInterval;
-
-    console.log("Настройки насоса обновлены:", pumpSettings);
-    res.json({ message: "Настройки обновлены!" });
+    pumpSettings = { pumpStartHour, pumpStartMinute, pumpDuration, pumpInterval };
+    console.log('Pump settings updated:', pumpSettings);
+    res.json({ success: true });
   } else {
-    res.status(400).json({ error: "Некорректные данные" });
+    res.status(400).json({ error: 'Invalid pump settings' });
   }
 });
 
-
-
-
-
-
-
-
-
-
-
-
-// Новые переменные для кулера и света
-// Используйте существующую переменную для настройки освещения:
-lightingSettings.onDuration = 30; // Обновите настройки, если это нужно
-lightingSettings.offDuration = 60;
-lightingSettings.fanTemperatureThreshold = 31.0;
-lightingSettings.lightOnDuration = 60000;
-lightingSettings.lightIntervalManual = 60000;
-
-// Эндпоинт для получения настроек (в том числе для ручного управления)
 app.get('/getLightingSettings', (req, res) => {
   res.json(lightingSettings);
 });
 
-// Эндпоинт для обновления настроек (в том числе для ручного управления)
-// Эндпоинт для обновления настроек освещения
-// Эндпоинт для обновления настроек освещения
 app.post('/updateLightingSettings', (req, res) => {
   const { fanTemperatureThreshold, lightOnDuration, lightIntervalManual } = req.body;
-  if (fanTemperatureThreshold != null && lightOnDuration != null && lightIntervalManual != null) {
-    lightingSettings.fanTemperatureThreshold = fanTemperatureThreshold;
-    lightingSettings.lightOnDuration = lightOnDuration;
-    lightingSettings.lightIntervalManual = lightIntervalManual;
-
-    console.log(`Lighting settings updated: 
-      fanTemperatureThreshold: ${fanTemperatureThreshold}, 
-      lightOnDuration: ${lightOnDuration}, 
-      lightIntervalManual: ${lightIntervalManual}`);
-    
-    res.json({ message: 'Lighting settings updated successfully' });
+  if (
+    typeof fanTemperatureThreshold === 'number' &&
+    typeof lightOnDuration === 'number' && lightOnDuration > 0 &&
+    typeof lightIntervalManual === 'number' && lightIntervalManual > 0
+  ) {
+    lightingSettings = { fanTemperatureThreshold, lightOnDuration, lightIntervalManual };
+    console.log('Lighting settings updated:', lightingSettings);
+    res.json({ success: true });
   } else {
-    res.status(400).json({ error: 'Invalid data' });
+    res.status(400).json({ error: 'Invalid lighting settings' });
   }
 });
-app.get('/getLightingSettings', (req, res) => {
-  res.json(lightingSettings);
-});
-// Запуск сервера
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
