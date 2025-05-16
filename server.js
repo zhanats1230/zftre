@@ -721,11 +721,11 @@ app.get('/', (req, res) => {
         const relay2Control = document.getElementById('relayState2Control');
 
         relay1Badge.textContent = data.relayState1 ? 'ON' : 'OFF';
-        relay1Badge.className = `status-badge ${data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}`;
+        relay1Badge.className = \`status-badge \${data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}\`;
         relay2Badge.textContent = data.relayState2 ? 'ON' : 'OFF';
-        relay2Badge.className = `status-badge ${data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}`;
-        relay1Control.textContent = `Lighting: ${data.relayState1 ? 'ON' : 'OFF'}`;
-        relay2Control.textContent = `Ventilation: ${data.relayState2 ? 'ON' : 'OFF'}`;
+        relay2Badge.className = \`status-badge \${data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}\`;
+        relay1Control.textContent = \`Lighting: \${data.relayState1 ? 'ON' : 'OFF'}\`;
+        relay2Control.textContent = \`Ventilation: \${data.relayState2 ? 'ON' : 'OFF'}\`;
       } catch (error) {
         console.error('Error fetching relay state:', error);
       }
