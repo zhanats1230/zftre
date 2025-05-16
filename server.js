@@ -112,60 +112,131 @@ app.get('/', (req, res) => {
     .section-header {
       background: linear-gradient(to right, #14b8a6, #2dd4bf);
       color: white;
-      padding: 1rem;
-      border-radius: 8px 8px 0 0;
+      padding: 1.25rem;
+      border-radius: 12px 12px 0 0;
       margin: -1.5rem -1.5rem 1.5rem;
+      box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+      display: flex;
+      align-items: center;
+      font-size: 1.5rem;
+      font-weight: 700;
     }
-    .input-container {
+    .section-header i {
+      margin-right: 0.75rem;
+      font-size: 1.75rem;
+    }
+    .input-card {
       position: relative;
-      transition: all 0.3s ease;
-      padding: 0.5rem;
+      padding: 1rem;
       border-radius: 12px;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(20, 184, 166, 0.2);
+      transition: all 0.3s ease;
+      animation: slideIn 0.5s ease-out;
     }
-    .input-container:hover {
-      background: #eff6ff;
-      border-color: #14b8a6;
-      box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+    .input-card:nth-child(odd) {
+      background: rgba(240, 253, 250, 0.9);
     }
-    .input-container input {
+    .input-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(20, 184, 166, 0.15);
+    }
+    .input-card input {
       width: 100%;
-      padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+      padding: 0.75rem 0.75rem 0.75rem 3rem;
       border: none;
-      border-radius: 8px;
+      border-bottom: 2px solid transparent;
       background: transparent;
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: #1f2937;
       outline: none;
+      transition: border-bottom 0.3s ease;
     }
-    .input-container input:focus {
-      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.3);
+    .input-card input:focus {
+      border-bottom: 2px solid #14b8a6;
+      animation: borderGlow 0.5s ease;
     }
-    .input-container i {
+    .icon-circle {
       position: absolute;
       left: 0.75rem;
       top: 50%;
       transform: translateY(-50%);
-      color: #14b8a6;
-      font-size: 1.2rem;
-    }
-    .input-label {
+      width: 2rem;
+      height: 2rem;
+      background: linear-gradient(to bottom, #14b8a6, #2dd4bf);
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      font-weight: 500;
-      color: #4b5563;
-      margin-bottom: 0.5rem;
+      justify-content: center;
+      color: white;
+      font-size: 1.1rem;
+      transition: transform 0.3s ease;
+    }
+    .input-card:hover .icon-circle {
+      transform: translateY(-50%) scale(1.1);
+    }
+    .input-label {
+      display: block;
+      font-weight: 600;
       font-size: 0.9rem;
+      text-transform: uppercase;
+      background: linear-gradient(to right, #14b8a6, #2dd4bf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      transition: transform 0.3s ease;
     }
-    .input-label i {
+    .input-card:hover .input-label {
+      transform: translateX(4px);
+    }
+    .wave-divider {
+      height: 2px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 20"><path fill="none" stroke="#14b8a6" stroke-width="2" d="M0,10 C360,20 1080,0 1440,10" /></svg>') repeat-x;
+      margin: 2rem 0;
+    }
+    .ripple-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      background: linear-gradient(to right, #14b8a6, #2dd4bf);
+      padding: 0.75rem 1.5rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      color: white;
+    }
+    .ripple-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(20, 184, 166, 0.3);
+    }
+    .ripple-btn:active::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: ripple 0.6s ease-out;
+    }
+    .ripple-btn i {
       margin-right: 0.5rem;
-      color: #14b8a6;
+      font-size: 1.3rem;
     }
-    .divider {
-      height: 1px;
-      background: linear-gradient(to right, transparent, #e5e7eb, transparent);
-      margin: 1.5rem 0;
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes borderGlow {
+      0% { border-bottom-color: transparent; }
+      100% { border-bottom-color: #14b8a6; }
+    }
+    @keyframes ripple {
+      0% { width: 0; height: 0; opacity: 0.5; }
+      100% { width: 200px; height: 200px; opacity: 0; }
     }
     @keyframes pulse {
       0% { transform: scale(1); }
@@ -296,64 +367,66 @@ app.get('/', (req, res) => {
       <!-- Manual Mode Settings -->
       <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
         <div class="section-header">
-          <h3 class="text-xl font-semibold"><i class="fa-solid fa-sliders mr-2"></i> Manual Mode Settings</h3>
+          <i class="fa-solid fa-sliders-h"></i>
+          <h3>Manual Mode Settings</h3>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div class="input-container">
-            <label class="input-label"><i class="fa-solid fa-temperature-high"></i> Temperature Threshold (°C)</label>
-            <i class="fa-solid fa-thermometer"></i>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          <div class="input-card">
+            <label class="input-label">Temp Threshold (°C)</label>
+            <div class="icon-circle"><i class="fa-solid fa-temperature-half"></i></div>
             <input id="fanTemperatureThreshold" type="number" step="0.1" value="31.0" placeholder="Enter °C">
           </div>
-          <div class="input-container">
-            <label class="input-label"><i class="fa-solid fa-clock"></i> Light On Duration (min)</label>
-            <i class="fa-solid fa-lightbulb"></i>
+          <div class="input-card">
+            <label class="input-label">Light Duration (min)</label>
+            <div class="icon-circle"><i class="fa-solid fa-sun"></i></div>
             <input id="lightOnDuration" type="number" value="1" placeholder="Enter minutes">
           </div>
-          <div class="input-container">
-            <label class="input-label"><i class="fa-solid fa-hourglass"></i> Light Interval (min)</label>
-            <i class="fa-solid fa-clock"></i>
+          <div class="input-card">
+            <label class="input-label">Light Interval (min)</label>
+            <div class="icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
             <input id="lightIntervalManual" type="number" value="1" placeholder="Enter minutes">
           </div>
         </div>
-        <div class="divider"></div>
-        <button id="saveLightingSettings" class="w-full mt-4 bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-save mr-2"></i> Save Settings</button>
+        <div class="wave-divider"></div>
+        <button id="saveLightingSettings" class="ripple-btn w-full mt-4"><i class="fa-solid fa-save"></i> Save Settings</button>
       </div>
 
       <!-- Pump Settings -->
       <div class="bg-white p-6 rounded-2xl shadow-lg card">
         <div class="section-header">
-          <h3 class="text-xl font-semibold"><i class="fa-solid fa-water mr-2"></i> Pump Settings</h3>
+          <i class="fa-solid fa-droplet"></i>
+          <h3>Pump Settings</h3>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
-          <div class="input-container">
-            <label class="input-label"><i class="fa-solid fa-clock"></i> Start Hour</label>
-            <i class="fa-solid fa-hourglass-start"></i>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-8">
+          <div class="input-card">
+            <label class="input-label">Start Hour</label>
+            <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
             <input id="pumpStartHour" type="number" min="0" max="23" value="18" placeholder="0-23">
           </div>
-          <div class="input-container">
-            <label class="input-label"><i class="fa-solid fa-clock"></i> Start Minute</label>
-            <i class="fa-solid fa-hourglass-end"></i>
+          <div class="input-card">
+            <label class="input-label">Start Minute</label>
+            <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
             <input id="pumpStartMinute" type="number" min="0" max="59" value="0" placeholder="0-59">
           </div>
-          <div class="input-container">
-            <label class="input-label"><i class="fa-solid fa-stopwatch"></i> Duration (sec)</label>
-            <i class="fa-solid fa-water"></i>
+          <div class="input-card">
+            <label class="input-label">Duration (sec)</label>
+            <div class="icon-circle"><i class="fa-solid fa-stopwatch-20"></i></div>
             <input id="pumpDuration" type="number" min="1" value="10" placeholder="Seconds">
           </div>
-          <div class="input-container">
-            <label class="input-label"><i class="fa-solid fa-clock"></i> Interval (min)</label>
-            <i class="fa-solid fa-hourglass"></i>
+          <div class="input-card">
+            <label class="input-label">Interval (min)</label>
+            <div class="icon-circle"><i class="fa-solid fa-hourglass-half"></i></div>
             <input id="pumpInterval" type="number" min="1" value="240" placeholder="Minutes">
           </div>
         </div>
-        <div class="divider"></div>
-        <button id="savePumpSettings" class="w-full mt-4 bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-save mr-2"></i> Save Settings</button>
+        <div class="wave-divider"></div>
+        <button id="savePumpSettings" class="ripple-btn w-full mt-4"><i class="fa-solid fa-save"></i> Save Settings</button>
       </div>
     </div>
   </div>
 
   <script>
-    console.log('Script loaded'); // Debug: Confirm script execution
+    console.log('Script loaded');
     const correctPassword = 'admin';
 
     function handleLogin() {
@@ -386,7 +459,6 @@ app.get('/', (req, res) => {
       }
     }
 
-    // Initialize login event listeners
     function setupLoginListeners() {
       console.log('Setting up login listeners');
       const submitButton = document.getElementById('submitPassword');
@@ -417,13 +489,11 @@ app.get('/', (req, res) => {
       }
     }
 
-    // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', () => {
       console.log('DOM fully loaded');
       setupLoginListeners();
     });
 
-    // Tab switching
     const tabs = {
       dashboard: document.getElementById('dashboardContent'),
       relays: document.getElementById('relaysContent'),
@@ -446,7 +516,6 @@ app.get('/', (req, res) => {
       tabButtons[tabName].addEventListener('click', () => switchTab(tabName));
     });
 
-    // Chart initialization
     let tempChart, humidityChart, soilMoistureChart;
     const maxDataPoints = 30;
     function initializeCharts() {
@@ -512,7 +581,6 @@ app.get('/', (req, res) => {
       });
     }
 
-    // Modal handling
     function toggleModal(modalId, show) {
       const modal = document.getElementById(modalId);
       if (show) {
@@ -531,7 +599,6 @@ app.get('/', (req, res) => {
     document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
     document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
 
-    // Initialize app
     function initializeApp() {
       switchTab('dashboard');
       initializeCharts();
@@ -551,7 +618,6 @@ app.get('/', (req, res) => {
       setInterval(updateMode, 5000);
     }
 
-    // Fetch and display relay states
     async function updateRelayState() {
       try {
         const response = await fetch('/getRelayState');
@@ -572,7 +638,6 @@ app.get('/', (req, res) => {
       }
     }
 
-    // Fetch and display sensor data
     async function updateSensorData() {
       try {
         const response = await fetch('/getSensorData');
@@ -581,12 +646,10 @@ app.get('/', (req, res) => {
         document.getElementById('humidity').textContent = \`\${data.humidity} %\`;
         document.getElementById('soilMoisture').textContent = \`\${data.soilMoisture} %\`;
 
-        // Update progress bars
         document.getElementById('temperatureProgress').style.width = \`\${Math.min((data.temperature / 40) * 100, 100)}%\`;
         document.getElementById('humidityProgress').style.width = \`\${Math.min(data.humidity, 100)}%\`;
         document.getElementById('soilMoistureProgress').style.width = \`\${Math.min(data.soilMoisture, 100)}%\`;
 
-        // Store data for charts
         const timestamp = new Date().toLocaleTimeString();
         updateChartData('temperature', timestamp, data.temperature);
         updateChartData('humidity', timestamp, data.humidity);
@@ -596,7 +659,6 @@ app.get('/', (req, res) => {
       }
     }
 
-    // Update chart data
     function updateChartData(sensor, timestamp, value) {
       const key = \`\${sensor}Data\`;
       let storedData = JSON.parse(localStorage.getItem(key)) || { labels: [], values: [] };
@@ -621,7 +683,6 @@ app.get('/', (req, res) => {
       chart.update();
     }
 
-    // Fetch and display current mode
     async function updateMode() {
       try {
         const response = await fetch('/getMode');
@@ -634,7 +695,6 @@ app.get('/', (req, res) => {
       }
     }
 
-    // Fetch and display settings
     async function updateSettings() {
       try {
         const lightingResponse = await fetch('/getLightingSettings');
@@ -654,7 +714,6 @@ app.get('/', (req, res) => {
       }
     }
 
-    // Toggle relay state
     async function toggleRelay(relayNumber) {
       try {
         const response = await fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' });
@@ -670,7 +729,6 @@ app.get('/', (req, res) => {
       }
     }
 
-    // Toggle mode
     async function toggleMode() {
       try {
         const currentMode = document.getElementById('currentMode').textContent.toLowerCase();
@@ -692,7 +750,6 @@ app.get('/', (req, res) => {
       }
     }
 
-    // Save lighting settings
     async function saveLightingSettings() {
       try {
         const settings = {
@@ -718,7 +775,6 @@ app.get('/', (req, res) => {
       }
     }
 
-    // Save pump settings
     async function savePumpSettings() {
       try {
         const settings = {
