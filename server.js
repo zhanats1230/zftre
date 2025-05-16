@@ -226,6 +226,14 @@ app.get('/', (req, res) => {
       margin-right: 0.5rem;
       font-size: 1.3rem;
     }
+    .logout-btn {
+      background: linear-gradient(to right, #ef4444, #f87171);
+      transition: all 0.3s ease;
+    }
+    .logout-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+    }
     @keyframes slideIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -260,7 +268,10 @@ app.get('/', (req, res) => {
   <div id="controlSection" class="container mx-auto p-6 hidden">
     <div class="flex items-center justify-between mb-8">
       <h1 class="text-4xl font-bold text-gray-900"><i class="fa-solid fa-leaf mr-2 text-teal-500"></i> Greenhouse Control</h1>
-      <button id="toggleMode" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-sync mr-2"></i> Switch Mode</button>
+      <div class="flex space-x-4">
+        <button id="toggleMode" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-sync mr-2"></i> Switch Mode</button>
+        <button id="logoutButton" class="logout-btn text-white px-4 py-2 rounded-lg"><i class="fa-solid fa-sign-out-alt mr-2"></i> Logout</button>
+      </div>
     </div>
 
     <!-- Tabs Navigation -->
@@ -447,6 +458,7 @@ app.get('/', (req, res) => {
 
       if (password === correctPassword.toLowerCase()) {
         console.log('Password correct, showing control section');
+        localStorage.setItem('isLoggedIn', 'true');
         passwordSection.classList.add('hidden');
         controlSection.classList.remove('hidden');
         passwordInput.value = '';
@@ -457,6 +469,17 @@ app.get('/', (req, res) => {
         passwordError.classList.remove('hidden');
         alert('Incorrect password, please try again.');
       }
+    }
+
+    function handleLogout() {
+      console.log('Logging out');
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('lightingSettings');
+      localStorage.removeItem('pumpSettings');
+      const passwordSection = document.getElementById('passwordSection');
+      const controlSection = document.getElementById('controlSection');
+      controlSection.classList.add('hidden');
+      passwordSection.classList.remove('hidden');
     }
 
     function setupLoginListeners() {
@@ -489,9 +512,26 @@ app.get('/', (req, res) => {
       }
     }
 
+    // Check login status on page load
     document.addEventListener('DOMContentLoaded', () => {
       console.log('DOM fully loaded');
       setupLoginListeners();
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      const passwordSection = document.getElementById('passwordSection');
+      const controlSection = document.getElementById('controlSection');
+
+      if (isLoggedIn && passwordSection && controlSection) {
+        console.log('User is logged in, bypassing password section');
+        passwordSection.classList.add('hidden');
+        controlSection.classList.remove('hidden');
+        initializeApp();
+      }
+
+      // Setup logout button
+      const logoutButton = document.getElementById('logoutButton');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+      }
     });
 
     const tabs = {
@@ -628,11 +668,11 @@ app.get('/', (req, res) => {
         const relay2Control = document.getElementById('relayState2Control');
 
         relay1Badge.textContent = data.relayState1 ? 'ON' : 'OFF';
-        relay1Badge.className = \`status-badge \${data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}\`;
+        relay1Badge.className = `status-badge ${data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}`;
         relay2Badge.textContent = data.relayState2 ? 'ON' : 'OFF';
-        relay2Badge.className = \`status-badge \${data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}\`;
-        relay1Control.textContent = \`Lighting: \${data.relayState1 ? 'ON' : 'OFF'}\`;
-        relay2Control.textContent = \`Ventilation: \${data.relayState2 ? 'ON' : 'OFF'}\`;
+        relay2Badge.className = `status-badge ${data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}`;
+        relay1Control.textContent = `Lighting: ${data.relayState1 ? 'ON' : 'OFF'}`;
+        relay2Control.textContent = `Ventilation: ${data.relayState2 ? 'ON' : 'OFF'}`;
       } catch (error) {
         console.error('Error fetching relay state:', error);
       }
@@ -642,13 +682,13 @@ app.get('/', (req, res) => {
       try {
         const response = await fetch('/getSensorData');
         const data = await response.json();
-        document.getElementById('temperature').textContent = \`\${data.temperature} °C\`;
-        document.getElementById('humidity').textContent = \`\${data.humidity} %\`;
-        document.getElementById('soilMoisture').textContent = \`\${data.soilMoisture} %\`;
+        document.getElementById('temperature').textContent = `${data.temperature} °C`;
+        document.getElementById('humidity').textContent = `${data.humidity} %`;
+        document.getElementById('soilMoisture').textContent = `${data.soilMoisture} %`;
 
-        document.getElementById('temperatureProgress').style.width = \`\${Math.min((data.temperature / 40) * 100, 100)}%\`;
-        document.getElementById('humidityProgress').style.width = \`\${Math.min(data.humidity, 100)}%\`;
-        document.getElementById('soilMoistureProgress').style.width = \`\${Math.min(data.soilMoisture, 100)}%\`;
+        document.getElementById('temperatureProgress').style.width = `${Math.min((data.temperature / 40) * 100, 100)}%`;
+        document.getElementById('humidityProgress').style.width = `${Math.min(data.humidity, 100)}%`;
+        document.getElementById('soilMoistureProgress').style.width = `${Math.min(data.soilMoisture, 100)}%`;
 
         const timestamp = new Date().toLocaleTimeString();
         updateChartData('temperature', timestamp, data.temperature);
@@ -660,7 +700,7 @@ app.get('/', (req, res) => {
     }
 
     function updateChartData(sensor, timestamp, value) {
-      const key = \`\${sensor}Data\`;
+      const key = `${sensor}Data`;
       let storedData = JSON.parse(localStorage.getItem(key)) || { labels: [], values: [] };
       storedData.labels.push(timestamp);
       storedData.values.push(value);
@@ -689,7 +729,7 @@ app.get('/', (req, res) => {
         const data = await response.json();
         const modeBadge = document.getElementById('currentMode');
         modeBadge.textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
-        modeBadge.className = \`status-badge \${data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}\`;
+        modeBadge.className = `status-badge ${data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}`;
       } catch (error) {
         console.error('Error fetching mode:', error);
       }
@@ -697,18 +737,35 @@ app.get('/', (req, res) => {
 
     async function updateSettings() {
       try {
-        const lightingResponse = await fetch('/getLightingSettings');
-        const lightingData = await lightingResponse.json();
-        document.getElementById('fanTemperatureThreshold').value = lightingData.fanTemperatureThreshold;
-        document.getElementById('lightOnDuration').value = lightingData.lightOnDuration / 60000;
-        document.getElementById('lightIntervalManual').value = lightingData.lightIntervalManual / 60000;
+        // Check localStorage first
+        const storedLighting = JSON.parse(localStorage.getItem('lightingSettings'));
+        const storedPump = JSON.parse(localStorage.getItem('pumpSettings'));
 
-        const pumpResponse = await fetch('/getPumpSettings');
-        const pumpData = await pumpResponse.json();
-        document.getElementById('pumpStartHour').value = pumpData.pumpStartHour;
-        document.getElementById('pumpStartMinute').value = pumpData.pumpStartMinute;
-        document.getElementById('pumpDuration').value = pumpData.pumpDuration;
-        document.getElementById('pumpInterval').value = pumpData.pumpInterval;
+        if (storedLighting) {
+          document.getElementById('fanTemperatureThreshold').value = storedLighting.fanTemperatureThreshold;
+          document.getElementById('lightOnDuration').value = storedLighting.lightOnDuration / 60000;
+          document.getElementById('lightIntervalManual').value = storedLighting.lightIntervalManual / 60000;
+        } else {
+          const lightingResponse = await fetch('/getLightingSettings');
+          const lightingData = await lightingResponse.json();
+          document.getElementById('fanTemperatureThreshold').value = lightingData.fanTemperatureThreshold;
+          document.getElementById('lightOnDuration').value = lightingData.lightOnDuration / 60000;
+          document.getElementById('lightIntervalManual').value = lightingData.lightIntervalManual / 60000;
+        }
+
+        if (storedPump) {
+          document.getElementById('pumpStartHour').value = storedPump.pumpStartHour;
+          document.getElementById('pumpStartMinute').value = storedPump.pumpStartMinute;
+          document.getElementById('pumpDuration').value = storedPump.pumpDuration;
+          document.getElementById('pumpInterval').value = storedPump.pumpInterval;
+        } else {
+          const pumpResponse = await fetch('/getPumpSettings');
+          const pumpData = await pumpResponse.json();
+          document.getElementById('pumpStartHour').value = pumpData.pumpStartHour;
+          document.getElementById('pumpStartMinute').value = pumpData.pumpStartMinute;
+          document.getElementById('pumpDuration').value = pumpData.pumpDuration;
+          document.getElementById('pumpInterval').value = pumpData.pumpInterval;
+        }
       } catch (error) {
         console.error('Error fetching settings:', error);
       }
@@ -716,7 +773,7 @@ app.get('/', (req, res) => {
 
     async function toggleRelay(relayNumber) {
       try {
-        const response = await fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' });
+        const response = await fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' });
         if (response.ok) {
           await updateRelayState();
         } else {
@@ -763,6 +820,11 @@ app.get('/', (req, res) => {
           body: JSON.stringify(settings)
         });
         if (response.ok) {
+          localStorage.setItem('lightingSettings', JSON.stringify({
+            fanTemperatureThreshold: settings.fanTemperatureThreshold,
+            lightOnDuration: settings.lightOnDuration,
+            lightIntervalManual: settings.lightIntervalManual
+          }));
           alert('Lighting settings saved!');
           await updateSettings();
         } else {
@@ -789,6 +851,7 @@ app.get('/', (req, res) => {
           body: JSON.stringify(settings)
         });
         if (response.ok) {
+          localStorage.setItem('pumpSettings', JSON.stringify(settings));
           alert('Pump settings saved!');
           await updateSettings();
         } else {
