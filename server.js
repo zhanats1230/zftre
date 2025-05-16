@@ -234,6 +234,30 @@ app.get('/', (req, res) => {
       transform: scale(1.05);
       box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
     }
+    .connection-indicator {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    .connection-indicator i {
+      margin-right: 0.5rem;
+      font-size: 1.2rem;
+    }
+    .connection-indicator.online {
+      background: linear-gradient(to right, #14b8a6, #2dd4bf);
+    }
+    .connection-indicator.offline {
+      background: linear-gradient(to right, #ef4444, #f87171);
+    }
+    .connection-indicator:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
     @keyframes slideIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -270,6 +294,7 @@ app.get('/', (req, res) => {
       <h1 class="text-4xl font-bold text-gray-900"><i class="fa-solid fa-leaf mr-2 text-teal-500"></i> Greenhouse Control</h1>
       <div class="flex space-x-4">
         <button id="toggleMode" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-sync mr-2"></i> Switch Mode</button>
+        <div id="connectionIndicator" class="connection-indicator offline"><i class="fa-solid fa-wifi-slash"></i> Offline</div>
         <button id="logoutButton" class="logout-btn text-white px-4 py-2 rounded-lg"><i class="fa-solid fa-sign-out-alt mr-2"></i> Logout</button>
       </div>
     </div>
@@ -512,6 +537,26 @@ app.get('/', (req, res) => {
       }
     }
 
+    async function checkConnection() {
+      const indicator = document.getElementById('connectionIndicator');
+      try {
+        const response = await fetch('/ping', { method: 'GET', cache: 'no-store' });
+        if (response.ok) {
+          indicator.classList.remove('offline');
+          indicator.classList.add('online');
+          indicator.innerHTML = '<i class="fa-solid fa-wifi"></i> Online';
+          console.log('Server is online');
+        } else {
+          throw new Error('Ping failed');
+        }
+      } catch (error) {
+        indicator.classList.remove('online');
+        indicator.classList.add('offline');
+        indicator.innerHTML = '<i class="fa-solid fa-wifi-slash"></i> Offline';
+        console.log('Server is offline:', error);
+      }
+    }
+
     // Check login status on page load
     document.addEventListener('DOMContentLoaded', () => {
       console.log('DOM fully loaded');
@@ -646,6 +691,7 @@ app.get('/', (req, res) => {
       updateSensorData();
       updateMode();
       updateSettings();
+      checkConnection();
 
       document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
       document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
@@ -656,6 +702,7 @@ app.get('/', (req, res) => {
       setInterval(updateSensorData, 5000);
       setInterval(updateRelayState, 5000);
       setInterval(updateMode, 5000);
+      setInterval(checkConnection, 10000);
     }
 
     async function updateRelayState() {
@@ -867,6 +914,10 @@ app.get('/', (req, res) => {
 </body>
 </html>
 `);
+});
+
+app.get('/ping', (req, res) => {
+  res.json({ status: 'ok' });
 });
 
 app.get('/getRelayState', (req, res) => {
