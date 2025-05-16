@@ -735,13 +735,13 @@ app.get('/', (req, res) => {
       try {
         const response = await fetch('/getSensorData');
         const data = await response.json();
-        document.getElementById('temperature').textContent = `${data.temperature} °C`;
-        document.getElementById('humidity').textContent = `${data.humidity} %`;
-        document.getElementById('soilMoisture').textContent = `${data.soilMoisture} %`;
+        document.getElementById('temperature').textContent = \`\${data.temperature} °C\`;
+        document.getElementById('humidity').textContent = \`\${data.humidity} %\`;
+        document.getElementById('soilMoisture').textContent = \`\${data.soilMoisture} %\`;
 
-        document.getElementById('temperatureProgress').style.width = `${Math.min((data.temperature / 40) * 100, 100)}%`;
-        document.getElementById('humidityProgress').style.width = `${Math.min(data.humidity, 100)}%`;
-        document.getElementById('soilMoistureProgress').style.width = `${Math.min(data.soilMoisture, 100)}%`;
+        document.getElementById('temperatureProgress').style.width = \`\${Math.min((data.temperature / 40) * 100, 100)}%\`;
+        document.getElementById('humidityProgress').style.width = \`\${Math.min(data.humidity, 100)}%\`;
+        document.getElementById('soilMoistureProgress').style.width = \`\${Math.min(data.soilMoisture, 100)}%\`;
 
         const timestamp = new Date().toLocaleTimeString();
         updateChartData('temperature', timestamp, data.temperature);
@@ -753,7 +753,7 @@ app.get('/', (req, res) => {
     }
 
     function updateChartData(sensor, timestamp, value) {
-      const key = `${sensor}Data`;
+      const key = \`\${sensor}Data\`;
       let storedData = JSON.parse(localStorage.getItem(key)) || { labels: [], values: [] };
       storedData.labels.push(timestamp);
       storedData.values.push(value);
@@ -782,7 +782,7 @@ app.get('/', (req, res) => {
         const data = await response.json();
         const modeBadge = document.getElementById('currentMode');
         modeBadge.textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
-        modeBadge.className = `status-badge ${data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}`;
+        modeBadge.className = \`status-badge \${data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}\`;
       } catch (error) {
         console.error('Error fetching mode:', error);
       }
@@ -826,7 +826,7 @@ app.get('/', (req, res) => {
 
     async function toggleRelay(relayNumber) {
       try {
-        const response = await fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' });
+        const response = await fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' });
         if (response.ok) {
           await updateRelayState();
         } else {
