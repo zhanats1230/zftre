@@ -944,19 +944,15 @@ app.post('/updateSensorData', (req, res) => {
   if (temperature !== undefined && humidity !== undefined && soilMoisture !== undefined) {
     sensorData = { temperature, humidity, soilMoisture };
     lastSensorUpdate = Date.now();
-    
-    // Add new data to history with timestamp
     sensorDataHistory.push({
       temperature,
       humidity,
       soilMoisture,
       timestamp: lastSensorUpdate
     });
-
-    // Clean up data older than 24 hours (86400000 milliseconds)
+    // Clean up data older than 24 hours
     const oneDayAgo = Date.now() - 86400000;
     sensorDataHistory = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
-
     console.log('Sensor data updated:', sensorData);
     res.json({ success: true });
   } else {
@@ -964,12 +960,12 @@ app.post('/updateSensorData', (req, res) => {
   }
 });
 
-// New endpoint to get sensor trends for the last 24 hours
 app.get('/getSensorTrends', (req, res) => {
-  const oneDayAgo = Date.now() - 86400000; // 24 hours in milliseconds
+  const oneDayAgo = Date.now() - 86400000;
   const filteredData = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
   res.json(filteredData);
 });
+
 
 app.get('/getMode', (req, res) => {
   res.json({ mode });
