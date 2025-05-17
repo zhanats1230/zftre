@@ -19,6 +19,9 @@ let sensorData = {
 
 let lastSensorUpdate = 0; // Timestamp of last sensor data update
 
+// Array to store historical sensor data with timestamps
+let sensorDataHistory = [];
+
 let mode = 'auto';
 
 let lightingSettings = {
