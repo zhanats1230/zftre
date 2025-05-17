@@ -966,7 +966,6 @@ app.get('/getSensorTrends', (req, res) => {
   res.json(filteredData);
 });
 
-
 app.get('/getMode', (req, res) => {
   res.json({ mode });
 });
