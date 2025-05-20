@@ -941,7 +941,14 @@ app.get('/getSensorData', (req, res) => {
 
 app.post('/updateSensorData', (req, res) => {
   const { temperature, humidity, soilMoisture } = req.body;
-  if (temperature !== undefined && humidity !== undefined && soilMoisture !== undefined) {
+  if (
+    typeof temperature === 'number' &&
+    typeof humidity === 'number' &&
+    typeof soilMoisture === 'number' &&
+    !isNaN(temperature) &&
+    !isNaN(humidity) &&
+    !isNaN(soilMoisture)
+  ) {
     sensorData = { temperature, humidity, soilMoisture };
     lastSensorUpdate = Date.now();
     sensorDataHistory.push({
@@ -956,6 +963,7 @@ app.post('/updateSensorData', (req, res) => {
     console.log('Sensor data updated:', sensorData);
     res.json({ success: true });
   } else {
+    console.error('Invalid sensor data received:', req.body);
     res.status(400).json({ error: 'Invalid sensor data' });
   }
 });
@@ -963,6 +971,7 @@ app.post('/updateSensorData', (req, res) => {
 app.get('/getSensorTrends', (req, res) => {
   const oneDayAgo = Date.now() - 86400000;
   const filteredData = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
+  console.log('Sending trends data:', filteredData.length, 'entries');
   res.json(filteredData);
 });
 
