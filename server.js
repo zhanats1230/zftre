@@ -24,25 +24,50 @@ let sensorData = {
 
 let lastSensorUpdate = 0; // Timestamp of last sensor data update
 
-// Array to store historical sensor data with timestamps
-let sensorDataHistory = [];
+// Store raw and aggregated data
+let sensorDataHistory = {
+  raw: [], // Raw readings with timestamps
+  hourlyAverages: [], // Aggregated hourly averages
+  healthyRanges: { // Percentage of time in healthy range
+    temperature: { inRange: 0, total: 0 },
+    humidity: { inRange: 0, total: 0 },
+    soilMoisture: { inRange: 0, total: 0 }
+  }
+};
+
+// Healthy range thresholds
+const HEALTHY_RANGES = {
+  temperature: { min: 20, max: 30 },
+  humidity: { min: 50, max: 80 },
+  soilMoisture: { min: 30, max: 70 }
+};
 
 // Load sensor data history from file on startup
 async function loadSensorDataHistory() {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     sensorDataHistory = JSON.parse(data);
-    // Filter out data older than 24 hours
+    // Filter raw data to last 24 hours
     const oneDayAgo = Date.now() - 86400000;
-    sensorDataHistory = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
-    console.log(`Loaded ${sensorDataHistory.length} sensor data entries from file`);
+    sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
+    // Filter hourly averages to last 24 hours
+    sensorDataHistory.hourlyAverages = sensorDataHistory.hourlyAverages.filter(entry => entry.timestamp >= oneDayAgo);
+    console.log(`Loaded ${sensorDataHistory.raw.length} raw entries and ${sensorDataHistory.hourlyAverages.length} hourly averages`);
   } catch (error) {
     if (error.code === 'ENOENT') {
       console.log('No existing sensor data file found, starting with empty history');
     } else {
       console.error('Error loading sensor data history:', error);
     }
-    sensorDataHistory = [];
+    sensorDataHistory = { 
+      raw: [], 
+      hourlyAverages: [], 
+      healthyRanges: { 
+        temperature: { inRange: 0, total: 0 }, 
+        humidity: { inRange: 0, total: 0 }, 
+        soilMoisture: { inRange: 0, total: 0 } 
+      } 
+    };
   }
 }
 
@@ -53,6 +78,52 @@ async function saveSensorDataHistory() {
     console.log('Sensor data history saved to file');
   } catch (error) {
     console.error('Error saving sensor data history:', error);
+  }
+}
+
+// Compute hourly averages
+function computeHourlyAverages() {
+  const oneDayAgo = Date.now() - 86400000;
+  const hourlyBuckets = {};
+
+  // Group raw data by hour
+  sensorDataHistory.raw.forEach(entry => {
+    const date = new Date(entry.timestamp);
+    const hourKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}`;
+    if (!hourlyBuckets[hourKey]) {
+      hourlyBuckets[hourKey] = { temperature: [], humidity: [], soilMoisture: [], timestamp: date.setMinutes(0, 0, 0) };
+    }
+    hourlyBuckets[hourKey].temperature.push(entry.temperature);
+    hourlyBuckets[hourKey].humidity.push(entry.humidity);
+    hourlyBuckets[hourKey].soilMoisture.push(entry.soilMoisture);
+  });
+
+  // Calculate averages
+  sensorDataHistory.hourlyAverages = Object.keys(hourlyBuckets).map(key => {
+    const bucket = hourlyBuckets[key];
+    return {
+      timestamp: bucket.timestamp,
+      temperature: bucket.temperature.length ? bucket.temperature.reduce((sum, val) => sum + val, 0) / bucket.temperature.length : 0,
+      humidity: bucket.humidity.length ? bucket.humidity.reduce((sum, val) => sum + val, 0) / bucket.humidity.length : 0,
+      soilMoisture: bucket.soilMoisture.length ? bucket.soilMoisture.reduce((sum, val) => sum + val, 0) / bucket.soilMoisture.length : 0
+    };
+  }).filter(entry => entry.timestamp >= oneDayAgo);
+}
+
+// Update healthy range metrics
+function updateHealthyRanges({ temperature, humidity, soilMoisture }) {
+  sensorDataHistory.healthyRanges.temperature.total++;
+  sensorDataHistory.healthyRanges.humidity.total++;
+  sensorDataHistory.healthyRanges.soilMoisture.total++;
+
+  if (temperature >= HEALTHY_RANGES.temperature.min && temperature <= HEALTHY_RANGES.temperature.max) {
+    sensorDataHistory.healthyRanges.temperature.inRange++;
+  }
+  if (humidity >= HEALTHY_RANGES.humidity.min && humidity <= HEALTHY_RANGES.humidity.max) {
+    sensorDataHistory.healthyRanges.humidity.inRange++;
+  }
+  if (soilMoisture >= HEALTHY_RANGES.soilMoisture.min && soilMoisture <= HEALTHY_RANGES.soilMoisture.max) {
+    sensorDataHistory.healthyRanges.soilMoisture.inRange++;
   }
 }
 
@@ -1009,15 +1080,18 @@ app.post('/updateSensorData', (req, res) => {
     ) {
       sensorData = { temperature, humidity, soilMoisture };
       lastSensorUpdate = Date.now();
-      sensorDataHistory.push({
+      sensorDataHistory.raw.push({
         temperature,
         humidity,
         soilMoisture,
         timestamp: lastSensorUpdate
       });
-      // Clean up data older than 24 hours
+      // Clean up raw data older than 24 hours
       const oneDayAgo = Date.now() - 86400000;
-      sensorDataHistory = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
+      sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
+      // Update hourly averages and healthy ranges
+      computeHourlyAverages();
+      updateHealthyRanges({ temperature, humidity, soilMoisture });
       // Save to file
       saveSensorDataHistory();
       console.log('Sensor data updated:', sensorData);
@@ -1035,9 +1109,20 @@ app.post('/updateSensorData', (req, res) => {
 app.get('/getSensorTrends', (req, res) => {
   try {
     const oneDayAgo = Date.now() - 86400000;
-    const filteredData = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
-    console.log('Sending trends data:', filteredData.length, 'entries');
-    res.json(filteredData);
+    res.json({
+      hourlyAverages: sensorDataHistory.hourlyAverages.filter(entry => entry.timestamp >= oneDayAgo),
+      healthyRanges: {
+        temperature: sensorDataHistory.healthyRanges.temperature.total > 0 
+          ? (sensorDataHistory.healthyRanges.temperature.inRange / sensorDataHistory.healthyRanges.temperature.total * 100) 
+          : 0,
+        humidity: sensorDataHistory.healthyRanges.humidity.total > 0 
+          ? (sensorDataHistory.healthyRanges.humidity.inRange / sensorDataHistory.healthyRanges.humidity.total * 100) 
+          : 0,
+        soilMoisture: sensorDataHistory.healthyRanges.soilMoisture.total > 0 
+          ? (sensorDataHistory.healthyRanges.soilMoisture.inRange / sensorDataHistory.healthyRanges.soilMoisture.total * 100) 
+          : 0
+      }
+    });
   } catch (error) {
     console.error('Error in /getSensorTrends:', error);
     res.status(500).json({ error: 'Server error' });
