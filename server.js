@@ -1,8 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const fs = require('fs').promises;
 const app = express();
 const port = 80;
 
+// Path to store sensor data history
+const DATA_FILE = 'sensorDataHistory.json';
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -21,7 +24,37 @@ let lastSensorUpdate = 0; // Timestamp of last sensor data update
 
 // Array to store historical sensor data with timestamps
 let sensorDataHistory = [];
+// Load sensor data history from file on startup
+async function loadSensorDataHistory() {
+  try {
+    const data = await fs.readFile(DATA_FILE, 'utf8');
+    sensorDataHistory = JSON.parse(data);
+    // Filter out data older than 24 hours
+    const oneDayAgo = Date.now() - 86400000;
+    sensorDataHistory = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
+    console.log(`Loaded ${sensorDataHistory.length} sensor data entries from file`);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log('No existing sensor data file found, starting with empty history');
+    } else {
+      console.error('Error loading sensor data history:', error);
+    }
+    sensorDataHistory = [];
+  }
+}
 
+// Save sensor data history to file
+async function saveSensorDataHistory() {
+  try {
+    await fs.writeFile(DATA_FILE, JSON.stringify(sensorDataHistory, null, 2));
+    console.log('Sensor data history saved to file');
+  } catch (error) {
+    console.error('Error saving sensor data history:', error);
+  }
+}
+
+// Load data on server start
+loadSensorDataHistory();
 let mode = 'auto';
 
 let lightingSettings = {
