@@ -960,6 +960,8 @@ app.post('/updateSensorData', (req, res) => {
     // Clean up data older than 24 hours
     const oneDayAgo = Date.now() - 86400000;
     sensorDataHistory = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
+    // Save to file
+    saveSensorDataHistory();
     console.log('Sensor data updated:', sensorData);
     res.json({ success: true });
   } else {
