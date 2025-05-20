@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
+const path = require('path');
 const app = express();
 const port = 80;
 
@@ -8,6 +9,7 @@ const port = 80;
 const DATA_FILE = 'sensorDataHistory.json';
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from 'public' directory
 
 let relayState = {
   relayState1: false,
@@ -24,6 +26,7 @@ let lastSensorUpdate = 0; // Timestamp of last sensor data update
 
 // Array to store historical sensor data with timestamps
 let sensorDataHistory = [];
+
 // Load sensor data history from file on startup
 async function loadSensorDataHistory() {
   try {
@@ -55,6 +58,7 @@ async function saveSensorDataHistory() {
 
 // Load data on server start
 loadSensorDataHistory();
+
 let mode = 'auto';
 
 let lightingSettings = {
@@ -69,7 +73,6 @@ let pumpSettings = {
   pumpDuration: 10,
   pumpInterval: 240
 };
-
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -958,124 +961,190 @@ app.get('/', (req, res) => {
 `);
 });
 
+// Serve the main page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// API Endpoints
 app.get('/getSensorStatus', (req, res) => {
-  const now = Date.now();
-  const isOnline = now - lastSensorUpdate < 30000; // 30 seconds threshold
-  res.json({ isOnline });
+  try {
+    const now = Date.now();
+    const isOnline = now - lastSensorUpdate < 30000; // 30 seconds threshold
+    res.json({ isOnline });
+  } catch (error) {
+    console.error('Error in /getSensorStatus:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.get('/getRelayState', (req, res) => {
-  res.json(relayState);
+  try {
+    res.json(relayState);
+  } catch (error) {
+    console.error('Error in /getRelayState:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.get('/getSensorData', (req, res) => {
-  res.json(sensorData);
+  try {
+    res.json(sensorData);
+  } catch (error) {
+    console.error('Error in /getSensorData:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.post('/updateSensorData', (req, res) => {
-  const { temperature, humidity, soilMoisture } = req.body;
-  if (
-    typeof temperature === 'number' &&
-    typeof humidity === 'number' &&
-    typeof soilMoisture === 'number' &&
-    !isNaN(temperature) &&
-    !isNaN(humidity) &&
-    !isNaN(soilMoisture)
-  ) {
-    sensorData = { temperature, humidity, soilMoisture };
-    lastSensorUpdate = Date.now();
-    sensorDataHistory.push({
-      temperature,
-      humidity,
-      soilMoisture,
-      timestamp: lastSensorUpdate
-    });
-    // Clean up data older than 24 hours
-    const oneDayAgo = Date.now() - 86400000;
-    sensorDataHistory = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
-    // Save to file
-    saveSensorDataHistory();
-    console.log('Sensor data updated:', sensorData);
-    res.json({ success: true });
-  } else {
-    console.error('Invalid sensor data received:', req.body);
-    res.status(400).json({ error: 'Invalid sensor data' });
+  try {
+    const { temperature, humidity, soilMoisture } = req.body;
+    if (
+      typeof temperature === 'number' &&
+      typeof humidity === 'number' &&
+      typeof soilMoisture === 'number' &&
+      !isNaN(temperature) &&
+      !isNaN(humidity) &&
+      !isNaN(soilMoisture)
+    ) {
+      sensorData = { temperature, humidity, soilMoisture };
+      lastSensorUpdate = Date.now();
+      sensorDataHistory.push({
+        temperature,
+        humidity,
+        soilMoisture,
+        timestamp: lastSensorUpdate
+      });
+      // Clean up data older than 24 hours
+      const oneDayAgo = Date.now() - 86400000;
+      sensorDataHistory = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
+      // Save to file
+      saveSensorDataHistory();
+      console.log('Sensor data updated:', sensorData);
+      res.json({ success: true });
+    } else {
+      console.error('Invalid sensor data received:', req.body);
+      res.status(400).json({ error: 'Invalid sensor data' });
+    }
+  } catch (error) {
+    console.error('Error in /updateSensorData:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 app.get('/getSensorTrends', (req, res) => {
-  const oneDayAgo = Date.now() - 86400000;
-  const filteredData = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
-  console.log('Sending trends data:', filteredData.length, 'entries');
-  res.json(filteredData);
+  try {
+    const oneDayAgo = Date.now() - 86400000;
+    const filteredData = sensorDataHistory.filter(entry => entry.timestamp >= oneDayAgo);
+    console.log('Sending trends data:', filteredData.length, 'entries');
+    res.json(filteredData);
+  } catch (error) {
+    console.error('Error in /getSensorTrends:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.get('/getMode', (req, res) => {
-  res.json({ mode });
+  try {
+    res.json({ mode });
+  } catch (error) {
+    console.error('Error in /getMode:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.post('/setMode', (req, res) => {
-  const { mode: newMode } = req.body;
-  if (newMode === 'auto' || newMode === 'manual') {
-    mode = newMode;
-    console.log('Mode set to:', mode);
-    res.json({ success: true });
-  } else {
-    res.status(400).json({ error: 'Invalid mode' });
+  try {
+    const { mode: newMode } = req.body;
+    if (newMode === 'auto' || newMode === 'manual') {
+      mode = newMode;
+      console.log('Mode set to:', mode);
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: 'Invalid mode' });
+    }
+  } catch (error) {
+    console.error('Error in /setMode:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 app.post('/toggleRelay/:relayNumber', (req, res) => {
-  const relayNumber = parseInt(req.params.relayNumber);
-  if (relayNumber === 1 || relayNumber === 2) {
-    if (mode === 'manual') {
-      relayState[`relayState${relayNumber}`] = !relayState[`relayState${relayNumber}`];
-      console.log(`Relay ${relayNumber} toggled to:`, relayState[`relayState${relayNumber}`]);
-      res.json({ success: true });
+  try {
+    const relayNumber = parseInt(req.params.relayNumber);
+    if (relayNumber === 1 || relayNumber === 2) {
+      if (mode === 'manual') {
+        relayState[`relayState${relayNumber}`] = !relayState[`relayState${relayNumber}`];
+        console.log(`Relay ${relayNumber} toggled to:`, relayState[`relayState${relayNumber}`]);
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ error: 'Cannot toggle relay in auto mode' });
+      }
     } else {
-      res.status(400).json({ error: 'Cannot toggle relay in auto mode' });
+      res.status(400).json({ error: 'Invalid relay number' });
     }
-  } else {
-    res.status(400).json({ error: 'Invalid relay number' });
+  } catch (error) {
+    console.error('Error in /toggleRelay:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 app.get('/getPumpSettings', (req, res) => {
-  res.json(pumpSettings);
+  try {
+    res.json(pumpSettings);
+  } catch (error) {
+    console.error('Error in /getPumpSettings:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.post('/updatePumpSettings', (req, res) => {
-  const { pumpStartHour, pumpStartMinute, pumpDuration, pumpInterval } = req.body;
-  if (
-    Number.isInteger(pumpStartHour) && pumpStartHour >= 0 && pumpStartHour <= 23 &&
-    Number.isInteger(pumpStartMinute) && pumpStartMinute >= 0 && pumpStartMinute <= 59 &&
-    Number.isInteger(pumpDuration) && pumpDuration > 0 &&
-    Number.isInteger(pumpInterval) && pumpInterval > 0
-  ) {
-    pumpSettings = { pumpStartHour, pumpStartMinute, pumpDuration, pumpInterval };
-    console.log('Pump settings updated:', pumpSettings);
-    res.json({ success: true });
-  } else {
-    res.status(400).json({ error: 'Invalid pump settings' });
+  try {
+    const { pumpStartHour, pumpStartMinute, pumpDuration, pumpInterval } = req.body;
+    if (
+      Number.isInteger(pumpStartHour) && pumpStartHour >= 0 && pumpStartHour <= 23 &&
+      Number.isInteger(pumpStartMinute) && pumpStartMinute >= 0 && pumpStartMinute <= 59 &&
+      Number.isInteger(pumpDuration) && pumpDuration > 0 &&
+      Number.isInteger(pumpInterval) && pumpInterval > 0
+    ) {
+      pumpSettings = { pumpStartHour, pumpStartMinute, pumpDuration, pumpInterval };
+      console.log('Pump settings updated:', pumpSettings);
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: 'Invalid pump settings' });
+    }
+  } catch (error) {
+    console.error('Error in /updatePumpSettings:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 app.get('/getLightingSettings', (req, res) => {
-  res.json(lightingSettings);
+  try {
+    res.json(lightingSettings);
+  } catch (error) {
+    console.error('Error in /getLightingSettings:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.post('/updateLightingSettings', (req, res) => {
-  const { fanTemperatureThreshold, lightOnDuration, lightIntervalManual } = req.body;
-  if (
-    typeof fanTemperatureThreshold === 'number' &&
-    typeof lightOnDuration === 'number' && lightOnDuration > 0 &&
-    typeof lightIntervalManual === 'number' && lightIntervalManual > 0
-  ) {
-    lightingSettings = { fanTemperatureThreshold, lightOnDuration, lightIntervalManual };
-    console.log('Lighting settings updated:', lightingSettings);
-    res.json({ success: true });
-  } else {
-    res.status(400).json({ error: 'Invalid lighting settings' });
+  try {
+    const { fanTemperatureThreshold, lightOnDuration, lightIntervalManual } = req.body;
+    if (
+      typeof fanTemperatureThreshold === 'number' &&
+      typeof lightOnDuration === 'number' && lightOnDuration > 0 &&
+      typeof lightIntervalManual === 'number' && lightIntervalManual > 0
+    ) {
+      lightingSettings = { fanTemperatureThreshold, lightOnDuration, lightIntervalManual };
+      console.log('Lighting settings updated:', lightingSettings);
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: 'Invalid lighting settings' });
+    }
+  } catch (error) {
+    console.error('Error in /updateLightingSettings:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
