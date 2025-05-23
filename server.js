@@ -198,7 +198,7 @@ Promise.all([loadSensorDataHistory(), loadCropProfiles()]).then(() => {
 // Serve the login page
 app.get('/login', (req, res) => {
   res.send(`
-    <!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
