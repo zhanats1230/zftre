@@ -198,7 +198,7 @@ Promise.all([loadSensorDataHistory(), loadCropProfiles()]).then(() => {
 // Serve the login page
 app.get('/login', (req, res) => {
   res.send(`
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -862,9 +862,9 @@ app.post('/updateLightingSettings', (req, res) => {
   try {
     const { fanTemperatureThreshold, lightOnDuration, lightIntervalManual } = req.body;
     if (
-      typeof fanTemperatureThreshold === 'number' &&
-      typeof lightOnDuration === 'number' && lightOnDuration > 0 &&
-      typeof lightIntervalManual === 'number' && lightIntervalManual > 0
+      typeof fanTemperatureThreshold === 'number' && !isNaN(fanTemperatureThreshold) &&
+      Number.isInteger(lightOnDuration) && lightOnDuration > 0 &&
+      Number.isInteger(lightIntervalManual) && lightIntervalManual > 0
     ) {
       lightingSettings = { fanTemperatureThreshold, lightOnDuration, lightIntervalManual };
       console.log('Lighting settings updated:', lightingSettings);
@@ -912,17 +912,25 @@ app.post('/addCropProfile', (req, res) => {
   try {
     const { name, healthyRanges, pumpSettings, lightingSettings } = req.body;
     if (
-      name && typeof name === 'string' && !cropProfiles[name.toLowerCase()] &&
-      healthyRanges && pumpSettings && lightingSettings &&
+      name && typeof name === 'string' && name.trim() && !cropProfiles[name.toLowerCase()] &&
+      healthyRanges &&
+      typeof healthyRanges.temperature.min === 'number' && !isNaN(healthyRanges.temperature.min) &&
+      typeof healthyRanges.temperature.max === 'number' && !isNaN(healthyRanges.temperature.max) &&
+      typeof healthyRanges.humidity.min === 'number' && !isNaN(healthyRanges.humidity.min) &&
+      typeof healthyRanges.humidity.max === 'number' && !isNaN(healthyRanges.humidity.max) &&
+      typeof healthyRanges.soilMoisture.min === 'number' && !isNaN(healthyRanges.soilMoisture.min) &&
+      typeof healthyRanges.soilMoisture.max === 'number' && !isNaN(healthyRanges.soilMoisture.max) &&
+      pumpSettings &&
       Number.isInteger(pumpSettings.pumpStartHour) && pumpSettings.pumpStartHour >= 0 && pumpSettings.pumpStartHour <= 23 &&
       Number.isInteger(pumpSettings.pumpStartMinute) && pumpSettings.pumpStartMinute >= 0 && pumpSettings.pumpStartMinute <= 59 &&
       Number.isInteger(pumpSettings.pumpDuration) && pumpSettings.pumpDuration > 0 &&
       Number.isInteger(pumpSettings.pumpInterval) && pumpSettings.pumpInterval > 0 &&
-      typeof lightingSettings.fanTemperatureThreshold === 'number' &&
-      typeof lightingSettings.lightOnDuration === 'number' && lightingSettings.lightOnDuration > 0 &&
-      typeof lightingSettings.lightIntervalManual === 'number' && lightingSettings.lightIntervalManual > 0
+      lightingSettings &&
+      typeof lightingSettings.fanTemperatureThreshold === 'number' && !isNaN(lightingSettings.fanTemperatureThreshold) &&
+      Number.isInteger(lightingSettings.lightOnDuration) && lightingSettings.lightOnDuration > 0 &&
+      Number.isInteger(lightingSettings.lightIntervalManual) && lightingSettings.lightIntervalManual > 0
     ) {
-      cropProfiles[name.toLowerCase()] = { name, healthyRanges, pumpSettings, lightingSettings };
+      cropProfiles[name.toLowerCase()] = { name: name.trim(), healthyRanges, pumpSettings, lightingSettings };
       saveCropProfiles();
       console.log(`Crop profile added: ${name}`);
       res.json({ success: true });
