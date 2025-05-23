@@ -197,7 +197,7 @@ Promise.all([loadSensorDataHistory(), loadCropProfiles()]).then(() => {
 
 // Serve the login page
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'login.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // Serve the main page
