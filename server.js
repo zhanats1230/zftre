@@ -44,7 +44,6 @@ const HEALTHY_RANGES = {
 
 const PREDEFINED_CROPS = [
   {
-    id: uuidv4(),
     name: 'Potatoes',
     settings: {
       fanTemperatureThreshold: 25,
