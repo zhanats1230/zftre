@@ -2,8 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 const app = express();
-const port = 80;
+const port = process.env.PORT || 80; // Use Render's PORT or default to 80
 
 // Path to store sensor data and crop data
 const DATA_FILE = 'sensorDataHistory.json';
@@ -44,6 +45,7 @@ const HEALTHY_RANGES = {
 
 const PREDEFINED_CROPS = [
   {
+    id: uuidv4(),
     name: 'Potatoes',
     settings: {
       fanTemperatureThreshold: 25,
@@ -61,6 +63,7 @@ const PREDEFINED_CROPS = [
     }
   },
   {
+    id: uuidv4(),
     name: 'Carrots',
     settings: {
       fanTemperatureThreshold: 22,
@@ -78,6 +81,7 @@ const PREDEFINED_CROPS = [
     }
   },
   {
+    id: uuidv4(),
     name: 'Tomatoes',
     settings: {
       fanTemperatureThreshold: 27,
