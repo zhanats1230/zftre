@@ -61,7 +61,6 @@ const PREDEFINED_CROPS = [
     }
   },
   {
-    id: uuidv4(),
     name: 'Carrots',
     settings: {
       fanTemperatureThreshold: 22,
@@ -79,7 +78,6 @@ const PREDEFINED_CROPS = [
     }
   },
   {
-    id: uuidv4(),
     name: 'Tomatoes',
     settings: {
       fanTemperatureThreshold: 27,
