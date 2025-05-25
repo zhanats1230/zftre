@@ -366,130 +366,130 @@ app.get('/', (req, res) => {
             }
         };
 
-        // Load custom crops from localStorage
-        let customCrops = JSON.parse(localStorage.getItem('customCrops')) || {};
+       / Load custom crops from localStorage
+    let customCrops = JSON.parse(localStorage.getItem('customCrops')) || {};
 
-        function login() {
-            const passwordInput = document.getElementById('passwordInput').value;
-            if (passwordInput === password) {
-                document.getElementById('loginPage').classList.add('hidden');
-                document.getElementById('mainPage').classList.remove('hidden');
+    function login() {
+        const passwordInput = document.getElementById('passwordInput').value;
+        if (passwordInput === password) {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('mainPage').classList.remove('hidden');
+            updateUI();
+        } else {
+            document.getElementById('loginError').classList.remove('hidden');
+        }
+    }
+
+    function logout() {
+        document.getElementById('loginPage').classList.remove('hidden');
+        document.getElementById('mainPage').classList.add('hidden');
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('loginError').classList.add('hidden');
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    function showTrend(trendId) {
+        showTab(trendId);
+        updateCharts();
+    }
+
+    function toggleMode() {
+        fetch('/setMode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: mode === 'auto' ? 'manual' : 'auto' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mode = mode === 'auto' ? 'manual' : 'auto';
                 updateUI();
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
             }
-        }
+        });
+    }
 
-        function logout() {
-            document.getElementById('loginPage').classList.remove('hidden');
-            document.getElementById('mainPage').classList.add('hidden');
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('loginError').classList.add('hidden');
-        }
+    function toggleRelay(relayNumber) {
+        fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) updateUI();
+        });
+    }
 
-        function showTab(tabId) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-        }
+    function saveLightingSettings() {
+        const settings = {
+            fanTemperatureThreshold: parseFloat(document.getElementById('fanTemperatureThreshold').value),
+            lightOnDuration: parseInt(document.getElementById('lightOnDuration').value),
+            lightIntervalManual: parseInt(document.getElementById('lightIntervalManual').value)
+        };
+        fetch('/updateLightingSettings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) updateUI();
+        });
+    }
 
-        function showTrend(trendId) {
-            showTab(trendId);
-            updateCharts();
-        }
+    function savePumpSettings() {
+        const settings = {
+            pumpStartHour: parseInt(document.getElementById('pumpStartHour').value),
+            pumpStartMinute: parseInt(document.getElementById('pumpStartMinute').value),
+            pumpDuration: parseInt(document.getElementById('pumpDuration').value),
+            pumpInterval: parseInt(document.getElementById('pumpInterval').value)
+        };
+        fetch('/updatePumpSettings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) updateUI();
+        });
+    }
 
-        function toggleMode() {
-            fetch('/setMode', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mode: mode === 'auto' ? 'manual' : 'auto' })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    mode = mode === 'auto' ? 'manual' : 'auto';
-                    updateUI();
-                }
-            });
-        }
+    function showCustomCropForm() {
+        document.getElementById('customCropForm').classList.remove('hidden');
+    }
 
-        function toggleRelay(relayNumber) {
-            fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) updateUI();
-            });
-        }
+    function hideCustomCropForm() {
+        document.getElementById('customCropForm').classList.add('hidden');
+        document.getElementById('customCropName').value = '';
+        document.getElementById('customTempThreshold').value = '';
+        document.getElementById('customLightDuration').value = '';
+        document.getElementById('customLightInterval').value = '';
+        document.getElementById('customPumpStartHour').value = '';
+        document.getElementById('customPumpStartMinute').value = '';
+        document.getElementById('customPumpDuration').value = '';
+        document.getElementById('customPumpInterval').value = '';
+    }
 
-        function saveLightingSettings() {
-            const settings = {
-                fanTemperatureThreshold: parseFloat(document.getElementById('fanTemperatureThreshold').value),
-                lightOnDuration: parseInt(document.getElementById('lightOnDuration').value),
-                lightIntervalManual: parseInt(document.getElementById('lightIntervalManual').value)
+    function saveCustomCrop() {
+        const cropName = document.getElementById('customCropName').value.toLowerCase();
+        if (cropName && !cropSettings[cropName]) {
+            customCrops[cropName] = {
+                fanTemperatureThreshold: parseFloat(document.getElementById('customTempThreshold').value),
+                lightOnDuration: parseInt(document.getElementById('customLightDuration').value),
+                lightIntervalManual: parseInt(document.getElementById('customLightInterval').value),
+                pumpStartHour: parseInt(document.getElementById('customPumpStartHour').value),
+                pumpStartMinute: parseInt(document.getElementById('customPumpStartMinute').value),
+                pumpDuration: parseInt(document.getElementById('customPumpDuration').value),
+                pumpInterval: parseInt(document.getElementById('customPumpInterval').value)
             };
-            fetch('/updateLightingSettings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(settings)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) updateUI();
-            });
+            localStorage.setItem('customCrops', JSON.stringify(customCrops));
+            updateCropSelect();
+            hideCustomCropForm();
         }
+    }
 
-        function savePumpSettings() {
-            const settings = {
-                pumpStartHour: parseInt(document.getElementById('pumpStartHour').value),
-                pumpStartMinute: parseInt(document.getElementById('pumpStartMinute').value),
-                pumpDuration: parseInt(document.getElementById('pumpDuration').value),
-                pumpInterval: parseInt(document.getElementById('pumpInterval').value)
-            };
-            fetch('/updatePumpSettings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(settings)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) updateUI();
-            });
-        }
-
-        function showCustomCropForm() {
-            document.getElementById('customCropForm').classList.remove('hidden');
-        }
-
-        function hideCustomCropForm() {
-            document.getElementById('customCropForm').classList.add('hidden');
-            document.getElementById('customCropName').value = '';
-            document.getElementById('customTempThreshold').value = '';
-            document.getElementById('customLightDuration').value = '';
-            document.getElementById('customLightInterval').value = '';
-            document.getElementById('customPumpStartHour').value = '';
-            document.getElementById('customPumpStartMinute').value = '';
-            document.getElementById('customPumpDuration').value = '';
-            document.getElementById('customPumpInterval').value = '';
-        }
-
-        function saveCustomCrop() {
-            const cropName = document.getElementById('customCropName').value.toLowerCase();
-            if (cropName && !cropSettings[cropName]) {
-                customCrops[cropName] = {
-                    fanTemperatureThreshold: parseFloat(document.getElementById('customTempThreshold').value),
-                    lightOnDuration: parseInt(document.getElementById('customLightDuration').value),
-                    lightIntervalManual: parseInt(document.getElementById('customLightInterval').value),
-                    pumpStartHour: parseInt(document.getElementById('customPumpStartHour').value),
-                    pumpStartMinute: parseInt(document.getElementById('customPumpStartMinute').value),
-                    pumpDuration: parseInt(document.getElementById('customPumpDuration').value),
-                    pumpInterval: parseInt(document.getElementById('customPumpInterval').value)
-                };
-                localStorage.setItem('customCrops', JSON.stringify(customCrops));
-                updateCropSelect();
-                hideCustomCropForm();
-            }
-        }
-
-       function updateCropSelect() {
+    function updateCropSelect() {
         const select = document.getElementById('cropSelect');
         select.innerHTML = '<option value="">Select Crop</option>' +
                            '<option value="potato">Potato</option>' +
@@ -500,101 +500,102 @@ app.get('/', (req, res) => {
         });
         select.innerHTML += '<option value="custom">Custom</option>';
     }
-        function loadCropSettings() {
-            const crop = document.getElementById('cropSelect').value;
-            if (crop && crop !== 'custom') {
-                const settings = cropSettings[crop] || customCrops[crop];
-                if (settings) {
-                    document.getElementById('fanTemperatureThreshold').value = settings.fanTemperatureThreshold;
-                    document.getElementById('lightOnDuration').value = settings.lightOnDuration;
-                    document.getElementById('lightIntervalManual').value = settings.lightIntervalManual;
-                    document.getElementById('pumpStartHour').value = settings.pumpStartHour;
-                    document.getElementById('pumpStartMinute').value = settings.pumpStartMinute;
-                    document.getElementById('pumpDuration').value = settings.pumpDuration;
-                    document.getElementById('pumpInterval').value = settings.pumpInterval;
-                    saveLightingSettings();
-                    savePumpSettings();
-                }
+
+    function loadCropSettings() {
+        const crop = document.getElementById('cropSelect').value;
+        if (crop && crop !== 'custom') {
+            const settings = cropSettings[crop] || customCrops[crop];
+            if (settings) {
+                document.getElementById('fanTemperatureThreshold').value = settings.fanTemperatureThreshold;
+                document.getElementById('lightOnDuration').value = settings.lightOnDuration;
+                document.getElementById('lightIntervalManual').value = settings.lightIntervalManual;
+                document.getElementById('pumpStartHour').value = settings.pumpStartHour;
+                document.getElementById('pumpStartMinute').value = settings.pumpStartMinute;
+                document.getElementById('pumpDuration').value = settings.pumpDuration;
+                document.getElementById('pumpInterval').value = settings.pumpInterval;
+                saveLightingSettings();
+                savePumpSettings();
             }
         }
+    }
 
-        function updateUI() {
-            fetch('/getSensorStatus').then(response => response.json()).then(data => {
-                document.getElementById('statusIndicator').textContent = data.isOnline ? 'Online' : 'Offline';
-                document.getElementById('statusIndicator').className = `inline-block px-4 py-2 ${data.isOnline ? 'bg-green-600' : 'bg-red-600'} text-white rounded`;
-            });
+    function updateUI() {
+        fetch('/getSensorStatus').then(response => response.json()).then(data => {
+            document.getElementById('statusIndicator').textContent = data.isOnline ? 'Online' : 'Offline';
+            document.getElementById('statusIndicator').className = `inline-block px-4 py-2 ${data.isOnline ? 'bg-green-600' : 'bg-red-600'} text-white rounded`;
+        });
 
-            fetch('/getRelayState').then(response => response.json()).then(data => {
-                document.getElementById('relay1Status').textContent = data.relayState1 ? 'On' : 'Off';
-                document.getElementById('relay2Status').textContent = data.relayState2 ? 'On' : 'Off';
-                document.getElementById('lightingStatus').textContent = data.relayState1 ? 'On' : 'Off';
-                document.getElementById('ventilationStatus').textContent = data.relayState2 ? 'On' : 'Off';
-            });
+        fetch('/getRelayState').then(response => response.json()).then(data => {
+            document.getElementById('relay1Status').textContent = data.relayState1 ? 'On' : 'Off';
+            document.getElementById('relay2Status').textContent = data.relayState2 ? 'On' : 'Off';
+            document.getElementById('lightingStatus').textContent = data.relayState1 ? 'On' : 'Off';
+            document.getElementById('ventilationStatus').textContent = data.relayState2 ? 'On' : 'Off';
+        });
 
-            fetch('/getSensorData').then(response => response.json()).then(data => {
-                document.getElementById('temperature').textContent = `${data.temperature} °C`;
-                document.getElementById('humidity').textContent = `${data.humidity} %`;
-                document.getElementById('soilMoisture').textContent = `${data.soilMoisture} %`;
-            });
+        fetch('/getSensorData').then(response => response.json()).then(data => {
+            document.getElementById('temperature').textContent = `${data.temperature} °C`;
+            document.getElementById('humidity').textContent = `${data.humidity} %`;
+            document.getElementById('soilMoisture').textContent = `${data.soilMoisture} %`;
+        });
 
-            fetch('/getMode').then(response => response.json()).then(data => {
-                mode = data.mode;
-                document.getElementById('mode').textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
-                document.getElementById('modeButton').textContent = `Switch to ${mode === 'auto' ? 'Manual' : 'Auto'} Mode`;
-            });
+        fetch('/getMode').then(response => response.json()).then(data => {
+            mode = data.mode;
+            document.getElementById('mode').textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+            document.getElementById('modeButton').textContent = `Switch to ${mode === 'auto' ? 'Manual' : 'Auto'} Mode`;
+        });
 
-            fetch('/getLightingSettings').then(response => response.json()).then(data => {
-                document.getElementById('fanTemperatureThreshold').value = data.fanTemperatureThreshold;
-                document.getElementById('lightOnDuration').value = data.lightOnDuration;
-                document.getElementById('lightIntervalManual').value = data.lightIntervalManual;
-            });
+        fetch('/getLightingSettings').then(response => response.json()).then(data => {
+            document.getElementById('fanTemperatureThreshold').value = data.fanTemperatureThreshold;
+            document.getElementById('lightOnDuration').value = data.lightOnDuration;
+            document.getElementById('lightIntervalManual').value = data.lightIntervalManual;
+        });
 
-            fetch('/getPumpSettings').then(response => response.json()).then(data => {
-                document.getElementById('pumpStartHour').value = data.pumpStartHour;
-                document.getElementById('pumpStartMinute').value = data.pumpStartMinute;
-                document.getElementById('pumpDuration').value = data.pumpDuration;
-                document.getElementById('pumpInterval').value = data.pumpInterval;
-            });
+        fetch('/getPumpSettings').then(response => response.json()).then(data => {
+            document.getElementById('pumpStartHour').value = data.pumpStartHour;
+            document.getElementById('pumpStartMinute').value = data.pumpStartMinute;
+            document.getElementById('pumpDuration').value = data.pumpDuration;
+            document.getElementById('pumpInterval').value = data.pumpInterval;
+        });
 
-            updateCropSelect();
-        }
+        updateCropSelect();
+    }
 
-        function updateCharts() {
-            fetch('/getSensorTrends').then(response => response.json()).then(data => {
-                const labels = data.hourlyAverages.map(entry => new Date(entry.timestamp).toLocaleTimeString());
-                if (!charts.temperature) {
-                    charts.temperature = new Chart(document.getElementById('temperatureChart'), {
-                        type: 'line',
-                        data: { labels: [], datasets: [{ label: 'Temperature (°C)', data: [], borderColor: 'red', fill: false }] },
-                        options: { scales: { y: { beginAtZero: false } } }
-                    });
-                    charts.humidity = new Chart(document.getElementById('humidityChart'), {
-                        type: 'line',
-                        data: { labels: [], datasets: [{ label: 'Humidity (%)', data: [], borderColor: 'blue', fill: false }] },
-                        options: { scales: { y: { beginAtZero: false } } }
-                    });
-                    charts.soilMoisture = new Chart(document.getElementById('soilMoistureChart'), {
-                        type: 'line',
-                        data: { labels: [], datasets: [{ label: 'Soil Moisture (%)', data: [], borderColor: 'green', fill: false }] },
-                        options: { scales: { y: { beginAtZero: false } } }
-                    });
-                }
-                charts.temperature.data.labels = labels;
-                charts.temperature.data.datasets[0].data = data.hourlyAverages.map(entry => entry.temperature);
-                charts.temperature.update();
-                charts.humidity.data.labels = labels;
-                charts.humidity.data.datasets[0].data = data.hourlyAverages.map(entry => entry.humidity);
-                charts.humidity.update();
-                charts.soilMoisture.data.labels = labels;
-                charts.soilMoisture.data.datasets[0].data = data.hourlyAverages.map(entry => entry.soilMoisture);
-                charts.soilMoisture.update();
-                document.getElementById('temperatureHealthy').textContent = `${data.healthyRanges.temperature.toFixed(1)}%`;
-                document.getElementById('humidityHealthy').textContent = `${data.healthyRanges.humidity.toFixed(1)}%`;
-                document.getElementById('soilMoistureHealthy').textContent = `${data.healthyRanges.soilMoisture.toFixed(1)}%`;
-            });
-        }
+    function updateCharts() {
+        fetch('/getSensorTrends').then(response => response.json()).then(data => {
+            const labels = data.hourlyAverages.map(entry => new Date(entry.timestamp).toLocaleTimeString());
+            if (!charts.temperature) {
+                charts.temperature = new Chart(document.getElementById('temperatureChart'), {
+                    type: 'line',
+                    data: { labels: [], datasets: [{ label: 'Temperature (°C)', data: [], borderColor: 'red', fill: false }] },
+                    options: { scales: { y: { beginAtZero: false } } }
+                });
+                charts.humidity = new Chart(document.getElementById('humidityChart'), {
+                    type: 'line',
+                    data: { labels: [], datasets: [{ label: 'Humidity (%)', data: [], borderColor: 'blue', fill: false }] },
+                    options: { scales: { y: { beginAtZero: false } } }
+                });
+                charts.soilMoisture = new Chart(document.getElementById('soilMoistureChart'), {
+                    type: 'line',
+                    data: { labels: [], datasets: [{ label: 'Soil Moisture (%)', data: [], borderColor: 'green', fill: false }] },
+                    options: { scales: { y: { beginAtZero: false } } }
+                });
+            }
+            charts.temperature.data.labels = labels;
+            charts.temperature.data.datasets[0].data = data.hourlyAverages.map(entry => entry.temperature);
+            charts.temperature.update();
+            charts.humidity.data.labels = labels;
+            charts.humidity.data.datasets[0].data = data.hourlyAverages.map(entry => entry.humidity);
+            charts.humidity.update();
+            charts.soilMoisture.data.labels = labels;
+            charts.soilMoisture.data.datasets[0].data = data.hourlyAverages.map(entry => entry.soilMoisture);
+            charts.soilMoisture.update();
+            document.getElementById('temperatureHealthy').textContent = `${data.healthyRanges.temperature.toFixed(1)}%`;
+            document.getElementById('humidityHealthy').textContent = `${data.healthyRanges.humidity.toFixed(1)}%`;
+            document.getElementById('soilMoistureHealthy').textContent = `${data.healthyRanges.soilMoisture.toFixed(1)}%`;
+        });
+    }
 
-        setInterval(updateUI, 5000);
+    setInterval(updateUI, 5000);
         updateUI();
     </script>
 </body>
