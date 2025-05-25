@@ -413,7 +413,7 @@ app.get('/', (req, res) => {
     }
 
     function toggleRelay(relayNumber) {
-        fetch(`/toggleRelay/${relayNumber}`, { method: 'POST' })
+            fetch(\`/toggleRelay/\${relayNumber}\`, { method: 'POST' })
         .then(response => response.json())
         .then(data => {
             if (data.success) updateUI();
