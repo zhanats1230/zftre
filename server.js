@@ -496,7 +496,7 @@ app.get('/', (req, res) => {
                               '<option value="carrot">Carrot</option>' +
                               '<option value="tomato">Tomato</option>';
             Object.keys(customCrops).forEach(crop => {
-                select.innerHTML += `<option value="${crop}">${crop.charAt(0).toUpperCase() + crop.slice(1)}</option>`;
+select.innerHTML += `<option value="${crop}">${crop.charAt(0).toUpperCase() + crop.slice(1)}</option>`;
             });
             select.innerHTML += '<option value="custom">Custom</option>';
         }
