@@ -489,20 +489,17 @@ app.get('/', (req, res) => {
             }
         }
 
-        function updateCropSelect() {
-    const select = document.getElementById('cropSelect');
-    select.innerHTML = '<option value="">Select Crop</option>' +
-                       '<option value="potato">Potato</option>' +
-                       '<option value="carrot">Carrot</option>' +
-                       '<option value="tomato">Tomato</option>';
-    Object.keys(customCrops).forEach(crop => {
-      select.innerHTML += `<option value="${crop}">${crop.charAt(0).toUpperCase() + crop.slice(1)}</option>`;
-    });
-    select.innerHTML += '<option value="custom">Custom</option>';
-  }
-
-  window.onload = updateCropSelect;
-
+       function updateCropSelect() {
+        const select = document.getElementById('cropSelect');
+        select.innerHTML = '<option value="">Select Crop</option>' +
+                           '<option value="potato">Potato</option>' +
+                           '<option value="carrot">Carrot</option>' +
+                           '<option value="tomato">Tomato</option>';
+        Object.keys(customCrops).forEach(crop => {
+            select.innerHTML += `<option value="${crop}">${crop.charAt(0).toUpperCase()}${crop.slice(1)}</option>`;
+        });
+        select.innerHTML += '<option value="custom">Custom</option>';
+    }
         function loadCropSettings() {
             const crop = document.getElementById('cropSelect').value;
             if (crop && crop !== 'custom') {
