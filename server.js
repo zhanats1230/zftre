@@ -70,7 +70,36 @@ async function loadSensorDataHistory() {
     };
   }
 }
+async function login() {
+    const passwordInput = document.getElementById('passwordInput').value;
+    const loginError = document.getElementById('loginError');
 
+    try {
+        // Отправляем POST-запрос на сервер
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `password=${encodeURIComponent(passwordInput)}`
+        });
+
+        if (response.ok) {
+            // Успешная авторизация, перенаправляем на главную страницу
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('mainPage').classList.remove('hidden');
+            updateUI(); // Убедитесь, что эта функция определена
+        } else {
+            // Показываем ошибку
+            loginError.classList.remove('hidden');
+            loginError.textContent = 'Incorrect Password';
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        loginError.classList.remove('hidden');
+        loginError.textContent = 'Server error, please try again later';
+    }
+}
 // Save sensor data history to file
 async function saveSensorDataHistory() {
   try {
@@ -619,7 +648,31 @@ app.get('/getSensorStatus', (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+app.post('/login', (req, res) => {
+    try {
+        const { password } = req.body;
 
+        // Проверка, что пароль передан
+        if (!password) {
+            return res.status(400).json({ error: 'Password is required' });
+        }
+
+        // Временный жестко закодированный пароль (замените на bcrypt в будущем)
+        const CORRECT_PASSWORD = '12345678';
+
+        if (password === CORRECT_PASSWORD) {
+            // Успешная авторизация
+            console.log('Login successful');
+            res.json({ success: true });
+        } else {
+            console.log('Login failed: Incorrect password');
+            res.status(401).json({ error: 'Incorrect Password' });
+        }
+    } catch (error) {
+        console.error('Error in /login:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 app.get('/getRelayState', (req, res) => {
   try {
     res.json(relayState);
