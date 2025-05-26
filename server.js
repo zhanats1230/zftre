@@ -523,8 +523,7 @@ app.get('/', (req, res) => {
     function updateUI() {
         fetch('/getSensorStatus').then(response => response.json()).then(data => {
             document.getElementById('statusIndicator').textContent = data.isOnline ? 'Online' : 'Offline';
-            document.getElementById('statusIndicator').className = `inline-block px-4 py-2 ${data.isOnline ? 'bg-green-600' : 'bg-red-600'} text-white rounded`;
-        });
+document.getElementById('statusIndicator').className = 'inline-block px-4 py-2 ' + (data.isOnline ? 'bg-green-600' : 'bg-red-600') + ' text-white rounded';        });
 
         fetch('/getRelayState').then(response => response.json()).then(data => {
             document.getElementById('relay1Status').textContent = data.relayState1 ? 'On' : 'Off';
@@ -534,15 +533,15 @@ app.get('/', (req, res) => {
         });
 
         fetch('/getSensorData').then(response => response.json()).then(data => {
-            document.getElementById('temperature').textContent = `${data.temperature} °C`;
-            document.getElementById('humidity').textContent = `${data.humidity} %`;
-            document.getElementById('soilMoisture').textContent = `${data.soilMoisture} %`;
+             document.getElementById('temperature').textContent = data.temperature + ' °C';
+            document.getElementById('humidity').textContent = data.humidity + ' %';
+document.getElementById('soilMoisture').textContent = data.soilMoisture + ' %';
         });
 
         fetch('/getMode').then(response => response.json()).then(data => {
             mode = data.mode;
             document.getElementById('mode').textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
-            document.getElementById('modeButton').textContent = `Switch to ${mode === 'auto' ? 'Manual' : 'Auto'} Mode`;
+           document.getElementById('modeButton').textContent = 'Switch to ' + (mode === 'auto' ? 'Manual' : 'Auto') + ' Mode';
         });
 
         fetch('/getLightingSettings').then(response => response.json()).then(data => {
@@ -590,9 +589,9 @@ app.get('/', (req, res) => {
             charts.soilMoisture.data.labels = labels;
             charts.soilMoisture.data.datasets[0].data = data.hourlyAverages.map(entry => entry.soilMoisture);
             charts.soilMoisture.update();
-            document.getElementById('temperatureHealthy').textContent = `${data.healthyRanges.temperature.toFixed(1)}%`;
-            document.getElementById('humidityHealthy').textContent = `${data.healthyRanges.humidity.toFixed(1)}%`;
-            document.getElementById('soilMoistureHealthy').textContent = `${data.healthyRanges.soilMoisture.toFixed(1)}%`;
+            document.getElementById('temperatureHealthy').textContent = data.healthyRanges.temperature.toFixed(1) + '%';
+document.getElementById('humidityHealthy').textContent = data.healthyRanges.humidity.toFixed(1) + '%';
+document.getElementById('soilMoistureHealthy').textContent = data.healthyRanges.soilMoisture.toFixed(1) + '%';
         });
     }
 
