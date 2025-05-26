@@ -2,6 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
+const session = require('express-session'); // Добавляем express-session
+const bcrypt = require('bcrypt'); // Добавляем bcrypt
 const app = express();
 const port = 80;
 
@@ -41,7 +43,15 @@ const HEALTHY_RANGES = {
   humidity: { min: 50, max: 80 },
   soilMoisture: { min: 30, max: 70 }
 };
-
+// Хешированный пароль (сгенерируйте с помощью bcrypt.hash)
+const CORRECT_PASSWORD_HASH = '$2b$10$YOUR_HASH_HERE'; // Замените на свой хеш, например, для пароля '12345678'
+// Middleware для проверки авторизации
+function isAuthenticated(req, res, next) {
+  if (req.session.isAuthenticated) {
+    return next();
+  }
+  res.status(401).json({ error: 'Unauthorized' });
+}
 // Load sensor data history from file on startup
 async function loadSensorDataHistory() {
   try {
@@ -193,17 +203,14 @@ app.get('/', (req, res) => {
     </style>
 </head>
 <body class="bg-greenhouse">
-    <div id="loginPage" class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold text-center text-green-800 mb-6">Greenhouse Login</h1>
-        <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold mb-4">Login</h2>
-            <input id="passwordInput" type="password" class="w-full p-2 mb-4 border rounded" placeholder="Enter password">
-            <p id="loginError" class="text-red-500 hidden">Incorrect Password</p>
-            <button onclick="login()" class="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700">Login</button>
-        </div>
-    </div>
+    <div id="loginPage" class="${req.session.isAuthenticated ? 'hidden' : ''}">
+        <h1>Greenhouse Login</h1>
+        <input type="password" id="passwordInput" placeholder="Enter Password">
+        <div id="loginError" class="hidden error">Incorrect Password</div>
+        <button onclick="login()">Login</button>
+      </div>
 
-    <div id="mainPage" class="container mx-auto p-4 hidden">
+    <div id="mainPage" class="${req.session.isAuthenticated ? '' : 'hidden'}">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-green-800">Greenhouse Control</h1>
             <div>
@@ -398,69 +405,84 @@ app.get('/', (req, res) => {
     let customCrops = JSON.parse(localStorage.getItem('customCrops')) || {};
 
     async function login() {
-                    const passwordInput = document.getElementById('passwordInput').value;
-                    const loginError = document.getElementById('loginError');
+          const passwordInput = document.getElementById('passwordInput').value;
+          const loginError = document.getElementById('loginError');
 
-                    try {
-                        const response = await fetch('/login', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ password: passwordInput })
-                        });
+          try {
+            const response = await fetch('/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: \`password=\${encodeURIComponent(passwordInput)}\`
+            });
 
-                        if (response.ok) {
-                            document.getElementById('loginPage').classList.add('hidden');
-                            document.getElementById('mainPage').classList.remove('hidden');
-                            updateUI();
-                        } else {
-                            loginError.classList.remove('hidden');
-                            loginError.textContent = 'Incorrect Password';
-                        }
-                    } catch (error) {
-                        console.error('Login error:', error);
-                        loginError.classList.remove('hidden');
-                        loginError.textContent = 'Server error, please try again later';
-                    }
-                }
+            if (response.ok) {
+              document.getElementById('loginPage').classList.add('hidden');
+              document.getElementById('mainPage').classList.remove('hidden');
+              updateUI();
+            } else {
+              loginError.classList.remove('hidden');
+              loginError.textContent = 'Incorrect Password';
+            }
+          } catch (error) {
+            console.error('Login error:', error);
+            loginError.classList.remove('hidden');
+            loginError.textContent = 'Server error, please try again later';
+          }
+        }
 
-                async function updateUI() {
-                    try {
-                        const [sensorStatus, sensorData] = await Promise.all([
-                            fetch('/getSensorStatus').then(res => res.json()),
-                            fetch('/getSensorData').then(res => res.json())
-                        ]);
+        async function logout() {
+          try {
+            const response = await fetch('/logout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            if (response.ok) {
+              document.getElementById('mainPage').classList.add('hidden');
+              document.getElementById('loginPage').classList.remove('hidden');
+            }
+          } catch (error) {
+            console.error('Logout error:', error);
+          }
+        }
 
-                        document.getElementById('systemStatus').textContent = sensorStatus.isOnline ? 'Online' : 'Offline';
-                        document.getElementById('temperature').textContent = sensorData.temperature + ' °C';
-                        document.getElementById('humidity').textContent = sensorData.humidity + ' %';
-                        document.getElementById('soilMoisture').textContent = sensorData.soilMoisture + ' %';
-                    } catch (error) {
-                        console.error('Error updating UI:', error);
-                    }
-                }
-                async function logout() {
-                    try {
-                        await fetch('/logout', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            }
-                        });
-                        document.getElementById('mainPage').classList.add('hidden');
-                        document.getElementById('loginPage').classList.remove('hidden');
-                        document.getElementById('passwordInput').value = '';
-                        document.getElementById('loginError').classList.add('hidden');
-                    } catch (error) {
-                        console.error('Logout error:', error);
-                    }
-                }
-    function showTab(tabId) {
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-    }
+        async function updateUI() {
+          try {
+            const [sensorRes, relayRes, modeRes, trendsRes, statusRes] = await Promise.all([
+              fetch('/getSensorData'),
+              fetch('/getRelayState'),
+              fetch('/getMode'),
+              fetch('/getSensorTrends'),
+              fetch('/getSensorStatus')
+            ]);
+            if (sensorRes.ok && relayRes.ok && modeRes.ok && trendsRes.ok && statusRes.ok) {
+              const sensorData = await sensorRes.json();
+              const relayState = await relayRes.json();
+              const modeData = await modeRes.json();
+              const trendsData = await trendsRes.json();
+              const statusData = await statusRes.json();
 
+              document.getElementById('temperature').textContent = sensorData.temperature;
+              document.getElementById('humidity').textContent = sensorData.humidity;
+              document.getElementById('soilMoisture').textContent = sensorData.soilMoisture;
+              document.getElementById('relayState1').textContent = relayState.relayState1 ? 'On' : 'Off';
+              document.getElementById('relayState2').textContent = relayState.relayState2 ? 'On' : 'Off';
+              document.getElementById('relayState1Relays').textContent = relayState.relayState1 ? 'On' : 'Off';
+              document.getElementById('relayState2Relays').textContent = relayState.relayState2 ? 'On' : 'Off';
+              document.getElementById('mode').textContent = modeData.mode;
+              document.getElementById('onlineStatus').textContent = statusData.isOnline ? 'Online' : 'Offline';
+              document.getElementById('tempHealthy').textContent = trendsData.healthyRanges.temperature.toFixed(1);
+              document.getElementById('humidHealthy').textContent = trendsData.healthyRanges.humidity.toFixed(1);
+              document.getElementById('soilHealthy').textContent = trendsData.healthyRanges.soilMoisture.toFixed(1);
+            }
+          } catch (error) {
+            console.error('Error updating UI:', error);
+          }
+        }
+
+        function showTab(tabId) {
+          document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+          document.getElementById(tabId).classList.add('active');
+        }
     function showTrend(trendId) {
         showTab(trendId);
         updateCharts();
@@ -688,40 +710,37 @@ app.get('/getSensorStatus', (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-// Login endpoint
-app.post('/login', (req, res) => {
-    try {
-        const { password } = req.body;
-        if (!password) {
-            return res.status(400).json({ error: 'Password is required' });
-        }
-
-        // Temporary hardcoded password (replace with bcrypt in production)
-        const CORRECT_PASSWORD = '12345678';
-
-        if (password === CORRECT_PASSWORD) {
-            req.session.isAuthenticated = true;
-            console.log('Login successful');
-            res.json({ success: true });
-        } else {
-            console.log('Login failed: Incorrect password');
-            res.status(401).json({ error: 'Incorrect Password' });
-        }
-    } catch (error) {
-        console.error('Error in /login:', error);
-        res.status(500).json({ error: 'Server error' });
+app.post('/login', async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required' });
     }
+
+    const isMatch = await bcrypt.compare(password, CORRECT_PASSWORD_HASH);
+    if (isMatch) {
+      req.session.isAuthenticated = true;
+      console.log('Login successful');
+      res.json({ success: true });
+    } else {
+      console.log('Login failed: Incorrect password');
+      res.status(401).json({ error: 'Incorrect Password' });
+    }
+  } catch (error) {
+    console.error('Error in /login:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 // Logout endpoint
 app.post('/logout', (req, res) => {
-    try {
-        req.session.destroy();
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Error in /logout:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
+  try {
+    req.session.destroy();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error in /logout:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 app.get('/getRelayState', (req, res) => {
   try {
