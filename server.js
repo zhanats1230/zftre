@@ -360,7 +360,6 @@ app.get('/', (req, res) => {
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script>
-        const password = "admin123";
         let mode = "manual";
         let charts = {};
 
@@ -398,24 +397,65 @@ app.get('/', (req, res) => {
        / Load custom crops from localStorage
     let customCrops = JSON.parse(localStorage.getItem('customCrops')) || {};
 
-    function login() {
-        const passwordInput = document.getElementById('passwordInput').value;
-        if (passwordInput === password) {
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('mainPage').classList.remove('hidden');
-            updateUI();
-        } else {
-            document.getElementById('loginError').classList.remove('hidden');
-        }
-    }
+    async function login() {
+                    const passwordInput = document.getElementById('passwordInput').value;
+                    const loginError = document.getElementById('loginError');
 
-    function logout() {
-        document.getElementById('loginPage').classList.remove('hidden');
-        document.getElementById('mainPage').classList.add('hidden');
-        document.getElementById('passwordInput').value = '';
-        document.getElementById('loginError').classList.add('hidden');
-    }
+                    try {
+                        const response = await fetch('/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ password: passwordInput })
+                        });
 
+                        if (response.ok) {
+                            document.getElementById('loginPage').classList.add('hidden');
+                            document.getElementById('mainPage').classList.remove('hidden');
+                            updateUI();
+                        } else {
+                            loginError.classList.remove('hidden');
+                            loginError.textContent = 'Incorrect Password';
+                        }
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        loginError.classList.remove('hidden');
+                        loginError.textContent = 'Server error, please try again later';
+                    }
+                }
+
+                async function updateUI() {
+                    try {
+                        const [sensorStatus, sensorData] = await Promise.all([
+                            fetch('/getSensorStatus').then(res => res.json()),
+                            fetch('/getSensorData').then(res => res.json())
+                        ]);
+
+                        document.getElementById('systemStatus').textContent = sensorStatus.isOnline ? 'Online' : 'Offline';
+                        document.getElementById('temperature').textContent = sensorData.temperature + ' °C';
+                        document.getElementById('humidity').textContent = sensorData.humidity + ' %';
+                        document.getElementById('soilMoisture').textContent = sensorData.soilMoisture + ' %';
+                    } catch (error) {
+                        console.error('Error updating UI:', error);
+                    }
+                }
+                async function logout() {
+                    try {
+                        await fetch('/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                        document.getElementById('mainPage').classList.add('hidden');
+                        document.getElementById('loginPage').classList.remove('hidden');
+                        document.getElementById('passwordInput').value = '';
+                        document.getElementById('loginError').classList.add('hidden');
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                    }
+                }
     function showTab(tabId) {
         document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
@@ -648,20 +688,19 @@ app.get('/getSensorStatus', (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+// Login endpoint
 app.post('/login', (req, res) => {
     try {
         const { password } = req.body;
-
-        // Проверка, что пароль передан
         if (!password) {
             return res.status(400).json({ error: 'Password is required' });
         }
 
-        // Временный жестко закодированный пароль (замените на bcrypt в будущем)
+        // Temporary hardcoded password (replace with bcrypt in production)
         const CORRECT_PASSWORD = '12345678';
 
         if (password === CORRECT_PASSWORD) {
-            // Успешная авторизация
+            req.session.isAuthenticated = true;
             console.log('Login successful');
             res.json({ success: true });
         } else {
@@ -670,6 +709,17 @@ app.post('/login', (req, res) => {
         }
     } catch (error) {
         console.error('Error in /login:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Logout endpoint
+app.post('/logout', (req, res) => {
+    try {
+        req.session.destroy();
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error in /logout:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
