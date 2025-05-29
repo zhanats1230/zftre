@@ -158,591 +158,412 @@ app.get('/', (req, res) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Greenhouse Control</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-  :root {
-    --primary-green: #2e7d32;
-    --secondary-green: #4caf50;
-    --light-green: #81c784;
-    --background-light: #f5f7fa;
-    --text-dark: #1a1a1a;
-    --text-light: #f5f5f5;
-    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --transition: all 0.3s ease;
-  }
-
-  body {
-    @apply bg-gray-50 font-sans text-gray-800 min-h-screen;
-    background-color: var(--background-light);
-  }
-
-  /* Логин страница */
-  .login-container {
-    background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
-    @apply flex items-center justify-center min-h-screen;
-  }
-
-  .login-card {
-    @apply bg-white p-8 rounded-xl shadow-xl w-full max-w-md;
-    transform: translateY(-20px);
-    transition: var(--transition);
-  }
-
-  .login-card:hover {
-    transform: translateY(-25px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-  }
-
-  .login-card h1 {
-    @apply text-3xl font-bold text-center mb-6 text-gray-800;
-    color: var(--primary-green);
-  }
-
-  .login-card input {
-    @apply w-full p-4 border border-gray-200 rounded-lg mb-4 focus:outline-none;
-    transition: var(--transition);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  .login-card input:focus {
-    border-color: var(--primary-green);
-    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
-  }
-
-  .login-card button {
-    @apply w-full p-4 rounded-lg font-medium;
-    background-color: var(--primary-green);
-    color: white;
-    transition: var(--transition);
-  }
-
-  .login-card button:hover {
-    background-color: #1b5e20;
-    transform: translateY(-2px);
-  }
-
-  /* Навигация */
-  .nav-bar {
-    @apply bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-10;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  }
-
-  .nav-tabs {
-    @apply flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg;
-  }
-
-  .nav-tabs button {
-    @apply px-6 py-3 rounded-lg font-medium;
-    transition: var(--transition);
-  }
-
-  .nav-tabs button:not(.active) {
-    @apply text-gray-600;
-  }
-
-  .nav-tabs button.active {
-    @apply bg-white text-green-600 shadow-sm;
-  }
-
-  /* Карточки */
-  .card {
-    @apply bg-white p-6 rounded-xl shadow-sm border border-gray-100;
-    transition: var(--transition);
-  }
-
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--card-shadow);
-  }
-
-  .card h2 {
-    @apply text-xl font-semibold mb-4 pb-2 border-b border-gray-100;
-    color: var(--primary-green);
-  }
-
-  /* Сенсоры */
-  .sensor-card {
-    @apply p-4 rounded-lg;
-    background-color: rgba(129, 199, 132, 0.1);
-  }
-
-  .sensor-card h3 {
-    @apply text-base font-medium mb-2 flex items-center;
-  }
-
-  .sensor-card p {
-    @apply text-3xl font-bold mb-2;
-    color: var(--primary-green);
-  }
-
-  /* Кнопки */
-  .btn-primary {
-    @apply px-6 py-3 rounded-lg font-medium;
-    background-color: var(--primary-green);
-    color: white;
-    transition: var(--transition);
-  }
-
-  .btn-primary:hover {
-    background-color: #1b5e20;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .btn-secondary {
-    @apply px-6 py-3 rounded-lg font-medium;
-    background-color: #f5f5f5;
-    color: var(--text-dark);
-    transition: var(--transition);
-  }
-
-  .btn-secondary:hover {
-    background-color: #e0e0e0;
-  }
-
-  /* Графики */
-  .trend-chart {
-    @apply w-full h-80;
-    background-color: white;
-    border-radius: 0.5rem;
-    padding: 1rem;
-  }
-
-  /* Анимации */
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .tab {
-    animation: fadeIn 0.3s ease-out;
-  }
-
-  /* Адаптивность */
-  @media (max-width: 768px) {
-    .dashboard {
-      @apply grid-cols-1;
-    }
-    
-    .nav-tabs {
-      @apply flex-col space-y-2 space-x-0;
-    }
-    
-    .nav-tabs button {
-      @apply w-full;
-    }
-  }
-</style>
+        /* Custom gradient for background */
+        body {
+            background: linear-gradient(135deg, #1e3a8a, #10b981);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        /* Smooth fade-in animation for sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Hover effect for cards */
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        /* Custom button hover effect */
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
-<body class="bg-greenhouse">
-    <!-- Обновленный блок входа -->
-<div id="loginPage" class="login-container">
-  <div class="login-card">
-    <h1>🌿 Greenhouse Control</h1>
-    <input type="password" id="passwordInput" placeholder="Enter your password">
-    <div id="loginError" class="hidden text-red-500 mb-4">Incorrect password</div>
-    <button onclick="login()" class="btn-primary">Login</button>
-  </div>
-</div>
+<body class="text-white">
+    <!-- Login Section -->
+    <div id="login-section" class="section active min-h-screen flex items-center justify-center">
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md card">
+            <h1 class="text-3xl font-bold text-center mb-6 text-emerald-200">Greenhouse Login</h1>
+            <div id="login-error" class="hidden text-red-400 text-center mb-4">Incorrect Password</div>
+            <input id="password-input" type="password" placeholder="Enter Password" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+            <button onclick="handleLogin()" class="btn w-full py-3 bg-emerald-500 hover:bg-emerald-600 rounded-lg font-semibold">Login</button>
+        </div>
+    </div>
 
-    <div id="mainPage" class="hidden">
-        <div class="max-w-4xl mx-auto mt-10">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-green-800">Greenhouse Control</h1>
-                <div>
-                    <button onclick="toggleMode()" id="modeButton" class="bg-blue-600 text-white px-4 py-2 rounded mr-2">
-                        Switch Mode
-                    </button>
-                    <span id="statusIndicator" class="inline-block px-4 py-2 bg-red-600 text-white rounded">Offline</span>
-                    <button onclick="logout()" class="bg-gray-600 text-white px-4 py-2 rounded ml-2">Logout</button>
+    <!-- Main Content (Hidden until login) -->
+    <div id="main-content" class="hidden">
+        <!-- Header -->
+        <header class="bg-gray-900 bg-opacity-80 backdrop-blur-md p-4 sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-emerald-400">Greenhouse Control</h1>
+                <div class="flex items-center space-x-4">
+                    <button onclick="switchMode()" class="btn px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">Switch Mode</button>
+                    <span id="online-status" class="text-sm font-medium text-gray-300">Offline</span>
+                    <button onclick="handleLogout()" class="btn px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg">Logout</button>
                 </div>
             </div>
+        </header>
 
-            <div class="flex mb-4">
-                <button onclick="showTab('dashboard')" class="flex-1 bg-green-600 text-white p-2 rounded-l hover:bg-green-700">Dashboard</button>
-                <button onclick="showTab('relays')" class="flex-1 bg-green-600 text-white p-2 hover:bg-green-700">Relays</button>
-                <button onclick="showTab('settings')" class="flex-1 bg-green-600 text-white p-2 rounded-r hover:bg-green-700">Settings</button>
+        <!-- Navigation -->
+        <nav class="bg-gray-800 bg-opacity-80 p-4">
+            <div class="max-w-7xl mx-auto flex space-x-4">
+                <button onclick="showSection('dashboard-section')" class="nav-btn btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg">Dashboard</button>
+                <button onclick="showSection('relays-section')" class="nav-btn btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg">Relays</button>
+                <button onclick="showSection('settings-section')" class="nav-btn btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg">Settings</button>
             </div>
+        </nav>
 
-            <div id="dashboard" class="tab active">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-info-circle"></i> System Status</h2>
-                        <p>Mode: <span id="mode">—</span></p>
-                        <p>Lighting: <span id="lightingStatus">—</span></p>
-                        <p>Ventilation: <span id="ventilationStatus">—</span></p>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-leaf"></i> Environmental Sensors</h2>
-                        <div class="grid grid-cols-1 gap-4">
-                            <div>
-                                <h3 class="font-semibold"><i class="fas fa-thermometer-half crop-icon"></i>Temperature</h3>
-                                <p id="temperature">— °C</p>
-                                <button onclick="showTrend('temperatureTrends')" class="text-blue-600 hover:underline">View Trends</button>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold"><i class="fas fa-tint crop-icon"></i>Humidity</h3>
-                                <p id="humidity">— %</p>
-                                <button onclick="showTrend('humidityTrends')" class="text-blue-600 hover:underline">View Trends</button>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold"><i class="fas fa-seedling crop-icon"></i>Soil Moisture</h3>
-                                <p id="soilMoisture">— %</p>
-                                <button onclick="showTrend('soilMoistureTrends')" class="text-blue-600 hover:underline">View Trends</button>
-                            </div>
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section active max-w-7xl mx-auto p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- System Status -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">System Status</h2>
+                    <p>Mode: <span id="mode-display">—</span></p>
+                    <p>Lighting: <span id="lighting-status">—</span></p>
+                    <p>Ventilation: <span id="ventilation-status">—</span></p>
+                </div>
+                <!-- Environmental Sensors -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">Environmental Sensors</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <p>Temperature: <span id="temperature-display">— °C</span></p>
+                            <button onclick="showSection('temperature-trends-section')" class="btn px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded-lg">View Trends</button>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="temperatureTrends" class="tab">
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h2 class="text-xl font-semibold mb-4"><i class="fas fa-thermometer-half"></i> Temperature Trends</h2>
-                    <canvas id="temperatureChart" class="trend-chart"></canvas>
-                    <p>Temperature in healthy range: <span id="temperatureHealthy">—%</span></p>
-                    <button onclick="showTab('dashboard')" class="mt-4 bg-green-600 text-white p-2 rounded">Back to Dashboard</button>
-                </div>
-            </div>
-
-            <div id="humidityTrends" class="tab">
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h2 class="text-xl font-semibold mb-4"><i class="fas fa-tint"></i> Humidity Trends</h2>
-                    <canvas id="humidityChart" class="trend-chart"></canvas>
-                    <p>Humidity in healthy range: <span id="humidityHealthy">—%</span></p>
-                    <button onclick="showTab('dashboard')" class="mt-4 bg-green-600 text-white p-2 rounded">Back to Dashboard</button>
-                </div>
-            </div>
-
-            <div id="soilMoistureTrends" class="tab">
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h2 class="text-xl font-semibold mb-4"><i class="fas fa-seedling"></i> Soil Moisture Trends</h2>
-                    <canvas id="soilMoistureChart" class="trend-chart"></canvas>
-                    <p>Soil Moisture in healthy range: <span id="soilMoistureHealthy">—%</span></p>
-                    <button onclick="showTab('dashboard')" class="mt-4 bg-green-600 text-white p-2 rounded">Back to Dashboard</button>
-                </div>
-            </div>
-
-            <div id="relays" class="tab">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-lightbulb"></i> Lighting</h2>
-                        <p>Lighting: <span id="relay1Status">—</span></p>
-                        <button onclick="toggleRelay(1)" class="mt-4 bg-green-600 text-white p-2 rounded">Toggle Lighting</button>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-fan"></i> Ventilation</h2>
-                        <p>Ventilation: <span id="relay2Status">—</span></p>
-                        <button onclick="toggleRelay(2)" class="mt-4 bg-green-600 text-white p-2 rounded">Toggle Ventilation</button>
+                        <div>
+                            <p>Humidity: <span id="humidity-display">— %</span></p>
+                            <button onclick="showSection('humidity-trends-section')" class="btn px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded-lg">View Trends</button>
+                        </div>
+                        <div>
+                            <p>Soil Moisture: <span id="soil-moisture-display">— %</span></p>
+                            <button onclick="showSection('soil-moisture-trends-section')" class="btn px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded-lg">View Trends</button>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div id="settings" class="tab">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-seedling"></i> Crop Selection</h2>
-                        <select id="cropSelect" onchange="loadCropSettings()" class="w-full p-2 mb-4 border rounded">
-                            <option value="">Select Crop</option>
-                            <option value="potato">Potato</option>
-                            <option value="carrot">Carrot</option>
-                            <option value="tomato">Tomato</option>
-                            <option value="custom">Custom</option>
-                        </select>
-                        <button onclick="showCustomCropForm()" class="bg-blue-600 text-white p-2 rounded">Add/Edit Custom Crop</button>
-                    </div>
+        <!-- Trends Sections -->
+        <div id="temperature-trends-section" class="section max-w-7xl mx-auto p-6">
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                <h2 class="text-xl font-semibold mb-4 text-emerald-300">Temperature Trends</h2>
+                <p>Temperature in healthy range: <span id="temperature-healthy">—%</span></p>
+                <canvas id="temperature-chart" class="mt-4"></canvas>
+                <button onclick="showSection('dashboard-section')" class="btn mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">Back to Dashboard</button>
+            </div>
+        </div>
+        <div id="humidity-trends-section" class="section max-w-7xl mx-auto p-6">
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                <h2 class="text-xl font-semibold mb-4 text-emerald-300">Humidity Trends</h2>
+                <p>Humidity in healthy range: <span id="humidity-healthy">—%</span></p>
+                <canvas id="humidity-chart" class="mt-4"></canvas>
+                <button onclick="showSection('dashboard-section')" class="btn mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">Back to Dashboard</button>
+            </div>
+        </div>
+        <div id="soil-moisture-trends-section" class="section max-w-7xl mx-auto p-6">
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                <h2 class="text-xl font-semibold mb-4 text-emerald-300">Soil Moisture Trends</h2>
+                <p>Soil Moisture in healthy range: <span id="soil-moisture-healthy">—%</span></p>
+                <canvas id="soil-moisture-chart" class="mt-4"></canvas>
+                <button onclick="showSection('dashboard-section')" class="btn mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">Back to Dashboard</button>
+            </div>
+        </div>
 
-                    <div id="customCropForm" class="bg-white p-6 rounded-lg shadow-lg hidden">
-                        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-plus"></i> Custom Crop</h2>
-                        <input id="customCropName" type="text" class="w-full p-2 mb-4 border rounded" placeholder="Crop Name">
-                        <input id="customTempThreshold" type="number" class="w-full p-2 mb-4 border rounded" placeholder="Fan Temperature Threshold (°C)">
-                        <input id="customLightDuration" type="number" class="w-full p-2 mb-4 border rounded" placeholder="Light Duration (min)">
-                        <input id="customLightInterval" type="number" class="w-full p-2 mb-4 border rounded" placeholder="Light Interval (min)">
-                        <input id="customPumpStartHour" type="number" class="w-full p-2 mb-4 border rounded" placeholder="Pump Start Hour">
-                        <input id="customPumpStartMinute" type="number" class="w-full p-2 mb-4 border rounded" placeholder="Pump Start Minute">
-                        <input id="customPumpDuration" type="number" class="w-full p-2 mb-4 border rounded" placeholder="Pump Duration (sec)">
-                        <input id="customPumpInterval" type="number" class="w-full p-2 mb-4 border rounded" placeholder="Pump Interval (min)">
-                        <button onclick="saveCustomCrop()" class="bg-green-600 text-white p-2 rounded">Save Custom Crop</button>
-                        <button onclick="hideCustomCropForm()" class="bg-gray-600 text-white p-2 rounded ml-2">Cancel</button>
-                    </div>
+        <!-- Relays Section -->
+        <div id="relays-section" class="section max-w-7xl mx-auto p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">Lighting</h2>
+                    <p>Lighting: <span id="lighting-toggle-status">—</span></p>
+                    <button onclick="toggleRelay(1)" class="btn mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">Toggle Lighting</button>
+                </div>
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">Ventilation</h2>
+                    <p>Ventilation: <span id="ventilation-toggle-status">—</span></p>
+                    <button onclick="toggleRelay(2)" class="btn mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">Toggle Ventilation</button>
+                </div>
+            </div>
+        </div>
 
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-cog"></i> Manual Mode Settings</h2>
-                        <div class="mb-4">
-                            <label>Temp Threshold (°C)</label>
-                            <input id="fanTemperatureThreshold" type="number" class="w-full p-2 border rounded">
-                        </div>
-                        <div class="mb-4">
-                            <label>Light Duration (min)</label>
-                            <input id="lightOnDuration" type="number" class="w-full p-2 border rounded">
-                        </div>
-                        <div class="mb-4">
-                            <label>Light Interval (min)</label>
-                            <input id="lightIntervalManual" type="number" class="w-full p-2 border rounded">
-                        </div>
-                        <button onclick="saveLightingSettings()" class="bg-green-600 text-white p-2 rounded">Save Settings</button>
+        <!-- Settings Section -->
+        <div id="settings-section" class="section max-w-7xl mx-auto p-6">
+            <div class="space-y-6">
+                <!-- Crop Selection -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">Crop Selection</h2>
+                    <select id="crop-select" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="potato">Potato</option>
+                        <option value="carrot">Carrot</option>
+                        <option value="tomato">Tomato</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <button onclick="showCustomCropForm()" class="btn mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">Add/Edit Custom Crop</button>
+                </div>
+                <!-- Custom Crop Form -->
+                <div id="custom-crop-form" class="hidden bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">Custom Crop</h2>
+                    <input type="text" id="custom-crop-name" placeholder="Crop Name" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="custom-temp-min" placeholder="Min Temperature (°C)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="custom-temp-max" placeholder="Max Temperature (°C)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="custom-humidity-min" placeholder="Min Humidity (%)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="custom-humidity-max" placeholder="Max Humidity (%)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="custom-soil-moisture-min" placeholder="Min Soil Moisture (%)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="custom-soil-moisture-max" placeholder="Max Soil Moisture (%)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <div class="flex space-x-4">
+                        <button onclick="saveCustomCrop()" class="btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg">Save Custom Crop</button>
+                        <button onclick="cancelCustomCrop()" class="btn px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg">Cancel</button>
                     </div>
-
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-tint"></i> Pump Settings</h2>
-                        <div class="mb-4">
-                            <label>Start Hour</label>
-                            <input id="pumpStartHour" type="number" class="w-full p-2 border rounded">
-                        </div>
-                        <div class="mb-4">
-                            <label>Start Minute</label>
-                            <input id="pumpStartMinute" type="number" class="w-full p-2 border rounded">
-                        </div>
-                        <div class="mb-4">
-                            <label>Duration (sec)</label>
-                            <input id="pumpDuration" type="number" class="w-full p-2 border rounded">
-                        </div>
-                        <div class="mb-4">
-                            <label>Interval (min)</label>
-                            <input id="pumpInterval" type="number" class="w-full p-2 border rounded">
-                        </div>
-                        <button onclick="savePumpSettings()" class="bg-green-600 text-white p-2 rounded">Save Settings</button>
-                    </div>
+                </div>
+                <!-- Manual Mode Settings -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">Manual Mode Settings</h2>
+                    <input type="number" id="temp-threshold" placeholder="Temp Threshold (°C)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="light-duration" placeholder="Light Duration (min)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="light-interval" placeholder="Light Interval (min)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <button onclick="saveManualSettings()" class="btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg">Save Settings</button>
+                </div>
+                <!-- Pump Settings -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-300">Pump Settings</h2>
+                    <input type="number" id="pump-start-hour" placeholder="Start Hour" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="pump-start-minute" placeholder="Start Minute" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="pump-duration" placeholder="Duration (sec)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <input type="number" id="pump-interval" placeholder="Interval (min)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
+                    <button onclick="savePumpSettings()" class="btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg">Save Settings</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let mode = "manual";
-        let charts = {};
         let isAuthenticated = false;
 
-        // Predefined crop settings
-        const cropSettings = {
-            potato: {
-                fanTemperatureThreshold: 25,
-                lightOnDuration: 720,
-                lightIntervalManual: 360,
-                pumpStartHour: 6,
-                pumpStartMinute: 0,
-                pumpDuration: 30,
-                pumpInterval: 120
-            },
-            carrot: {
-                fanTemperatureThreshold: 22,
-                lightOnDuration: 600,
-                lightIntervalManual: 300,
-                pumpStartHour: 7,
-                pumpStartMinute: 0,
-                pumpDuration: 20,
-                pumpInterval: 90
-            },
-            tomato: {
-                fanTemperatureThreshold: 27,
-                lightOnDuration: 840,
-                lightIntervalManual: 420,
-                pumpStartHour: 8,
-                pumpStartMinute: 0,
-                pumpDuration: 40,
-                pumpInterval: 150
-            }
-        };
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        }
 
-        // Load custom crops from localStorage
-        let customCrops = JSON.parse(localStorage.getItem('customCrops')) || {};
-
-        async function login() {
-            const passwordInput = document.getElementById('passwordInput').value;
-            const loginError = document.getElementById('loginError');
-
+        // Login
+        async function handleLogin() {
+            const password = document.getElementById('password-input').value;
             try {
                 const response = await fetch('/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'password=' + encodeURIComponent(passwordInput)
-});
-
-                const data = await response.json();
-                if (response.ok && data.success) {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const result = await response.json();
+                if (result.success) {
                     isAuthenticated = true;
-                    document.getElementById('loginPage').classList.add('hidden');
-                    document.getElementById('mainPage').classList.remove('hidden');
+                    document.getElementById('login-section').classList.remove('active');
+                    document.getElementById('main-content').classList.remove('hidden');
                     updateUI();
                 } else {
-                    loginError.classList.remove('hidden');
-                    loginError.textContent = data.error || 'Incorrect Password';
+                    document.getElementById('login-error').classList.remove('hidden');
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                loginError.classList.remove('hidden');
-                loginError.textContent = 'Server error, please try again later';
             }
         }
 
-        async function logout() {
+        // Logout
+        async function handleLogout() {
             try {
-                const response = await fetch('/logout', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                if (response.ok) {
-                    isAuthenticated = false;
-                    document.getElementById('mainPage').classList.add('hidden');
-                    document.getElementById('loginPage').classList.remove('hidden');
-                    document.getElementById('passwordInput').value = '';
-                    document.getElementById('loginError').classList.add('hidden');
-                }
+                await fetch('/logout', { method: 'POST' });
+                isAuthenticated = false;
+                document.getElementById('main-content').classList.add('hidden');
+                document.getElementById('login-section').classList.add('active');
+                document.getElementById('login-error').classList.add('hidden');
+                document.getElementById('password-input').value = '';
             } catch (error) {
                 console.error('Logout error:', error);
             }
         }
 
-        async function updateUI() {
-            if (!isAuthenticated) return;
-
-            try {
-                const [sensorRes, relayRes, modeRes, trendsRes, statusRes, lightingRes, pumpRes] = await Promise.all([
-                    fetch('/getSensorData', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ isAuthenticated: true })
-                    }),
-                    fetch('/getRelayState', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ isAuthenticated: true })
-                    }),
-                    fetch('/getMode', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ isAuthenticated: true })
-                    }),
-                    fetch('/getSensorTrends', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ isAuthenticated: true })
-                    }),
-                    fetch('/getSensorStatus'),
-                    fetch('/getLightingSettings', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ isAuthenticated: true })
-                    }),
-                    fetch('/getPumpSettings', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ isAuthenticated: true })
-                    })
-                ]);
-
-                if (sensorRes.ok && relayRes.ok && modeRes.ok && trendsRes.ok && statusRes.ok && lightingRes.ok && pumpRes.ok) {
-                    const sensorData = await sensorRes.json();
-                    const relayState = await relayRes.json();
-                    const modeData = await modeRes.json();
-                    const trendsData = await trendsRes.json();
-                    const statusData = await statusRes.json();
-                    const lightingData = await lightingRes.json();
-                    const pumpData = await pumpRes.json();
-
-                    document.getElementById('temperature').textContent = sensorData.temperature + ' °C';
-                    document.getElementById('humidity').textContent = sensorData.humidity + ' %';
-                    document.getElementById('soilMoisture').textContent = sensorData.soilMoisture + ' %';
-                    document.getElementById('relay1Status').textContent = relayState.relayState1 ? 'On' : 'Off';
-                    document.getElementById('relay2Status').textContent = relayState.relayState2 ? 'On' : 'Off';
-                    document.getElementById('lightingStatus').textContent = relayState.relayState1 ? 'On' : 'Off';
-                    document.getElementById('ventilationStatus').textContent = relayState.relayState2 ? 'On' : 'Off';
-                    document.getElementById('mode').textContent = modeData.mode.charAt(0).toUpperCase() + modeData.mode.slice(1);
-                    document.getElementById('modeButton').textContent = 'Switch to ' + (modeData.mode === 'auto' ? 'Manual' : 'Auto') + ' Mode';
-                    document.getElementById('statusIndicator').textContent = statusData.isOnline ? 'Online' : 'Offline';
-                    document.getElementById('statusIndicator').className = 'inline-block px-4 py-2 ' + (statusData.isOnline ? 'bg-green-600' : 'bg-red-600') + ' text-white rounded';
-                    document.getElementById('temperatureHealthy').textContent = trendsData.healthyRanges.temperature.toFixed(1) + '%';
-                    document.getElementById('humidityHealthy').textContent = trendsData.healthyRanges.humidity.toFixed(1) + '%';
-                    document.getElementById('soilMoistureHealthy').textContent = trendsData.healthyRanges.soilMoisture.toFixed(1) + '%';
-                    document.getElementById('fanTemperatureThreshold').value = lightingData.fanTemperatureThreshold;
-                    document.getElementById('lightOnDuration').value = lightingData.lightOnDuration;
-                    document.getElementById('lightIntervalManual').value = lightingData.lightIntervalManual;
-                    document.getElementById('pumpStartHour').value = pumpData.pumpStartHour;
-                    document.getElementById('pumpStartMinute').value = pumpData.pumpStartMinute;
-                    document.getElementById('pumpDuration').value = pumpData.pumpDuration;
-                    document.getElementById('pumpInterval').value = pumpData.pumpInterval;
-                } else {
-                    console.error('Error fetching data:', {
-                        sensor: sensorRes.status,
-                        relay: relayRes.status,
-                        mode: modeRes.status,
-                        trends: trendsRes.status,
-                        status: statusRes.status,
-                        lighting: lightingRes.status,
-                        pump: pumpRes.status
-                    });
-                }
-            } catch (error) {
-                console.error('Error updating UI:', error);
-            }
-            updateCropSelect();
-        }
-
-        function showTab(tabId) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-        }
-
-        function showTrend(trendId) {
-            showTab(trendId);
-            updateCharts();
-        }
-
-        async function toggleMode() {
+        // Switch Mode
+        async function switchMode() {
             if (!isAuthenticated) return;
             try {
+                const response = await fetch('/getMode', { method: 'GET', headers: { 'Content-Type': 'application/json', 'isAuthenticated': 'true' } });
+                const { mode } = await response.json();
                 const newMode = mode === 'auto' ? 'manual' : 'auto';
-                const response = await fetch('/setMode', {
+                await fetch('/setMode', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mode: newMode, isAuthenticated: true })
+                    headers: { 'Content-Type': 'application/json', 'isAuthenticated': 'true' },
+                    body: JSON.stringify({ mode: newMode })
                 });
-                if (response.ok) {
-                    mode = newMode;
-                    updateUI();
-                }
+                updateUI();
             } catch (error) {
-                console.error('Error toggling mode:', error);
+                console.error('Switch mode error:', error);
             }
         }
 
+        // Toggle Relay
         async function toggleRelay(relayNumber) {
             if (!isAuthenticated) return;
             try {
                 const response = await fetch('/toggleRelay/' + relayNumber, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ isAuthenticated: true })
+                    headers: { 'Content-Type': 'application/json', 'isAuthenticated': 'true' }
                 });
                 if (response.ok) {
                     updateUI();
                 }
             } catch (error) {
-                console.error('Error toggling relay:', error);
+                console.error('Toggle relay error:', error);
             }
         }
 
-        async function saveLightingSettings() {
+        // Update UI
+        async function updateUI() {
+            if (!isAuthenticated) return;
+            try {
+                // Get Sensor Status
+                const statusResponse = await fetch('/getSensorStatus', { headers: { 'isAuthenticated': 'true' } });
+                const { isOnline } = await statusResponse.json();
+                document.getElementById('online-status').textContent = isOnline ? 'Online' : 'Offline';
+                document.getElementById('online-status').classList.toggle('text-green-400', isOnline);
+                document.getElementById('online-status').classList.toggle('text-red-400', !isOnline);
+
+                // Get Mode
+                const modeResponse = await fetch('/getMode', { headers: { 'isAuthenticated': 'true' } });
+                const { mode } = await modeResponse.json();
+                document.getElementById('mode-display').textContent = mode;
+
+                // Get Relay State
+                const relayResponse = await fetch('/getRelayState', { headers: { 'isAuthenticated': 'true' } });
+                const relayState = await relayResponse.json();
+                document.getElementById('lighting-status').textContent = relayState.relayState1 ? 'On' : 'Off';
+                document.getElementById('ventilation-status').textContent = relayState.relayState2 ? 'On' : 'Off';
+                document.getElementById('lighting-toggle-status').textContent = relayState.relayState1 ? 'On' : 'Off';
+                document.getElementById('ventilation-toggle-status').textContent = relayState.relayState2 ? 'On' : 'Off';
+
+                // Get Sensor Data
+                const sensorResponse = await fetch('/getSensorData', { headers: { 'isAuthenticated': 'true' } });
+                const sensorData = await sensorResponse.json();
+                document.getElementById('temperature-display').textContent = sensorData.temperature + ' °C';
+document.getElementById('humidity-display').textContent = sensorData.humidity + ' %';
+document.getElementById('soil-moisture-display').textContent = sensorData.soilMoisture + ' %';
+
+                // Get Trends
+                const trendsResponse = await fetch('/getSensorTrends', { headers: { 'isAuthenticated': 'true' } });
+                const trends = await trendsResponse.json();
+                document.getElementById('temperature-healthy').textContent = trends.healthyRanges.temperature.toFixed(1) + '%';
+document.getElementById('humidity-healthy').textContent = trends.healthyRanges.humidity.toFixed(1) + '%';
+document.getElementById('soil-moisture-healthy').textContent = trends.healthyRanges.soilMoisture.toFixed(1) + '%';
+
+                // Update Charts
+                updateCharts(trends.hourlyAverages);
+            } catch (error) {
+                console.error('Update UI error:', error);
+            }
+        }
+
+        // Update Charts
+        function updateCharts(hourlyAverages) {
+            const labels = hourlyAverages.map(entry => new Date(entry.timestamp).toLocaleTimeString());
+            const temperatureData = hourlyAverages.map(entry => entry.temperature);
+            const humidityData = hourlyAverages.map(entry => entry.humidity);
+            const soilMoistureData = hourlyAverages.map(entry => entry.soilMoisture);
+
+            new Chart(document.getElementById('temperature-chart'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: temperatureData,
+                        borderColor: '#34d399',
+                        backgroundColor: 'rgba(52, 211, 153, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+
+            new Chart(document.getElementById('humidity-chart'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Humidity (%)',
+                        data: humidityData,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+
+            new Chart(document.getElementById('soil-moisture-chart'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Soil Moisture (%)',
+                        data: soilMoistureData,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // Custom Crop Form
+        function showCustomCropForm() {
+            document.getElementById('custom-crop-form').classList.remove('hidden');
+        }
+
+        function cancelCustomCrop() {
+            document.getElementById('custom-crop-form').classList.add('hidden');
+        }
+
+        function saveCustomCrop() {
+            // Implement custom crop saving logic
+            document.getElementById('custom-crop-form').classList.add('hidden');
+        }
+
+        // Save Settings
+        async function saveManualSettings() {
             if (!isAuthenticated) return;
             try {
                 const settings = {
-                    fanTemperatureThreshold: parseFloat(document.getElementById('fanTemperatureThreshold').value),
-                    lightOnDuration: parseInt(document.getElementById('lightOnDuration').value),
-                    lightIntervalManual: parseInt(document.getElementById('lightIntervalManual').value),
-                    isAuthenticated: true
+                    fanTemperatureThreshold: parseFloat(document.getElementById('temp-threshold').value),
+                    lightOnDuration: parseFloat(document.getElementById('light-duration').value),
+                    lightIntervalManual: parseFloat(document.getElementById('light-interval').value)
                 };
-                const response = await fetch('/updateLightingSettings', {
+                await fetch('/updateLightingSettings', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'isAuthenticated': 'true' },
                     body: JSON.stringify(settings)
                 });
-                if (response.ok) {
-                    updateUI();
-                }
             } catch (error) {
-                console.error('Error saving lighting settings:', error);
+                console.error('Save manual settings error:', error);
             }
         }
 
@@ -750,140 +571,23 @@ app.get('/', (req, res) => {
             if (!isAuthenticated) return;
             try {
                 const settings = {
-                    pumpStartHour: parseInt(document.getElementById('pumpStartHour').value),
-                    pumpStartMinute: parseInt(document.getElementById('pumpStartMinute').value),
-                    pumpDuration: parseInt(document.getElementById('pumpDuration').value),
-                    pumpInterval: parseInt(document.getElementById('pumpInterval').value),
-                    isAuthenticated: true
+                    pumpStartHour: parseInt(document.getElementById('pump-start-hour').value),
+                    pumpStartMinute: parseInt(document.getElementById('pump-start-minute').value),
+                    pumpDuration: parseInt(document.getElementById('pump-duration').value),
+                    pumpInterval: parseInt(document.getElementById('pump-interval').value)
                 };
-                const response = await fetch('/updatePumpSettings', {
+                await fetch('/updatePumpSettings', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'isAuthenticated': 'true' },
                     body: JSON.stringify(settings)
                 });
-                if (response.ok) {
-                    updateUI();
-                }
             } catch (error) {
-                console.error('Error saving pump settings:', error);
+                console.error('Save pump settings error:', error);
             }
         }
 
-        function showCustomCropForm() {
-            document.getElementById('customCropForm').classList.remove('hidden');
-        }
-
-        function hideCustomCropForm() {
-            document.getElementById('customCropForm').classList.add('hidden');
-            document.getElementById('customCropName').value = '';
-            document.getElementById('customTempThreshold').value = '';
-            document.getElementById('customLightDuration').value = '';
-            document.getElementById('customLightInterval').value = '';
-            document.getElementById('customPumpStartHour').value = '';
-            document.getElementById('customPumpStartMinute').value = '';
-            document.getElementById('customPumpDuration').value = '';
-            document.getElementById('customPumpInterval').value = '';
-        }
-
-        function saveCustomCrop() {
-            const cropName = document.getElementById('customCropName').value.toLowerCase();
-            if (cropName && !cropSettings[cropName]) {
-                customCrops[cropName] = {
-                    fanTemperatureThreshold: parseFloat(document.getElementById('customTempThreshold').value),
-                    lightOnDuration: parseInt(document.getElementById('customLightDuration').value),
-                    lightIntervalManual: parseInt(document.getElementById('customLightInterval').value),
-                    pumpStartHour: parseInt(document.getElementById('customPumpStartHour').value),
-                    pumpStartMinute: parseInt(document.getElementById('customPumpStartMinute').value),
-                    pumpDuration: parseInt(document.getElementById('customPumpDuration').value),
-                    pumpInterval: parseInt(document.getElementById('customPumpInterval').value)
-                };
-                localStorage.setItem('customCrops', JSON.stringify(customCrops));
-                updateCropSelect();
-                hideCustomCropForm();
-                document.getElementById('cropSelect').value = cropName;
-                loadCropSettings();
-            }
-        }
-
-        function updateCropSelect() {
-            const select = document.getElementById('cropSelect');
-            select.innerHTML = '<option value="">Select Crop</option>' +
-                              '<option value="potato">Potato</option>' +
-                              '<option value="carrot">Carrot</option>' +
-                              '<option value="tomato">Tomato</option>';
-            Object.keys(customCrops).forEach(crop => {
-                const capitalizedCrop = crop.charAt(0).toUpperCase() + crop.slice(1);
-                select.innerHTML += '<option value="' + crop + '">' + capitalizedCrop + '</option>';
-            });
-            select.innerHTML += '<option value="custom">Custom</option>';
-        }
-
-        function loadCropSettings() {
-            const crop = document.getElementById('cropSelect').value;
-            if (crop && crop !== 'custom') {
-                const settings = cropSettings[crop] || customCrops[crop];
-                if (settings) {
-                    document.getElementById('fanTemperatureThreshold').value = settings.fanTemperatureThreshold;
-                    document.getElementById('lightOnDuration').value = settings.lightOnDuration;
-                    document.getElementById('lightIntervalManual').value = settings.lightIntervalManual;
-                    document.getElementById('pumpStartHour').value = settings.pumpStartHour;
-                    document.getElementById('pumpStartMinute').value = settings.pumpStartMinute;
-                    document.getElementById('pumpDuration').value = settings.pumpDuration;
-                    document.getElementById('pumpInterval').value = settings.pumpInterval;
-                    saveLightingSettings();
-                    savePumpSettings();
-                }
-            }
-        }
-
-        async function updateCharts() {
-            if (!isAuthenticated) return;
-            try {
-                const response = await fetch('/getSensorTrends', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ isAuthenticated: true })
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    const labels = data.hourlyAverages.map(entry => new Date(entry.timestamp).toLocaleTimeString());
-                    if (!charts.temperature) {
-                        charts.temperature = new Chart(document.getElementById('temperatureChart'), {
-                            type: 'line',
-                            data: { labels: [], datasets: [{ label: 'Temperature (°C)', data: [], borderColor: 'red', fill: false }] },
-                            options: { scales: { y: { beginAtZero: false } } }
-                        });
-                        charts.humidity = new Chart(document.getElementById('humidityChart'), {
-                            type: 'line',
-                            data: { labels: [], datasets: [{ label: 'Humidity (%)', data: [], borderColor: 'blue', fill: false }] },
-                            options: { scales: { y: { beginAtZero: false } } }
-                        });
-                        charts.soilMoisture = new Chart(document.getElementById('soilMoistureChart'), {
-                            type: 'line',
-                            data: { labels: [], datasets: [{ label: 'Soil Moisture (%)', data: [], borderColor: 'green', fill: false }] },
-                            options: { scales: { y: { beginAtZero: false } } }
-                        });
-                    }
-                    charts.temperature.data.labels = labels;
-                    charts.temperature.data.datasets[0].data = data.hourlyAverages.map(entry => entry.temperature);
-                    charts.temperature.update();
-                    charts.humidity.data.labels = labels;
-                    charts.humidity.data.datasets[0].data = data.hourlyAverages.map(entry => entry.humidity);
-                    charts.humidity.update();
-                    charts.soilMoisture.data.labels = labels;
-                    charts.soilMoisture.data.datasets[0].data = data.hourlyAverages.map(entry => entry.soilMoisture);
-                    charts.soilMoisture.update();
-                    document.getElementById('temperatureHealthy').textContent = data.healthyRanges.temperature.toFixed(1) + '%';
-                    document.getElementById('humidityHealthy').textContent = data.healthyRanges.humidity.toFixed(1) + '%';
-                    document.getElementById('soilMoistureHealthy').textContent = data.healthyRanges.soilMoisture.toFixed(1) + '%';
-                }
-            } catch (error) {
-                console.error('Error updating charts:', error);
-            }
-        }
-
+        // Periodic UI Update
         setInterval(updateUI, 5000);
-        updateUI();
     </script>
 </body>
 </html>
