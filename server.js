@@ -161,329 +161,173 @@ app.get('/', (req, res) => {
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
-        /* Importing Tailwind CSS via CDN (already included in HTML assumption) */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Global styles */
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f0f4f0; /* Light green-gray background */
-  color: #2d3748;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Container for all sections */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-/* Login Page */
-#login-page {
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-}
-
-#login-page h1 {
-  font-size: 1.8rem;
-  color: #2f855a; /* Green theme */
-  margin-bottom: 1.5rem;
-}
-
-#login-page .error {
-  color: #e53e3e;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
-#login-page input {
-  width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-#login-page button {
-  background-color: #2f855a;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-#login-page button:hover {
-  background-color: #276749;
-}
-
-/* Header Section */
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background-color: #2f855a;
-  color: white;
-  border-radius: 8px 8px 0 0;
-}
-
-header h1 {
-  font-size: 1.5rem;
-}
-
-header .status {
-  font-size: 0.9rem;
-}
-
-header button {
-  background-color: #48bb78;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-header button:hover {
-  background-color: #38a169;
-}
-
-/* Navigation Tabs */
-.nav-tabs {
-  display: flex;
-  background-color: #e2e8f0;
-  border-radius: 8px;
-  margin: 1rem 0;
-}
-
-.nav-tabs button {
-  flex: 1;
-  padding: 0.75rem;
-  border: none;
-  background: none;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.nav-tabs button:hover,
-.nav-tabs button.active {
-  background-color: #2f855a;
-  color: white;
-  border-radius: 8px;
-}
-
-/* Dashboard */
-#dashboard {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.card {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
-  text-align: center;
-}
-
-.card h2 {
-  font-size: 1.2rem;
-  color: #2f855a;
-  margin-bottom: 1rem;
-}
-
-.card p {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin: 0.5rem 0;
-}
-
-.card button {
-  margin-top: 0.5rem;
-  background-color: #48bb78;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.card button:hover {
-  background-color: #38a169;
-}
-
-/* Trends Pages */
-.trends-page {
-  background-color: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin: 1rem 0;
-}
-
-.trends-page h2 {
-  font-size: 1.5rem;
-  color: #2f855a;
-  margin-bottom: 1rem;
-}
-
-.trends-page .chart-placeholder {
-  height: 200px;
-  background-color: #edf2f7;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-.trends-page p {
-  font-size: 1rem;
-  margin-bottom: 1rem;
-}
-
-.trends-page button {
-  background-color: #2f855a;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.trends-page button:hover {
-  background-color: #276749;
-}
-
-/* Relays Page */
-#relays-page {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.relay-card {
-  background-color: white;
-  border-radius: 8px;
-  padding: 1rem;
-  text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.relay-card h2 {
-  font-size: 1.2rem;
-  color: #2f855a;
-  margin-bottom: 0.5rem;
-}
-
-.relay-card button {
-  background-color: #48bb78;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.relay-card button:hover {
-  background-color: #38a169;
-}
-
-/* Settings Page */
-#settings-page {
-  background-color: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin: 1rem 0;
-}
-
-.settings-section {
-  margin-bottom: 2rem;
-}
-
-.settings-section h2 {
-  font-size: 1.3rem;
-  color: #2f855a;
-  margin-bottom: 1rem;
-}
-
-.settings-section select,
-.settings-section input {
-  width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-.settings-section button {
-  background-color: #2f855a;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.settings-section button:hover {
-  background-color: #276749;
-}
-
-.settings-section button.cancel {
-  background-color: #e53e3e;
-  margin-left: 0.5rem;
-}
-
-.settings-section button.cancel:hover {
-  background-color: #c53030;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .container {
-    padding: 0.5rem;
-  }
-
-  header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .nav-tabs {
-    flex-direction: column;
-  }
-
-  .nav-tabs button {
-    width: 100%;
-    text-align: center;
-  }
-
-  #dashboard,
-  #relays-page {
-    grid-template-columns: 1fr;
-  }
-}
+     body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f7f6;
+          margin: 0;
+          padding: 20px;
+          color: #333;
+        }
+        .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        .login {
+          background: #fff;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          max-width: 400px;
+          margin: 50px auto;
+          text-align: center;
+        }
+        .login h1 {
+          color: #2e7d32;
+          margin-bottom: 20px;
+        }
+        .login input {
+          width: 100%;
+          padding: 10px;
+          margin: 10px 0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 16px;
+        }
+        .login button {
+          background-color: #4caf50;
+          color: white;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 16px;
+        }
+        .login button:hover {
+          background-color: #45a049;
+        }
+        #error {
+          color: #d32f2f;
+          margin: 10px 0;
+        }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #2e7d32;
+          color: white;
+          padding: 15px 20px;
+          border-radius: 8px;
+          margin-bottom: 20px;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 24px;
+        }
+        .header button, .header span {
+          background: #388e3c;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+        }
+        .header button:hover {
+          background: #2e7d32;
+        }
+        .header span {
+          background: none;
+          padding: 0 10px;
+        }
+        .tabs {
+          display: flex;
+          margin-bottom: 20px;
+        }
+        .tablinks {
+          background: #e0e0e0;
+          border: none;
+          padding: 10px 20px;
+          margin-right: 5px;
+          border-radius: 4px 4px 0 0;
+          cursor: pointer;
+          font-size: 16px;
+        }
+        .tablinks.active, .tablinks:hover {
+          background: #4caf50;
+          color: white;
+        }
+        .tabcontent {
+          background: #fff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+          background: #f9f9f9;
+          padding: 20px;
+          margin-bottom: 20px;
+          border-radius: 8px;
+          box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+        }
+        .card h2 {
+          color: #2e7d32;
+          margin-top: 0;
+        }
+        .sensor {
+          display: inline-block;
+          width: 30%;
+          margin: 1.5%;
+          text-align: center;
+          background: #fff;
+          padding: 15px;
+          border-radius: 8px;
+          box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+        }
+        .sensor p {
+          font-size: 24px;
+          margin: 10px 0;
+          color: #2e7d32;
+        }
+        .sensor button {
+          background: #4caf50;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .sensor button:hover {
+          background: #45a049;
+        }
+        .tabcontent button {
+          background: #4caf50;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-top: 10px;
+        }
+        .tabcontent button:hover {
+          background: #45a049;
+        }
+        .card select, .card input {
+          width: 100%;
+          padding: 10px;
+          margin: 10px 0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 16px;
+        }
+        .card form label {
+          display: block;
+          margin: 10px 0 5px;
+          font-weight: bold;
+        }
+        #temperatureChart, #humidityChart, #soilMoistureChart {
+          width: 100%;
+          height: 300px;
+        }
     </style>
 </head>
 <body class="bg-greenhouse">
