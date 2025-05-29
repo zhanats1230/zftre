@@ -161,184 +161,190 @@ app.get('/', (req, res) => {
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
-     body {
-          font-family: Arial, sans-serif;
-          background-color: #f4f7f6;
-          margin: 0;
-          padding: 20px;
-          color: #333;
-        }
-        .container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        .login {
-          background: #fff;
-          padding: 30px;
-          border-radius: 8px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-          max-width: 400px;
-          margin: 50px auto;
-          text-align: center;
-        }
-        .login h1 {
-          color: #2e7d32;
-          margin-bottom: 20px;
-        }
-        .login input {
-          width: 100%;
-          padding: 10px;
-          margin: 10px 0;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 16px;
-        }
-        .login button {
-          background-color: #4caf50;
-          color: white;
-          padding: 10px 20px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 16px;
-        }
-        .login button:hover {
-          background-color: #45a049;
-        }
-        #error {
-          color: #d32f2f;
-          margin: 10px 0;
-        }
-        .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #2e7d32;
-          color: white;
-          padding: 15px 20px;
-          border-radius: 8px;
-          margin-bottom: 20px;
-        }
-        .header h1 {
-          margin: 0;
-          font-size: 24px;
-        }
-        .header button, .header span {
-          background: #388e3c;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-        }
-        .header button:hover {
-          background: #2e7d32;
-        }
-        .header span {
-          background: none;
-          padding: 0 10px;
-        }
-        .tabs {
-          display: flex;
-          margin-bottom: 20px;
-        }
-        .tablinks {
-          background: #e0e0e0;
-          border: none;
-          padding: 10px 20px;
-          margin-right: 5px;
-          border-radius: 4px 4px 0 0;
-          cursor: pointer;
-          font-size: 16px;
-        }
-        .tablinks.active, .tablinks:hover {
-          background: #4caf50;
-          color: white;
-        }
-        .tabcontent {
-          background: #fff;
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .card {
-          background: #f9f9f9;
-          padding: 20px;
-          margin-bottom: 20px;
-          border-radius: 8px;
-          box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-        }
-        .card h2 {
-          color: #2e7d32;
-          margin-top: 0;
-        }
-        .sensor {
-          display: inline-block;
-          width: 30%;
-          margin: 1.5%;
-          text-align: center;
-          background: #fff;
-          padding: 15px;
-          border-radius: 8px;
-          box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-        }
-        .sensor p {
-          font-size: 24px;
-          margin: 10px 0;
-          color: #2e7d32;
-        }
-        .sensor button {
-          background: #4caf50;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 4px;
-          cursor: pointer;
-        }
-        .sensor button:hover {
-          background: #45a049;
-        }
-        .tabcontent button {
-          background: #4caf50;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 4px;
-          cursor: pointer;
-          margin-top: 10px;
-        }
-        .tabcontent button:hover {
-          background: #45a049;
-        }
-        .card select, .card input {
-          width: 100%;
-          padding: 10px;
-          margin: 10px 0;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 16px;
-        }
-        .card form label {
-          display: block;
-          margin: 10px 0 5px;
-          font-weight: bold;
-        }
-        #temperatureChart, #humidityChart, #soilMoistureChart {
-          width: 100%;
-          height: 300px;
-        }
-    </style>
+  :root {
+    --primary-green: #2e7d32;
+    --secondary-green: #4caf50;
+    --light-green: #81c784;
+    --background-light: #f5f7fa;
+    --text-dark: #1a1a1a;
+    --text-light: #f5f5f5;
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+  }
+
+  body {
+    @apply bg-gray-50 font-sans text-gray-800 min-h-screen;
+    background-color: var(--background-light);
+  }
+
+  /* Логин страница */
+  .login-container {
+    background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+    @apply flex items-center justify-center min-h-screen;
+  }
+
+  .login-card {
+    @apply bg-white p-8 rounded-xl shadow-xl w-full max-w-md;
+    transform: translateY(-20px);
+    transition: var(--transition);
+  }
+
+  .login-card:hover {
+    transform: translateY(-25px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .login-card h1 {
+    @apply text-3xl font-bold text-center mb-6 text-gray-800;
+    color: var(--primary-green);
+  }
+
+  .login-card input {
+    @apply w-full p-4 border border-gray-200 rounded-lg mb-4 focus:outline-none;
+    transition: var(--transition);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .login-card input:focus {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+  }
+
+  .login-card button {
+    @apply w-full p-4 rounded-lg font-medium;
+    background-color: var(--primary-green);
+    color: white;
+    transition: var(--transition);
+  }
+
+  .login-card button:hover {
+    background-color: #1b5e20;
+    transform: translateY(-2px);
+  }
+
+  /* Навигация */
+  .nav-bar {
+    @apply bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-10;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .nav-tabs {
+    @apply flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg;
+  }
+
+  .nav-tabs button {
+    @apply px-6 py-3 rounded-lg font-medium;
+    transition: var(--transition);
+  }
+
+  .nav-tabs button:not(.active) {
+    @apply text-gray-600;
+  }
+
+  .nav-tabs button.active {
+    @apply bg-white text-green-600 shadow-sm;
+  }
+
+  /* Карточки */
+  .card {
+    @apply bg-white p-6 rounded-xl shadow-sm border border-gray-100;
+    transition: var(--transition);
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow);
+  }
+
+  .card h2 {
+    @apply text-xl font-semibold mb-4 pb-2 border-b border-gray-100;
+    color: var(--primary-green);
+  }
+
+  /* Сенсоры */
+  .sensor-card {
+    @apply p-4 rounded-lg;
+    background-color: rgba(129, 199, 132, 0.1);
+  }
+
+  .sensor-card h3 {
+    @apply text-base font-medium mb-2 flex items-center;
+  }
+
+  .sensor-card p {
+    @apply text-3xl font-bold mb-2;
+    color: var(--primary-green);
+  }
+
+  /* Кнопки */
+  .btn-primary {
+    @apply px-6 py-3 rounded-lg font-medium;
+    background-color: var(--primary-green);
+    color: white;
+    transition: var(--transition);
+  }
+
+  .btn-primary:hover {
+    background-color: #1b5e20;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 rounded-lg font-medium;
+    background-color: #f5f5f5;
+    color: var(--text-dark);
+    transition: var(--transition);
+  }
+
+  .btn-secondary:hover {
+    background-color: #e0e0e0;
+  }
+
+  /* Графики */
+  .trend-chart {
+    @apply w-full h-80;
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+
+  /* Анимации */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tab {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .dashboard {
+      @apply grid-cols-1;
+    }
+    
+    .nav-tabs {
+      @apply flex-col space-y-2 space-x-0;
+    }
+    
+    .nav-tabs button {
+      @apply w-full;
+    }
+  }
+</style>
 </head>
 <body class="bg-greenhouse">
-    <div id="loginPage" class="block">
-        <div class="max-w-md mx-auto mt-10 bg-white p-6 rounded-lg shadow-lg">
-            <h1 class="text-2xl font-bold text-green-800 mb-4">Greenhouse Login</h1>
-            <input type="password" id="passwordInput" class="w-full p-2 mb-4 border rounded" placeholder="Enter Password">
-            <div id="loginError" class="hidden text-red-600 mb-4">Incorrect Password</div>
-            <button onclick="login()" class="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700">Login</button>
-        </div>
-    </div>
+    <!-- Обновленный блок входа -->
+<div id="loginPage" class="login-container">
+  <div class="login-card">
+    <h1>🌿 Greenhouse Control</h1>
+    <input type="password" id="passwordInput" placeholder="Enter your password">
+    <div id="loginError" class="hidden text-red-500 mb-4">Incorrect password</div>
+    <button onclick="login()" class="btn-primary">Login</button>
+  </div>
+</div>
 
     <div id="mainPage" class="hidden">
         <div class="max-w-4xl mx-auto mt-10">
