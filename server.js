@@ -592,6 +592,78 @@ app.get('/', (req, res) => {
   </div>
 
   <script>
+async function selectCrop() {
+  const cropSelect = document.getElementById('cropSelect');
+  const cropKey = cropSelect.value;
+  if (cropKey) {
+    const response = await fetch('/selectCrop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cropKey })
+    });
+    const result = await response.json();
+    if (result.success) {
+      alert('Crop settings applied!');
+      // Update settings inputs
+      document.getElementById('fanTemperatureThreshold').value = result.settings.fanTemperatureThreshold;
+      document.getElementById('lightOnDuration').value = result.settings.lightOnDuration;
+      document.getElementById('lightIntervalManual').value = result.settings.lightIntervalManual;
+      document.getElementById('pumpStartHour').value = result.settings.pumpStartHour;
+      document.getElementById('pumpStartMinute').value = result.settings.pumpStartMinute;
+      document.getElementById('pumpDuration').value = result.settings.pumpDuration;
+      document.getElementById('pumpInterval').value = result.settings.pumpInterval;
+    } else {
+      alert('Error applying crop settings: ' + result.error);
+    }
+  }
+}
+
+async function addOrUpdateCrop() {
+  const cropName = document.getElementById('newCropName').value;
+  if (!cropName) {
+    alert('Please enter a crop name');
+    return;
+  }
+  const cropSettings = {
+    name: cropName,
+    fanTemperatureThreshold: parseFloat(document.getElementById('fanTemperatureThreshold').value),
+    lightOnDuration: parseInt(document.getElementById('lightOnDuration').value),
+    lightIntervalManual: parseInt(document.getElementById('lightIntervalManual').value),
+    pumpStartHour: parseInt(document.getElementById('pumpStartHour').value),
+    pumpStartMinute: parseInt(document.getElementById('pumpStartMinute').value),
+    pumpDuration: parseInt(document.getElementById('pumpDuration').value),
+    pumpInterval: parseInt(document.getElementById('pumpInterval').value)
+  };
+  const response = await fetch('/addOrUpdateCrop', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cropSettings)
+  });
+  const result = await response.json();
+  if (result.success) {
+    alert('Crop saved successfully!');
+    // Refresh crop dropdown
+    const cropSelect = document.getElementById('cropSelect');
+    const cropKey = cropName.toLowerCase().replace(/\s+/g, '_');
+    const existingOption = Array.from(cropSelect.options).find(opt => opt.value === cropKey);
+    if (!existingOption) {
+      const newOption = new Option(cropSettings.name, cropKey);
+      cropSelect.add(newOption);
+    }
+    cropSelect.value = cropKey;
+  } else {
+    alert('Error saving crop: ' + result.error);
+  }
+}
+
+
+
+
+
+
+
+
+  
     console.log('Script loaded');
     const correctPassword = 'admin';
 
