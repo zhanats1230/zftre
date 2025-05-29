@@ -571,6 +571,24 @@ app.get('/', (req, res) => {
         <button id="savePumpSettings" class="ripple-btn w-full mt-4"><i class="fa-solid fa-save"></i> Save Settings</button>
       </div>
     </div>
+    <div class="column">
+  <div class="card">
+    <h3>Crop Selection</h3>
+    <div>
+      <label>Select Crop</label>
+      <select id="cropSelect" onchange="selectCrop()">
+        <option value="">Custom Settings</option>
+        <option value="potato">Potato</option>
+        <option value="carrot">Carrot</option>
+      </select>
+    </div>
+    <div>
+      <label>Add/Edit Crop Name</label>
+      <input id="newCropName" type="text" placeholder="Enter crop name">
+    </div>
+    <input type="submit" value="Save Crop" onclick="addOrUpdateCrop()">
+  </div>
+</div>
   </div>
 
   <script>
