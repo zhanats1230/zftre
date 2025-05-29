@@ -55,7 +55,7 @@ let lightingSettings = {
 const CORRECT_PASSWORD = '12345678';
 
 function isAuthenticated(req, res, next) {
-  if (req.body.isAuthenticated) {
+  if (req.headers['x-authenticated'] === 'true') {
     return next();
   }
   res.status(401).json({ error: 'Unauthorized' });
@@ -147,13 +147,11 @@ app.get('/', (req, res) => {
     <title>Greenhouse Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom gradient for background */
         body {
             background: linear-gradient(135deg, #1e3a8a, #10b981);
             min-height: 100vh;
             font-family: 'Inter', sans-serif;
         }
-        /* Smooth fade-in animation for sections */
         .section {
             display: none;
             animation: fadeIn 0.5s ease-in-out;
@@ -165,7 +163,6 @@ app.get('/', (req, res) => {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* Hover effect for cards */
         .card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -173,7 +170,6 @@ app.get('/', (req, res) => {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
-        /* Custom button hover effect */
         .btn {
             transition: all 0.3s ease;
         }
@@ -194,9 +190,8 @@ app.get('/', (req, res) => {
         </div>
     </div>
 
-    <!-- Main Content (Hidden until login) -->
+    <!-- Main Content -->
     <div id="main-content" class="hidden">
-        <!-- Header -->
         <header class="bg-gray-900 bg-opacity-80 backdrop-blur-md p-4 sticky top-0 z-10">
             <div class="max-w-7xl mx-auto flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-emerald-400">Greenhouse Control</h1>
@@ -208,7 +203,6 @@ app.get('/', (req, res) => {
             </div>
         </header>
 
-        <!-- Navigation -->
         <nav class="bg-gray-800 bg-opacity-80 p-4">
             <div class="max-w-7xl mx-auto flex space-x-4">
                 <button onclick="showSection('dashboard-section')" class="nav-btn btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg">Dashboard</button>
@@ -217,17 +211,14 @@ app.get('/', (req, res) => {
             </div>
         </nav>
 
-        <!-- Dashboard Section -->
         <div id="dashboard-section" class="section active max-w-7xl mx-auto p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- System Status -->
                 <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
                     <h2 class="text-xl font-semibold mb-4 text-emerald-300">System Status</h2>
                     <p>Mode: <span id="mode-display">—</span></p>
                     <p>Lighting: <span id="lighting-status">—</span></p>
                     <p>Ventilation: <span id="ventilation-status">—</span></p>
                 </div>
-                <!-- Environmental Sensors -->
                 <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
                     <h2 class="text-xl font-semibold mb-4 text-emerald-300">Environmental Sensors</h2>
                     <div class="space-y-4">
@@ -248,7 +239,6 @@ app.get('/', (req, res) => {
             </div>
         </div>
 
-        <!-- Trends Sections -->
         <div id="temperature-trends-section" class="section max-w-7xl mx-auto p-6">
             <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
                 <h2 class="text-xl font-semibold mb-4 text-emerald-300">Temperature Trends</h2>
@@ -274,7 +264,6 @@ app.get('/', (req, res) => {
             </div>
         </div>
 
-        <!-- Relays Section -->
         <div id="relays-section" class="section max-w-7xl mx-auto p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
@@ -290,10 +279,8 @@ app.get('/', (req, res) => {
             </div>
         </div>
 
-        <!-- Settings Section -->
         <div id="settings-section" class="section max-w-7xl mx-auto p-6">
             <div class="space-y-6">
-                <!-- Crop Selection -->
                 <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
                     <h2 class="text-xl font-semibold mb-4 text-emerald-300">Crop Selection</h2>
                     <select id="crop-select" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
@@ -304,7 +291,6 @@ app.get('/', (req, res) => {
                     </select>
                     <button onclick="showCustomCropForm()" class="btn mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">Add/Edit Custom Crop</button>
                 </div>
-                <!-- Custom Crop Form -->
                 <div id="custom-crop-form" class="hidden bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
                     <h2 class="text-xl font-semibold mb-4 text-emerald-300">Custom Crop</h2>
                     <input type="text" id="custom-crop-name" placeholder="Crop Name" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
@@ -319,7 +305,6 @@ app.get('/', (req, res) => {
                         <button onclick="cancelCustomCrop()" class="btn px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg">Cancel</button>
                     </div>
                 </div>
-                <!-- Manual Mode Settings -->
                 <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
                     <h2 class="text-xl font-semibold mb-4 text-emerald-300">Manual Mode Settings</h2>
                     <input type="number" id="temp-threshold" placeholder="Temp Threshold (°C)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
@@ -327,7 +312,6 @@ app.get('/', (req, res) => {
                     <input type="number" id="light-interval" placeholder="Light Interval (min)" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
                     <button onclick="saveManualSettings()" class="btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg">Save Settings</button>
                 </div>
-                <!-- Pump Settings -->
                 <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 card">
                     <h2 class="text-xl font-semibold mb-4 text-emerald-300">Pump Settings</h2>
                     <input type="number" id="pump-start-hour" placeholder="Start Hour" class="w-full p-3 rounded-lg bg-gray-800 bg-opacity-50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4">
@@ -344,7 +328,6 @@ app.get('/', (req, res) => {
     <script>
         let isAuthenticated = false;
 
-        // Navigation
         function showSection(sectionId) {
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
@@ -352,7 +335,6 @@ app.get('/', (req, res) => {
             document.getElementById(sectionId).classList.add('active');
         }
 
-        // Login
         async function handleLogin() {
             const password = document.getElementById('password-input').value;
             try {
@@ -372,10 +354,11 @@ app.get('/', (req, res) => {
                 }
             } catch (error) {
                 console.error('Login error:', error);
+                document.getElementById('login-error').textContent = 'Server error';
+                document.getElementById('login-error').classList.remove('hidden');
             }
         }
 
-        // Logout
         async function handleLogout() {
             try {
                 await fetch('/logout', { method: 'POST' });
@@ -389,16 +372,17 @@ app.get('/', (req, res) => {
             }
         }
 
-        // Switch Mode
         async function switchMode() {
             if (!isAuthenticated) return;
             try {
-                const response = await fetch('/getMode', { method: 'GET', headers: { 'Content-Type': 'application/json', 'isAuthenticated': 'true' } });
+                const response = await fetch('/getMode', { 
+                    headers: { 'X-Authenticated': 'true' }
+                });
                 const { mode } = await response.json();
                 const newMode = mode === 'auto' ? 'manual' : 'auto';
                 await fetch('/setMode', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'isAuthenticated': 'true' },
+                    headers: { 'Content-Type': 'application/json', 'X-Authenticated': 'true' },
                     body: JSON.stringify({ mode: newMode })
                 });
                 updateUI();
@@ -407,13 +391,12 @@ app.get('/', (req, res) => {
             }
         }
 
-        // Toggle Relay
         async function toggleRelay(relayNumber) {
             if (!isAuthenticated) return;
             try {
                 const response = await fetch('/toggleRelay/' + relayNumber, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'isAuthenticated': 'true' }
+                    headers: { 'X-Authenticated': 'true' }
                 });
                 if (response.ok) {
                     updateUI();
@@ -423,52 +406,44 @@ app.get('/', (req, res) => {
             }
         }
 
-        // Update UI
         async function updateUI() {
             if (!isAuthenticated) return;
             try {
-                // Get Sensor Status
-                const statusResponse = await fetch('/getSensorStatus', { headers: { 'isAuthenticated': 'true' } });
+                const statusResponse = await fetch('/getSensorStatus', { headers: { 'X-Authenticated': 'true' } });
                 const { isOnline } = await statusResponse.json();
                 document.getElementById('online-status').textContent = isOnline ? 'Online' : 'Offline';
                 document.getElementById('online-status').classList.toggle('text-green-400', isOnline);
                 document.getElementById('online-status').classList.toggle('text-red-400', !isOnline);
 
-                // Get Mode
-                const modeResponse = await fetch('/getMode', { headers: { 'isAuthenticated': 'true' } });
+                const modeResponse = await fetch('/getMode', { headers: { 'X-Authenticated': 'true' } });
                 const { mode } = await modeResponse.json();
                 document.getElementById('mode-display').textContent = mode;
 
-                // Get Relay State
-                const relayResponse = await fetch('/getRelayState', { headers: { 'isAuthenticated': 'true' } });
+                const relayResponse = await fetch('/getRelayState', { headers: { 'X-Authenticated': 'true' } });
                 const relayState = await relayResponse.json();
                 document.getElementById('lighting-status').textContent = relayState.relayState1 ? 'On' : 'Off';
                 document.getElementById('ventilation-status').textContent = relayState.relayState2 ? 'On' : 'Off';
                 document.getElementById('lighting-toggle-status').textContent = relayState.relayState1 ? 'On' : 'Off';
                 document.getElementById('ventilation-toggle-status').textContent = relayState.relayState2 ? 'On' : 'Off';
 
-                // Get Sensor Data
-                const sensorResponse = await fetch('/getSensorData', { headers: { 'isAuthenticated': 'true' } });
+                const sensorResponse = await fetch('/getSensorData', { headers: { 'X-Authenticated': 'true' } });
                 const sensorData = await sensorResponse.json();
                 document.getElementById('temperature-display').textContent = sensorData.temperature + ' °C';
 document.getElementById('humidity-display').textContent = sensorData.humidity + ' %';
 document.getElementById('soil-moisture-display').textContent = sensorData.soilMoisture + ' %';
 
-                // Get Trends
-                const trendsResponse = await fetch('/getSensorTrends', { headers: { 'isAuthenticated': 'true' } });
+                const trendsResponse = await fetch('/getSensorTrends', { headers: { 'X-Authenticated': 'true' } });
                 const trends = await trendsResponse.json();
                 document.getElementById('temperature-healthy').textContent = trends.healthyRanges.temperature.toFixed(1) + '%';
 document.getElementById('humidity-healthy').textContent = trends.healthyRanges.humidity.toFixed(1) + '%';
 document.getElementById('soil-moisture-healthy').textContent = trends.healthyRanges.soilMoisture.toFixed(1) + '%';
 
-                // Update Charts
                 updateCharts(trends.hourlyAverages);
             } catch (error) {
                 console.error('Update UI error:', error);
             }
         }
 
-        // Update Charts
         function updateCharts(hourlyAverages) {
             const labels = hourlyAverages.map(entry => new Date(entry.timestamp).toLocaleTimeString());
             const temperatureData = hourlyAverages.map(entry => entry.temperature);
@@ -521,7 +496,6 @@ document.getElementById('soil-moisture-healthy').textContent = trends.healthyRan
             });
         }
 
-        // Custom Crop Form
         function showCustomCropForm() {
             document.getElementById('custom-crop-form').classList.remove('hidden');
         }
@@ -531,11 +505,9 @@ document.getElementById('soil-moisture-healthy').textContent = trends.healthyRan
         }
 
         function saveCustomCrop() {
-            // Implement custom crop saving logic
             document.getElementById('custom-crop-form').classList.add('hidden');
         }
 
-        // Save Settings
         async function saveManualSettings() {
             if (!isAuthenticated) return;
             try {
@@ -546,7 +518,7 @@ document.getElementById('soil-moisture-healthy').textContent = trends.healthyRan
                 };
                 await fetch('/updateLightingSettings', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'isAuthenticated': 'true' },
+                    headers: { 'Content-Type': 'application/json', 'X-Authenticated': 'true' },
                     body: JSON.stringify(settings)
                 });
             } catch (error) {
@@ -565,7 +537,7 @@ document.getElementById('soil-moisture-healthy').textContent = trends.healthyRan
                 };
                 await fetch('/updatePumpSettings', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'isAuthenticated': 'true' },
+                    headers: { 'Content-Type': 'application/json', 'X-Authenticated': 'true' },
                     body: JSON.stringify(settings)
                 });
             } catch (error) {
@@ -573,7 +545,6 @@ document.getElementById('soil-moisture-healthy').textContent = trends.healthyRan
             }
         }
 
-        // Periodic UI Update
         setInterval(updateUI, 5000);
     </script>
 </body>
