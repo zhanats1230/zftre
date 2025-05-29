@@ -8,7 +8,7 @@ const port = 80;
 const DATA_FILE = 'sensorDataHistory.json';
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 let relayState = {
   relayState1: false,
@@ -21,27 +21,24 @@ let sensorData = {
   soilMoisture: 0
 };
 
-let lastSensorUpdate = 0; // Timestamp of last sensor data update
+let lastSensorUpdate = 0;
 
-// Store raw and aggregated data
 let sensorDataHistory = {
-  raw: [], // Raw readings with timestamps
-  hourlyAverages: [], // Aggregated hourly averages
-  healthyRanges: { // Percentage of time in healthy range
+  raw: [],
+  hourlyAverages: [],
+  healthyRanges: {
     temperature: { inRange: 0, total: 0 },
     humidity: { inRange: 0, total: 0 },
     soilMoisture: { inRange: 0, total: 0 }
   }
 };
 
-// Healthy range thresholds
 const HEALTHY_RANGES = {
   temperature: { min: 20, max: 30 },
   humidity: { min: 50, max: 80 },
   soilMoisture: { min: 30, max: 70 }
 };
 
-// Initialize variables that were undefined in the original code
 let mode = 'manual';
 let pumpSettings = {
   pumpStartHour: 0,
@@ -55,10 +52,8 @@ let lightingSettings = {
   lightIntervalManual: 0
 };
 
-// Simple password for authentication
 const CORRECT_PASSWORD = '12345678';
 
-// Middleware for checking authentication
 function isAuthenticated(req, res, next) {
   if (req.body.isAuthenticated) {
     return next();
@@ -66,15 +61,12 @@ function isAuthenticated(req, res, next) {
   res.status(401).json({ error: 'Unauthorized' });
 }
 
-// Load sensor data history from file on startup
 async function loadSensorDataHistory() {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     sensorDataHistory = JSON.parse(data);
-    // Filter raw data to last 24 hours
     const oneDayAgo = Date.now() - 86400000;
     sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
-    // Filter hourly averages to last 24 hours
     sensorDataHistory.hourlyAverages = sensorDataHistory.hourlyAverages.filter(entry => entry.timestamp >= oneDayAgo);
     console.log(`Loaded ${sensorDataHistory.raw.length} raw entries and ${sensorDataHistory.hourlyAverages.length} hourly averages`);
   } catch (error) {
@@ -95,7 +87,6 @@ async function loadSensorDataHistory() {
   }
 }
 
-// Save sensor data history to file
 async function saveSensorDataHistory() {
   try {
     await fs.writeFile(DATA_FILE, JSON.stringify(sensorDataHistory, null, 2));
@@ -105,12 +96,10 @@ async function saveSensorDataHistory() {
   }
 }
 
-// Compute hourly averages
 function computeHourlyAverages() {
   const oneDayAgo = Date.now() - 86400000;
   const hourlyBuckets = {};
 
-  // Group raw data by hour
   sensorDataHistory.raw.forEach(entry => {
     const date = new Date(entry.timestamp);
     const hourKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}`;
@@ -122,7 +111,6 @@ function computeHourlyAverages() {
     hourlyBuckets[hourKey].soilMoisture.push(entry.soilMoisture);
   });
 
-  // Calculate averages
   sensorDataHistory.hourlyAverages = Object.keys(hourlyBuckets).map(key => {
     const bucket = hourlyBuckets[key];
     return {
@@ -134,7 +122,6 @@ function computeHourlyAverages() {
   }).filter(entry => entry.timestamp >= oneDayAgo);
 }
 
-// Update healthy range metrics
 function updateHealthyRanges({ temperature, humidity, soilMoisture }) {
   sensorDataHistory.healthyRanges.temperature.total++;
   sensorDataHistory.healthyRanges.humidity.total++;
@@ -593,17 +580,14 @@ document.getElementById('soil-moisture-healthy').textContent = trends.healthyRan
 </html>
 `);
 });
-
-// Serve the main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// API Endpoints
 app.get('/getSensorStatus', (req, res) => {
   try {
     const now = Date.now();
-    const isOnline = now - lastSensorUpdate < 30000; // 30 seconds threshold
+    const isOnline = now - lastSensorUpdate < 30000;
     res.json({ isOnline });
   } catch (error) {
     console.error('Error in /getSensorStatus:', error);
@@ -677,13 +661,10 @@ app.post('/updateSensorData', (req, res) => {
         soilMoisture,
         timestamp: lastSensorUpdate
       });
-      // Clean up raw data older than 24 hours
       const oneDayAgo = Date.now() - 86400000;
       sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
-      // Update hourly averages and healthy ranges
       computeHourlyAverages();
       updateHealthyRanges({ temperature, humidity, soilMoisture });
-      // Save to file
       saveSensorDataHistory();
       console.log('Sensor data updated:', sensorData);
       res.json({ success: true });
@@ -824,8 +805,7 @@ app.post('/updateLightingSettings', isAuthenticated, (req, res) => {
   }
 });
 
-// Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
-  loadSensorDataHistory(); // Load sensor data history on startup
+  loadSensorDataHistory();
 });
