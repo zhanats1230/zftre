@@ -11,7 +11,8 @@
     "ws": "^8.11.0",
     "node-fetch": "^2.6.1",
     "uuid": "^10.0.0",
-    "express-session": "^1.18.0"
+    "express-session": "^1.18.0",
+    "bcrypt": "^5.1.1"
   },
   "license": "MIT"
 }
