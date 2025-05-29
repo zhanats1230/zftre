@@ -161,185 +161,327 @@ app.get('/', (req, res) => {
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
-        @tailwind base;
+        /* Importing Tailwind CSS via CDN (already included in HTML assumption) */
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary-green: #2e7d32;
-  --secondary-green: #4caf50;
-  --background-light: #f5f7fa;
-  --text-dark: #1a1a1a;
-  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
+/* Global styles */
 body {
-  @apply bg-gray-100 font-sans text-gray-800 min-h-screen;
+  font-family: 'Inter', sans-serif;
+  background-color: #f0f4f0; /* Light green-gray background */
+  color: #2d3748;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
+/* Container for all sections */
 .container {
-  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
 }
 
 /* Login Page */
-.login-container {
-  @apply flex items-center justify-center min-h-screen bg-green-50;
+#login-page {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
 }
 
-.login-card {
-  @apply bg-white p-8 rounded-lg shadow-lg w-full max-w-md;
+#login-page h1 {
+  font-size: 1.8rem;
+  color: #2f855a; /* Green theme */
+  margin-bottom: 1.5rem;
 }
 
-.login-card h1 {
-  @apply text-2xl font-bold text-center mb-6 text-gray-800;
+#login-page .error {
+  color: #e53e3e;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
 }
 
-.login-card input {
-  @apply w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-green-500;
+#login-page input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
 }
 
-.login-card button {
-  @apply w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition-colors;
+#login-page button {
+  background-color: #2f855a;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.error-message {
-  @apply text-red-500 text-center mb-4;
+#login-page button:hover {
+  background-color: #276749;
 }
 
-/* Navigation */
-.nav-bar {
-  @apply bg-white shadow-md p-4 flex justify-between items-center;
+/* Header Section */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #2f855a;
+  color: white;
+  border-radius: 8px 8px 0 0;
 }
 
-.nav-bar button {
-  @apply px-4 py-2 rounded-lg text-sm font-medium;
+header h1 {
+  font-size: 1.5rem;
 }
 
-.nav-bar .mode-toggle {
-  @apply bg-green-600 text-white hover:bg-green-700;
+header .status {
+  font-size: 0.9rem;
 }
 
-.nav-bar .logout-btn {
-  @apply bg-gray-600 text-white hover:bg-gray-700;
+header button {
+  background-color: #48bb78;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
+header button:hover {
+  background-color: #38a169;
+}
+
+/* Navigation Tabs */
 .nav-tabs {
-  @apply flex space-x-4 border-b border-gray-200 mb-6;
+  display: flex;
+  background-color: #e2e8f0;
+  border-radius: 8px;
+  margin: 1rem 0;
 }
 
 .nav-tabs button {
-  @apply px-4 py-2 text-sm font-medium text-gray-600 hover:text-green-600 border-b-2 border-transparent hover:border-green-600 transition-colors;
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
+.nav-tabs button:hover,
 .nav-tabs button.active {
-  @apply text-green-600 border-green-600;
+  background-color: #2f855a;
+  color: white;
+  border-radius: 8px;
 }
 
 /* Dashboard */
-.dashboard {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+#dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
 }
 
 .card {
-  @apply bg-white p-6 rounded-lg shadow-md;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  text-align: center;
 }
 
 .card h2 {
-  @apply text-lg font-semibold mb-4 text-gray-800;
+  font-size: 1.2rem;
+  color: #2f855a;
+  margin-bottom: 1rem;
 }
 
-.sensor-card {
-  @apply flex flex-col items-center text-center;
+.card p {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0.5rem 0;
 }
 
-.sensor-card h3 {
-  @apply text-base font-medium mb-2;
+.card button {
+  margin-top: 0.5rem;
+  background-color: #48bb78;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-.sensor-card p {
-  @apply text-2xl font-bold text-gray-800 mb-2;
+.card button:hover {
+  background-color: #38a169;
 }
 
-.sensor-card button {
-  @apply text-sm text-green-600 hover:underline;
+/* Trends Pages */
+.trends-page {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
 }
 
-/* Trends */
-.trends-section {
-  @apply bg-white p-6 rounded-lg shadow-md;
+.trends-page h2 {
+  font-size: 1.5rem;
+  color: #2f855a;
+  margin-bottom: 1rem;
 }
 
-.trends-section h2 {
-  @apply text-lg font-semibold mb-4;
+.trends-page .chart-placeholder {
+  height: 200px;
+  background-color: #edf2f7;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
 }
 
-.trends-section .chart-placeholder {
-  @apply h-64 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500;
+.trends-page p {
+  font-size: 1rem;
+  margin-bottom: 1rem;
 }
 
-.trends-section .back-btn {
-  @apply mt-4 text-sm text-green-600 hover:underline;
+.trends-page button {
+  background-color: #2f855a;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-/* Relays */
-.relay-controls {
-  @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+.trends-page button:hover {
+  background-color: #276749;
+}
+
+/* Relays Page */
+#relays-page {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
 }
 
 .relay-card {
-  @apply bg-white p-4 rounded-lg shadow-md flex justify-between items-center;
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-.relay-card h3 {
-  @apply text-base font-medium;
+.relay-card h2 {
+  font-size: 1.2rem;
+  color: #2f855a;
+  margin-bottom: 0.5rem;
 }
 
-.toggle-btn {
-  @apply px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors;
+.relay-card button {
+  background-color: #48bb78;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-.toggle-btn.off {
-  @apply bg-gray-400 hover:bg-gray-500;
+.relay-card button:hover {
+  background-color: #38a169;
 }
 
-/* Settings */
+/* Settings Page */
+#settings-page {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
 .settings-section {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  margin-bottom: 2rem;
 }
 
-.settings-card {
-  @apply bg-white p-6 rounded-lg shadow-md;
+.settings-section h2 {
+  font-size: 1.3rem;
+  color: #2f855a;
+  margin-bottom: 1rem;
 }
 
-.settings-card h2 {
-  @apply text-lg font-semibold mb-4;
+.settings-section select,
+.settings-section input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
 }
 
-.settings-card select,
-.settings-card input {
-  @apply w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-green-500;
+.settings-section button {
+  background-color: #2f855a;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.settings-card button {
-  @apply px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors;
+.settings-section button:hover {
+  background-color: #276749;
 }
 
-.settings-card .cancel-btn {
-  @apply bg-gray-400 hover:bg-gray-500;
+.settings-section button.cancel {
+  background-color: #e53e3e;
+  margin-left: 0.5rem;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 640px) {
-  .nav-bar {
-    @apply flex-col space-y-2;
+.settings-section button.cancel:hover {
+  background-color: #c53030;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .nav-tabs {
-    @apply flex-col space-y-2 border-b-0;
+    flex-direction: column;
   }
 
-  .dashboard, .settings-section {
-    @apply grid-cols-1;
+  .nav-tabs button {
+    width: 100%;
+    text-align: center;
+  }
+
+  #dashboard,
+  #relays-page {
+    grid-template-columns: 1fr;
   }
 }
     </style>
