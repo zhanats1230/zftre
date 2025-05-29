@@ -161,12 +161,187 @@ app.get('/', (req, res) => {
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
-        body { background-color: #f0f4f8; }
-        .tab { display: none; }
-        .tab.active { display: block; }
-        .bg-greenhouse { background-image: url('https://source.unsplash.com/random/1920x1080/?greenhouse'); background-size: cover; }
-        .trend-chart { width: 100%; height: 200px; }
-        .crop-icon { width: 24px; height: 24px; margin-right: 8px; }
+        @tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-green: #2e7d32;
+  --secondary-green: #4caf50;
+  --background-light: #f5f7fa;
+  --text-dark: #1a1a1a;
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+  @apply bg-gray-100 font-sans text-gray-800 min-h-screen;
+}
+
+.container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
+}
+
+/* Login Page */
+.login-container {
+  @apply flex items-center justify-center min-h-screen bg-green-50;
+}
+
+.login-card {
+  @apply bg-white p-8 rounded-lg shadow-lg w-full max-w-md;
+}
+
+.login-card h1 {
+  @apply text-2xl font-bold text-center mb-6 text-gray-800;
+}
+
+.login-card input {
+  @apply w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-green-500;
+}
+
+.login-card button {
+  @apply w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition-colors;
+}
+
+.error-message {
+  @apply text-red-500 text-center mb-4;
+}
+
+/* Navigation */
+.nav-bar {
+  @apply bg-white shadow-md p-4 flex justify-between items-center;
+}
+
+.nav-bar button {
+  @apply px-4 py-2 rounded-lg text-sm font-medium;
+}
+
+.nav-bar .mode-toggle {
+  @apply bg-green-600 text-white hover:bg-green-700;
+}
+
+.nav-bar .logout-btn {
+  @apply bg-gray-600 text-white hover:bg-gray-700;
+}
+
+.nav-tabs {
+  @apply flex space-x-4 border-b border-gray-200 mb-6;
+}
+
+.nav-tabs button {
+  @apply px-4 py-2 text-sm font-medium text-gray-600 hover:text-green-600 border-b-2 border-transparent hover:border-green-600 transition-colors;
+}
+
+.nav-tabs button.active {
+  @apply text-green-600 border-green-600;
+}
+
+/* Dashboard */
+.dashboard {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.card {
+  @apply bg-white p-6 rounded-lg shadow-md;
+}
+
+.card h2 {
+  @apply text-lg font-semibold mb-4 text-gray-800;
+}
+
+.sensor-card {
+  @apply flex flex-col items-center text-center;
+}
+
+.sensor-card h3 {
+  @apply text-base font-medium mb-2;
+}
+
+.sensor-card p {
+  @apply text-2xl font-bold text-gray-800 mb-2;
+}
+
+.sensor-card button {
+  @apply text-sm text-green-600 hover:underline;
+}
+
+/* Trends */
+.trends-section {
+  @apply bg-white p-6 rounded-lg shadow-md;
+}
+
+.trends-section h2 {
+  @apply text-lg font-semibold mb-4;
+}
+
+.trends-section .chart-placeholder {
+  @apply h-64 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500;
+}
+
+.trends-section .back-btn {
+  @apply mt-4 text-sm text-green-600 hover:underline;
+}
+
+/* Relays */
+.relay-controls {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+}
+
+.relay-card {
+  @apply bg-white p-4 rounded-lg shadow-md flex justify-between items-center;
+}
+
+.relay-card h3 {
+  @apply text-base font-medium;
+}
+
+.toggle-btn {
+  @apply px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors;
+}
+
+.toggle-btn.off {
+  @apply bg-gray-400 hover:bg-gray-500;
+}
+
+/* Settings */
+.settings-section {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.settings-card {
+  @apply bg-white p-6 rounded-lg shadow-md;
+}
+
+.settings-card h2 {
+  @apply text-lg font-semibold mb-4;
+}
+
+.settings-card select,
+.settings-card input {
+  @apply w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-green-500;
+}
+
+.settings-card button {
+  @apply px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors;
+}
+
+.settings-card .cancel-btn {
+  @apply bg-gray-400 hover:bg-gray-500;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .nav-bar {
+    @apply flex-col space-y-2;
+  }
+
+  .nav-tabs {
+    @apply flex-col space-y-2 border-b-0;
+  }
+
+  .dashboard, .settings-section {
+    @apply grid-cols-1;
+  }
+}
     </style>
 </head>
 <body class="bg-greenhouse">
