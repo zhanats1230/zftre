@@ -571,25 +571,63 @@ app.get('/', (req, res) => {
         <button id="savePumpSettings" class="ripple-btn w-full mt-4"><i class="fa-solid fa-save"></i> Save Settings</button>
       </div>
     </div>
-    <div class="column">
-  <div class="card">
-    <h3>Crop Selection</h3>
-    <div>
-      <label>Select Crop</label>
-      <select id="cropSelect" onchange="selectCrop()">
-        <option value="">Custom Settings</option>
-        <option value="potato">Potato</option>
-        <option value="carrot">Carrot</option>
-      </select>
-    </div>
-    <div>
-      <label>Add/Edit Crop Name</label>
-      <input id="newCropName" type="text" placeholder="Enter crop name">
-    </div>
-    <input type="submit" value="Save Crop" onclick="addOrUpdateCrop()">
   </div>
-</div>
-  </div>
+  <div id="crops" class="tab-content hidden">
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Crop Selection</h2>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium">Select Crop</label>
+                <select id="cropSelect" class="p-2 w-full border rounded-md">
+                  <option value="">Select a crop</option>
+                </select>
+              </div>
+              <div>
+                <h3 class="font-semibold">Custom Crop Settings</h3>
+                <div class="space-y-2">
+                  <div>
+                    <label class="block text-sm font-medium">Crop Name</label>
+                    <input id="cropName" type="text" class="p-2 w-full border rounded-md">
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium">Min Temperature (°C)</label>
+                      <input id="cropTempMin" type="number" class="p-2 w-full border rounded-md">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium">Max Temperature (°C)</label>
+                      <input id="cropTempMax" type="number" class="p-2 w-full border rounded-md">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium">Min Humidity (%)</label>
+                      <input id="cropHumidityMin" type="number" class="p-2 w-full border rounded-md">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium">Max Humidity (%)</label>
+                      <input id="cropHumidityMax" type="number" class="p-2 w-full border rounded-md">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium">Min Soil Moisture (%)</label>
+                      <input id="cropSoilMoistureMin" type="number" class="p-2 w-full border rounded-md">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium">Max Soil Moisture (%)</label>
+                      <input id="cropSoilMoistureMax" type="number" class="p-2 w-full border rounded-md">
+                    </div>
+                  </div>
+                  <div class="flex space-x-2">
+                    <button id="saveCrop" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save Crop</button>
+                    <button id="deleteCrop" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete Crop</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
   <script>
 async function selectCrop() {
