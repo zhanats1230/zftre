@@ -7,7 +7,13 @@ const bcrypt = require('bcrypt'); // Добавляем bcrypt
 const app = express();
 const port = 80;
 
-// Path to store sensor data history
+// Configure express-session
+app.use(session({
+  secret: '8h4!fj#@9sdfjKJH23lfj*jsdf09dsf', // Replace with a secure random string
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true if using HTTPS
+}));
 const DATA_FILE = 'sensorDataHistory.json';
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
