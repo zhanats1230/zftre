@@ -144,6 +144,43 @@ let pumpSettings = {
   pumpDuration: 10,
   pumpInterval: 240
 };
+
+// Crop settings
+let cropSettings = {
+  "potato": {
+    name: "Potato",
+    fanTemperatureThreshold: 22.0,
+    lightOnDuration: 7200000, // 2 hours
+    lightIntervalManual: 21600000, // 6 hours
+    pumpStartHour: 8,
+    pumpStartMinute: 0,
+    pumpDuration: 15,
+    pumpInterval: 180 // 3 hours
+  },
+  "carrot": {
+    name: "Carrot",
+    fanTemperatureThreshold: 25.0,
+    lightOnDuration: 10800000, // 3 hours
+    lightIntervalManual: 18000000, // 5 hours
+    pumpStartHour: 7,
+    pumpStartMinute: 30,
+    pumpDuration: 10,
+    pumpInterval: 240 // 4 hours
+  },
+  "tomato": {
+    name: "Tomato",
+    fanTemperatureThreshold: 28.0,
+    lightOnDuration: 14400000, // 4 hours
+    lightIntervalManual: 28800000, // 8 hours
+    pumpStartHour: 6,
+    pumpStartMinute: 0,
+    pumpDuration: 20,
+    pumpInterval: 120 // 2 hours
+  }
+};
+
+let currentCrop = 'potato'; // Default crop
+
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -387,6 +424,31 @@ app.get('/', (req, res) => {
       50% { transform: scale(1.03); }
       100% { transform: scale(1); }
     }
+    .crop-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      background: linear-gradient(to right, #8b5cf6, #a78bfa);
+      color: white;
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-right: 0.5rem;
+    }
+    .crop-select {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: white;
+      font-size: 1rem;
+      color: #1f2937;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .crop-select:focus {
+      border-color: #14b8a6;
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+    }
   </style>
 </head>
 <body class="font-sans text-gray-900">
@@ -512,6 +574,97 @@ app.get('/', (req, res) => {
     </div>
 
     <div id="settingsContent" class="tab-content hidden">
+      <!-- Crop Selection -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
+        <div class="section-header">
+          <i class="fa-solid fa-seedling"></i>
+          <h3>Crop Selection</h3>
+        </div>
+        <div class="grid grid-cols-1 gap-6">
+          <div>
+            <label class="block text-gray-700 font-bold mb-2" for="cropSelect">Select Crop</label>
+            <select id="cropSelect" class="crop-select">
+              <option value="potato">Potato</option>
+              <option value="carrot">Carrot</option>
+              <option value="tomato">Tomato</option>
+              <option value="custom">Custom Crop...</option>
+            </select>
+          </div>
+          <div id="customCropFields" class="hidden">
+            <div class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="block text-gray-700 font-bold mb-2" for="newCropName">Crop Name</label>
+                <input id="newCropName" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Enter crop name">
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-gray-700 font-bold mb-2" for="newCropKey">Crop Key</label>
+                  <input id="newCropKey" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Unique key (e.g. custom_crop)">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Apply Crop Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Crop Settings Editor -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
+        <div class="section-header">
+          <i class="fa-solid fa-sliders-h"></i>
+          <h3>Crop Settings Editor</h3>
+        </div>
+        <div class="mb-4">
+          <p class="text-gray-700">Current Crop: <span id="currentCropName" class="crop-badge">Potato</span></p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          <div class="input-card">
+            <label class="input-label">Temp Threshold (°C)</label>
+            <div class="icon-circle"><i class="fa-solid fa-temperature-half"></i></div>
+            <input id="cropFanTemperatureThreshold" type="number" step="0.1" value="22.0" placeholder="Enter °C">
+          </div>
+          <div class="input-card">
+            <label class="input-label">Light Duration (min)</label>
+            <div class="icon-circle"><i class="fa-solid fa-sun"></i></div>
+            <input id="cropLightOnDuration" type="number" value="120" placeholder="Enter minutes">
+          </div>
+          <div class="input-card">
+            <label class="input-label">Light Interval (min)</label>
+            <div class="icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <input id="cropLightIntervalManual" type="number" value="360" placeholder="Enter minutes">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-8 mt-4">
+          <div class="input-card">
+            <label class="input-label">Pump Start Hour</label>
+            <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
+            <input id="cropPumpStartHour" type="number" min="0" max="23" value="8" placeholder="0-23">
+          </div>
+          <div class="input-card">
+            <label class="input-label">Pump Start Minute</label>
+            <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
+            <input id="cropPumpStartMinute" type="number" min="0" max="59" value="0" placeholder="0-59">
+          </div>
+          <div class="input-card">
+            <label class="input-label">Pump Duration (sec)</label>
+            <div class="icon-circle"><i class="fa-solid fa-stopwatch-20"></i></div>
+            <input id="cropPumpDuration" type="number" min="1" value="15" placeholder="Seconds">
+          </div>
+          <div class="input-card">
+            <label class="input-label">Pump Interval (min)</label>
+            <div class="icon-circle"><i class="fa-solid fa-hourglass-half"></i></div>
+            <input id="cropPumpInterval" type="number" min="1" value="180" placeholder="Minutes">
+          </div>
+        </div>
+        <div class="wave-divider"></div>
+        <div class="flex justify-between mt-4">
+          <button id="saveCropSettings" class="ripple-btn"><i class="fa-solid fa-save mr-2"></i> Save Crop Settings</button>
+          <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Delete Crop</button>
+        </div>
+      </div>
+
       <!-- Manual Mode Settings -->
       <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
         <div class="section-header">
@@ -572,136 +725,8 @@ app.get('/', (req, res) => {
       </div>
     </div>
   </div>
-  <div id="crops" class="tab-content hidden">
-          <div class="bg-white p-4 rounded-lg shadow">
-            <h2 class="text-xl font-semibold mb-4">Crop Selection</h2>
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium">Select Crop</label>
-                <select id="cropSelect" class="p-2 w-full border rounded-md">
-                  <option value="">Select a crop</option>
-                </select>
-              </div>
-              <div>
-                <h3 class="font-semibold">Custom Crop Settings</h3>
-                <div class="space-y-2">
-                  <div>
-                    <label class="block text-sm font-medium">Crop Name</label>
-                    <input id="cropName" type="text" class="p-2 w-full border rounded-md">
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium">Min Temperature (°C)</label>
-                      <input id="cropTempMin" type="number" class="p-2 w-full border rounded-md">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium">Max Temperature (°C)</label>
-                      <input id="cropTempMax" type="number" class="p-2 w-full border rounded-md">
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium">Min Humidity (%)</label>
-                      <input id="cropHumidityMin" type="number" class="p-2 w-full border rounded-md">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium">Max Humidity (%)</label>
-                      <input id="cropHumidityMax" type="number" class="p-2 w-full border rounded-md">
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium">Min Soil Moisture (%)</label>
-                      <input id="cropSoilMoistureMin" type="number" class="p-2 w-full border rounded-md">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium">Max Soil Moisture (%)</label>
-                      <input id="cropSoilMoistureMax" type="number" class="p-2 w-full border rounded-md">
-                    </div>
-                  </div>
-                  <div class="flex space-x-2">
-                    <button id="saveCrop" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save Crop</button>
-                    <button id="deleteCrop" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete Crop</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
   <script>
-async function selectCrop() {
-  const cropSelect = document.getElementById('cropSelect');
-  const cropKey = cropSelect.value;
-  if (cropKey) {
-    const response = await fetch('/selectCrop', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cropKey })
-    });
-    const result = await response.json();
-    if (result.success) {
-      alert('Crop settings applied!');
-      // Update settings inputs
-      document.getElementById('fanTemperatureThreshold').value = result.settings.fanTemperatureThreshold;
-      document.getElementById('lightOnDuration').value = result.settings.lightOnDuration;
-      document.getElementById('lightIntervalManual').value = result.settings.lightIntervalManual;
-      document.getElementById('pumpStartHour').value = result.settings.pumpStartHour;
-      document.getElementById('pumpStartMinute').value = result.settings.pumpStartMinute;
-      document.getElementById('pumpDuration').value = result.settings.pumpDuration;
-      document.getElementById('pumpInterval').value = result.settings.pumpInterval;
-    } else {
-      alert('Error applying crop settings: ' + result.error);
-    }
-  }
-}
-
-async function addOrUpdateCrop() {
-  const cropName = document.getElementById('newCropName').value;
-  if (!cropName) {
-    alert('Please enter a crop name');
-    return;
-  }
-  const cropSettings = {
-    name: cropName,
-    fanTemperatureThreshold: parseFloat(document.getElementById('fanTemperatureThreshold').value),
-    lightOnDuration: parseInt(document.getElementById('lightOnDuration').value),
-    lightIntervalManual: parseInt(document.getElementById('lightIntervalManual').value),
-    pumpStartHour: parseInt(document.getElementById('pumpStartHour').value),
-    pumpStartMinute: parseInt(document.getElementById('pumpStartMinute').value),
-    pumpDuration: parseInt(document.getElementById('pumpDuration').value),
-    pumpInterval: parseInt(document.getElementById('pumpInterval').value)
-  };
-  const response = await fetch('/addOrUpdateCrop', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(cropSettings)
-  });
-  const result = await response.json();
-  if (result.success) {
-    alert('Crop saved successfully!');
-    // Refresh crop dropdown
-    const cropSelect = document.getElementById('cropSelect');
-    const cropKey = cropName.toLowerCase().replace(/\s+/g, '_');
-    const existingOption = Array.from(cropSelect.options).find(opt => opt.value === cropKey);
-    if (!existingOption) {
-      const newOption = new Option(cropSettings.name, cropKey);
-      cropSelect.add(newOption);
-    }
-    cropSelect.value = cropKey;
-  } else {
-    alert('Error saving crop: ' + result.error);
-  }
-}
-
-
-
-
-
-
-
-
-  
     console.log('Script loaded');
     const correctPassword = 'admin';
 
@@ -928,6 +953,104 @@ async function addOrUpdateCrop() {
     document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
     document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
 
+    // Crop Management Functions
+    async function loadCropSettings() {
+      try {
+        const response = await fetch('/getCropSettings');
+        const data = await response.json();
+        document.getElementById('currentCropName').textContent = data.currentCrop.name;
+        
+        // Fill crop editor form
+        document.getElementById('cropFanTemperatureThreshold').value = data.currentCrop.fanTemperatureThreshold;
+        document.getElementById('cropLightOnDuration').value = data.currentCrop.lightOnDuration / 60000;
+        document.getElementById('cropLightIntervalManual').value = data.currentCrop.lightIntervalManual / 60000;
+        document.getElementById('cropPumpStartHour').value = data.currentCrop.pumpStartHour;
+        document.getElementById('cropPumpStartMinute').value = data.currentCrop.pumpStartMinute;
+        document.getElementById('cropPumpDuration').value = data.currentCrop.pumpDuration;
+        document.getElementById('cropPumpInterval').value = data.currentCrop.pumpInterval;
+        
+        console.log('Crop settings loaded:', data);
+      } catch (error) {
+        console.error('Error loading crop settings:', error);
+      }
+    }
+    
+    async function applyCropSettings() {
+      const cropSelect = document.getElementById('cropSelect');
+      const selectedCrop = cropSelect.value;
+      
+      try {
+        const response = await fetch('/setCurrentCrop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ crop: selectedCrop })
+        });
+        
+        if (response.ok) {
+          await loadCropSettings();
+          alert('Crop settings for ' + selectedCrop + ' applied successfully!');
+        } else {
+          const error = await response.json();
+          alert(error.error || 'Failed to apply crop settings');
+        }
+      } catch (error) {
+        console.error('Error applying crop settings:', error);
+        alert('Error applying crop settings');
+      }
+    }
+    
+    async function saveCropSettings() {
+      const settings = {
+        fanTemperatureThreshold: parseFloat(document.getElementById('cropFanTemperatureThreshold').value),
+        lightOnDuration: parseInt(document.getElementById('cropLightOnDuration').value) * 60000,
+        lightIntervalManual: parseInt(document.getElementById('cropLightIntervalManual').value) * 60000,
+        pumpStartHour: parseInt(document.getElementById('cropPumpStartHour').value),
+        pumpStartMinute: parseInt(document.getElementById('cropPumpStartMinute').value),
+        pumpDuration: parseInt(document.getElementById('cropPumpDuration').value),
+        pumpInterval: parseInt(document.getElementById('cropPumpInterval').value)
+      };
+      
+      try {
+        const response = await fetch('/saveCropSettings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+        
+        if (response.ok) {
+          alert('Crop settings saved successfully!');
+          await loadCropSettings();
+        } else {
+          const error = await response.json();
+          alert(error.error || 'Failed to save crop settings');
+        }
+      } catch (error) {
+        console.error('Error saving crop settings:', error);
+        alert('Error saving crop settings');
+      }
+    }
+    
+    async function deleteCurrentCrop() {
+      if (confirm('Are you sure you want to delete the current crop settings? This action cannot be undone.')) {
+        try {
+          const response = await fetch('/deleteCrop', {
+            method: 'POST'
+          });
+          
+          if (response.ok) {
+            alert('Crop settings deleted successfully!');
+            await loadCropSettings();
+          } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to delete crop settings');
+          }
+        } catch (error) {
+          console.error('Error deleting crop settings:', error);
+          alert('Error deleting crop settings');
+        }
+      }
+    }
+
     function initializeApp() {
       switchTab('dashboard');
       initializeCharts();
@@ -936,12 +1059,28 @@ async function addOrUpdateCrop() {
       updateMode();
       updateSettings();
       checkConnection();
+      loadCropSettings();
 
       document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
       document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
       document.getElementById('toggleMode').addEventListener('click', toggleMode);
       document.getElementById('saveLightingSettings').addEventListener('click', saveLightingSettings);
       document.getElementById('savePumpSettings').addEventListener('click', savePumpSettings);
+      
+      // Crop settings event listeners
+      document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
+      document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
+      document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
+      
+      // Show/hide custom crop fields
+      document.getElementById('cropSelect').addEventListener('change', function() {
+        const customFields = document.getElementById('customCropFields');
+        if (this.value === 'custom') {
+          customFields.classList.remove('hidden');
+        } else {
+          customFields.classList.add('hidden');
+        }
+      });
 
       setInterval(updateSensorData, 5000);
       setInterval(updateRelayState, 5000);
@@ -959,11 +1098,11 @@ async function addOrUpdateCrop() {
         const relay2Control = document.getElementById('relayState2Control');
 
         relay1Badge.textContent = data.relayState1 ? 'ON' : 'OFF';
-        relay1Badge.className = \`status-badge \${data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}\`;
-        relay2Badge.textContent = data.relayState2 ? 'ON' : 'OFF';
-        relay2Badge.className = \`status-badge \${data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}\`;
-        relay1Control.textContent = \`Lighting: \${data.relayState1 ? 'ON' : 'OFF'}\`;
-        relay2Control.textContent = \`Ventilation: \${data.relayState2 ? 'ON' : 'OFF'}\`;
+        relay1Badge.className = 'status-badge ' + (data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800');
+relay2Badge.textContent = data.relayState2 ? 'ON' : 'OFF';
+relay2Badge.className = 'status-badge ' + (data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800');
+relay1Control.textContent = 'Lighting: ' + (data.relayState1 ? 'ON' : 'OFF');
+relay2Control.textContent = 'Ventilation: ' + (data.relayState2 ? 'ON' : 'OFF');
       } catch (error) {
         console.error('Error fetching relay state:', error);
       }
@@ -973,13 +1112,13 @@ async function addOrUpdateCrop() {
       try {
         const response = await fetch('/getSensorData');
         const data = await response.json();
-        document.getElementById('temperature').textContent = \`\${data.temperature} °C\`;
-        document.getElementById('humidity').textContent = \`\${data.humidity} %\`;
-        document.getElementById('soilMoisture').textContent = \`\${data.soilMoisture} %\`;
+        document.getElementById('temperature').textContent = data.temperature + ' °C';
+document.getElementById('humidity').textContent = data.humidity + ' %';
+document.getElementById('soilMoisture').textContent = data.soilMoisture + ' %';
 
-        document.getElementById('temperatureProgress').style.width = \`\${Math.min((data.temperature / 40) * 100, 100)}%\`;
-        document.getElementById('humidityProgress').style.width = \`\${Math.min(data.humidity, 100)}%\`;
-        document.getElementById('soilMoistureProgress').style.width = \`\${Math.min(data.soilMoisture, 100)}%\`;
+document.getElementById('temperatureProgress').style.width = Math.min((data.temperature / 40) * 100, 100) + '%';
+document.getElementById('humidityProgress').style.width = Math.min(data.humidity, 100) + '%';
+document.getElementById('soilMoistureProgress').style.width = Math.min(data.soilMoisture, 100) + '%';
 
         const timestamp = new Date().toLocaleTimeString();
         updateChartData('temperature', timestamp, data.temperature);
@@ -991,7 +1130,7 @@ async function addOrUpdateCrop() {
     }
 
     function updateChartData(sensor, timestamp, value) {
-      const key = \`\${sensor}Data\`;
+      const key = sensor + 'Data';
       let storedData = JSON.parse(localStorage.getItem(key)) || { labels: [], values: [] };
       storedData.labels.push(timestamp);
       storedData.values.push(value);
@@ -1020,7 +1159,7 @@ async function addOrUpdateCrop() {
         const data = await response.json();
         const modeBadge = document.getElementById('currentMode');
         modeBadge.textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
-        modeBadge.className = \`status-badge \${data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}\`;
+        modeBadge.className = 'status-badge ' + (data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800');
       } catch (error) {
         console.error('Error fetching mode:', error);
       }
@@ -1064,7 +1203,9 @@ async function addOrUpdateCrop() {
 
     async function toggleRelay(relayNumber) {
       try {
-        const response = await updateCropSelect;
+        const response = await fetch('/toggleRelay/' + relayNumber, {
+          method: 'POST'
+        });
         if (response.ok) {
           await updateRelayState();
         } else {
@@ -1357,6 +1498,84 @@ app.post('/updateLightingSettings', (req, res) => {
     }
   } catch (error) {
     console.error('Error in /updateLightingSettings:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Crop Settings Endpoints
+app.get('/getCropSettings', (req, res) => {
+  try {
+    res.json({
+      currentCrop: cropSettings[currentCrop],
+      availableCrops: Object.keys(cropSettings)
+    });
+  } catch (error) {
+    console.error('Error in /getCropSettings:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/setCurrentCrop', (req, res) => {
+  try {
+    const { crop } = req.body;
+    if (cropSettings[crop]) {
+      currentCrop = crop;
+      console.log('Current crop set to:', currentCrop);
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: 'Invalid crop selection' });
+    }
+  } catch (error) {
+    console.error('Error in /setCurrentCrop:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/saveCropSettings', (req, res) => {
+  try {
+    const settings = req.body;
+    
+    // Validate settings
+    if (
+      typeof settings.fanTemperatureThreshold === 'number' &&
+      typeof settings.lightOnDuration === 'number' && settings.lightOnDuration > 0 &&
+      typeof settings.lightIntervalManual === 'number' && settings.lightIntervalManual > 0 &&
+      typeof settings.pumpStartHour === 'number' && settings.pumpStartHour >= 0 && settings.pumpStartHour <= 23 &&
+      typeof settings.pumpStartMinute === 'number' && settings.pumpStartMinute >= 0 && settings.pumpStartMinute <= 59 &&
+      typeof settings.pumpDuration === 'number' && settings.pumpDuration > 0 &&
+      typeof settings.pumpInterval === 'number' && settings.pumpInterval > 0
+    ) {
+      // Update current crop settings
+      cropSettings[currentCrop] = {
+        ...cropSettings[currentCrop],
+        ...settings
+      };
+      
+      console.log('Crop settings updated for', currentCrop, cropSettings[currentCrop]);
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: 'Invalid crop settings' });
+    }
+  } catch (error) {
+    console.error('Error in /saveCropSettings:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/deleteCrop', (req, res) => {
+  try {
+    // Don't allow deletion of default crops
+    if (['potato', 'carrot', 'tomato'].includes(currentCrop)) {
+      res.status(400).json({ error: 'Cannot delete default crops' });
+      return;
+    }
+    
+    delete cropSettings[currentCrop];
+    currentCrop = 'potato'; // Reset to default
+    console.log('Crop deleted, current crop reset to potato');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error in /deleteCrop:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
