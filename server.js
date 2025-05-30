@@ -5,11 +5,12 @@ const path = require('path');
 const app = express();
 const port = 80;
 
-// Path to store sensor data history
+// Paths to store data
 const DATA_FILE = 'sensorDataHistory.json';
+const CROP_SETTINGS_FILE = 'cropSettings.json'; // Новый файл для настроек культур
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 let relayState = {
   relayState1: false,
@@ -22,35 +23,31 @@ let sensorData = {
   soilMoisture: 0
 };
 
-let lastSensorUpdate = 0; // Timestamp of last sensor data update
+let lastSensorUpdate = 0;
 
-// Store raw and aggregated data
 let sensorDataHistory = {
-  raw: [], // Raw readings with timestamps
-  hourlyAverages: [], // Aggregated hourly averages
-  healthyRanges: { // Percentage of time in healthy range
+  raw: [],
+  hourlyAverages: [],
+  healthyRanges: {
     temperature: { inRange: 0, total: 0 },
     humidity: { inRange: 0, total: 0 },
     soilMoisture: { inRange: 0, total: 0 }
   }
 };
 
-// Healthy range thresholds
 const HEALTHY_RANGES = {
   temperature: { min: 20, max: 30 },
   humidity: { min: 50, max: 80 },
   soilMoisture: { min: 30, max: 70 }
 };
 
-// Load sensor data history from file on startup
+// Загрузка истории данных сенсоров
 async function loadSensorDataHistory() {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     sensorDataHistory = JSON.parse(data);
-    // Filter raw data to last 24 hours
     const oneDayAgo = Date.now() - 86400000;
     sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
-    // Filter hourly averages to last 24 hours
     sensorDataHistory.hourlyAverages = sensorDataHistory.hourlyAverages.filter(entry => entry.timestamp >= oneDayAgo);
     console.log(`Loaded ${sensorDataHistory.raw.length} raw entries and ${sensorDataHistory.hourlyAverages.length} hourly averages`);
   } catch (error) {
@@ -71,7 +68,7 @@ async function loadSensorDataHistory() {
   }
 }
 
-// Save sensor data history to file
+// Сохранение истории данных сенсоров
 async function saveSensorDataHistory() {
   try {
     await fs.writeFile(DATA_FILE, JSON.stringify(sensorDataHistory, null, 2));
@@ -81,12 +78,42 @@ async function saveSensorDataHistory() {
   }
 }
 
-// Compute hourly averages
+// Загрузка настроек культур
+async function loadCropSettings() {
+  try {
+    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+    cropSettings = settings.crops || cropSettings;
+    currentCrop = settings.currentCrop || 'potato';
+    console.log(`Loaded crop settings for ${Object.keys(cropSettings).length} crops, current crop: ${currentCrop}`);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log('No crop settings file found, using default settings');
+    } else {
+      console.error('Error loading crop settings:', error);
+    }
+  }
+}
+
+// Сохранение настроек культур
+async function saveCropSettings() {
+  try {
+    const dataToSave = {
+      crops: cropSettings,
+      currentCrop: currentCrop
+    };
+    await fs.writeFile(CROP_SETTINGS_FILE, JSON.stringify(dataToSave, null, 2));
+    console.log('Crop settings saved to file');
+  } catch (error) {
+    console.error('Error saving crop settings:', error);
+  }
+}
+
+// Вычисление средних значений
 function computeHourlyAverages() {
   const oneDayAgo = Date.now() - 86400000;
   const hourlyBuckets = {};
 
-  // Group raw data by hour
   sensorDataHistory.raw.forEach(entry => {
     const date = new Date(entry.timestamp);
     const hourKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}`;
@@ -98,7 +125,6 @@ function computeHourlyAverages() {
     hourlyBuckets[hourKey].soilMoisture.push(entry.soilMoisture);
   });
 
-  // Calculate averages
   sensorDataHistory.hourlyAverages = Object.keys(hourlyBuckets).map(key => {
     const bucket = hourlyBuckets[key];
     return {
@@ -110,7 +136,7 @@ function computeHourlyAverages() {
   }).filter(entry => entry.timestamp >= oneDayAgo);
 }
 
-// Update healthy range metrics
+// Обновление здоровых диапазонов
 function updateHealthyRanges({ temperature, humidity, soilMoisture }) {
   sensorDataHistory.healthyRanges.temperature.total++;
   sensorDataHistory.healthyRanges.humidity.total++;
@@ -127,8 +153,9 @@ function updateHealthyRanges({ temperature, humidity, soilMoisture }) {
   }
 }
 
-// Load data on server start
+// Загрузка данных при запуске
 loadSensorDataHistory();
+loadCropSettings();
 
 let mode = 'auto';
 
@@ -145,41 +172,41 @@ let pumpSettings = {
   pumpInterval: 240
 };
 
-// Crop settings
+// Настройки культур по умолчанию
 let cropSettings = {
   "potato": {
     name: "Potato",
     fanTemperatureThreshold: 22.0,
-    lightOnDuration: 7200000, // 2 hours
-    lightIntervalManual: 21600000, // 6 hours
+    lightOnDuration: 7200000,
+    lightIntervalManual: 21600000,
     pumpStartHour: 8,
     pumpStartMinute: 0,
     pumpDuration: 15,
-    pumpInterval: 180 // 3 hours
+    pumpInterval: 180
   },
   "carrot": {
     name: "Carrot",
     fanTemperatureThreshold: 25.0,
-    lightOnDuration: 10800000, // 3 hours
-    lightIntervalManual: 18000000, // 5 hours
+    lightOnDuration: 10800000,
+    lightIntervalManual: 18000000,
     pumpStartHour: 7,
     pumpStartMinute: 30,
     pumpDuration: 10,
-    pumpInterval: 240 // 4 hours
+    pumpInterval: 240
   },
   "tomato": {
     name: "Tomato",
     fanTemperatureThreshold: 28.0,
-    lightOnDuration: 14400000, // 4 hours
-    lightIntervalManual: 28800000, // 8 hours
+    lightOnDuration: 14400000,
+    lightIntervalManual: 28800000,
     pumpStartHour: 6,
     pumpStartMinute: 0,
     pumpDuration: 20,
-    pumpInterval: 120 // 2 hours
+    pumpInterval: 120
   }
 };
 
-let currentCrop = 'potato'; // Default crop
+let currentCrop = 'potato';
 
 app.get('/', (req, res) => {
   res.send(`
@@ -976,28 +1003,75 @@ app.get('/', (req, res) => {
     }
     
     async function applyCropSettings() {
-      const cropSelect = document.getElementById('cropSelect');
-      const selectedCrop = cropSelect.value;
+  const cropSelect = document.getElementById('cropSelect');
+  const selectedCrop = cropSelect.value;
+  
+  if (selectedCrop === 'custom') {
+    // Создание новой культуры
+    const cropKey = document.getElementById('newCropKey').value.trim();
+    const cropName = document.getElementById('newCropName').value.trim();
+    
+    if (!cropKey || !cropName) {
+      alert('Please enter both crop key and name');
+      return;
+    }
+    
+    try {
+      const response = await fetch('/addCrop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cropKey,
+          cropName,
+          fanTemperatureThreshold: document.getElementById('cropFanTemperatureThreshold').value,
+          lightOnDuration: document.getElementById('cropLightOnDuration').value,
+          lightIntervalManual: document.getElementById('cropLightIntervalManual').value,
+          pumpStartHour: document.getElementById('cropPumpStartHour').value,
+          pumpStartMinute: document.getElementById('cropPumpStartMinute').value,
+          pumpDuration: document.getElementById('cropPumpDuration').value,
+          pumpInterval: document.getElementById('cropPumpInterval').value
+        })
+      });
       
-      try {
-        const response = await fetch('/setCurrentCrop', {
+      if (response.ok) {
+        alert('New crop created successfully!');
+        // Устанавливаем новую культуру как текущую
+        await fetch('/setCurrentCrop', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ crop: selectedCrop })
+          body: JSON.stringify({ crop: cropKey })
         });
-        
-        if (response.ok) {
-          await loadCropSettings();
-          alert('Crop settings for ' + selectedCrop + ' applied successfully!');
-        } else {
-          const error = await response.json();
-          alert(error.error || 'Failed to apply crop settings');
-        }
-      } catch (error) {
-        console.error('Error applying crop settings:', error);
-        alert('Error applying crop settings');
+        loadCropSettings();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to create crop');
       }
+    } catch (error) {
+      console.error('Error creating crop:', error);
+      alert('Error creating crop');
     }
+  } else {
+    // Применение существующей культуры
+    try {
+      const response = await fetch('/setCurrentCrop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ crop: selectedCrop })
+      });
+      
+      if (response.ok) {
+        await loadCropSettings();
+        alert('Crop settings applied successfully!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to apply crop settings');
+      }
+    } catch (error) {
+      console.error('Error applying crop settings:', error);
+      alert('Error applying crop settings');
+    }
+  }
+}
     
     async function saveCropSettings() {
       const settings = {
@@ -1300,17 +1374,11 @@ document.getElementById('soilMoistureProgress').style.width = Math.min(data.soil
 </html>
 `);
 });
-
-// Serve the main page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 // API Endpoints
 app.get('/getSensorStatus', (req, res) => {
   try {
     const now = Date.now();
-    const isOnline = now - lastSensorUpdate < 30000; // 30 seconds threshold
+    const isOnline = now - lastSensorUpdate < 30000;
     res.json({ isOnline });
   } catch (error) {
     console.error('Error in /getSensorStatus:', error);
@@ -1355,13 +1423,10 @@ app.post('/updateSensorData', (req, res) => {
         soilMoisture,
         timestamp: lastSensorUpdate
       });
-      // Clean up raw data older than 24 hours
       const oneDayAgo = Date.now() - 86400000;
       sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
-      // Update hourly averages and healthy ranges
       computeHourlyAverages();
       updateHealthyRanges({ temperature, humidity, soilMoisture });
-      // Save to file
       saveSensorDataHistory();
       console.log('Sensor data updated:', sensorData);
       res.json({ success: true });
@@ -1515,12 +1580,13 @@ app.get('/getCropSettings', (req, res) => {
   }
 });
 
-app.post('/setCurrentCrop', (req, res) => {
+app.post('/setCurrentCrop', async (req, res) => {
   try {
     const { crop } = req.body;
     if (cropSettings[crop]) {
       currentCrop = crop;
       console.log('Current crop set to:', currentCrop);
+      await saveCropSettings();
       res.json({ success: true });
     } else {
       res.status(400).json({ error: 'Invalid crop selection' });
@@ -1531,11 +1597,10 @@ app.post('/setCurrentCrop', (req, res) => {
   }
 });
 
-app.post('/saveCropSettings', (req, res) => {
+app.post('/saveCropSettings', async (req, res) => {
   try {
     const settings = req.body;
     
-    // Validate settings
     if (
       typeof settings.fanTemperatureThreshold === 'number' &&
       typeof settings.lightOnDuration === 'number' && settings.lightOnDuration > 0 &&
@@ -1545,13 +1610,13 @@ app.post('/saveCropSettings', (req, res) => {
       typeof settings.pumpDuration === 'number' && settings.pumpDuration > 0 &&
       typeof settings.pumpInterval === 'number' && settings.pumpInterval > 0
     ) {
-      // Update current crop settings
       cropSettings[currentCrop] = {
         ...cropSettings[currentCrop],
         ...settings
       };
       
       console.log('Crop settings updated for', currentCrop, cropSettings[currentCrop]);
+      await saveCropSettings();
       res.json({ success: true });
     } else {
       res.status(400).json({ error: 'Invalid crop settings' });
@@ -1562,17 +1627,17 @@ app.post('/saveCropSettings', (req, res) => {
   }
 });
 
-app.post('/deleteCrop', (req, res) => {
+app.post('/deleteCrop', async (req, res) => {
   try {
-    // Don't allow deletion of default crops
     if (['potato', 'carrot', 'tomato'].includes(currentCrop)) {
       res.status(400).json({ error: 'Cannot delete default crops' });
       return;
     }
     
     delete cropSettings[currentCrop];
-    currentCrop = 'potato'; // Reset to default
+    currentCrop = 'potato';
     console.log('Crop deleted, current crop reset to potato');
+    await saveCropSettings();
     res.json({ success: true });
   } catch (error) {
     console.error('Error in /deleteCrop:', error);
@@ -1580,6 +1645,47 @@ app.post('/deleteCrop', (req, res) => {
   }
 });
 
-app.listen(port, () => {
+// Новый эндпоинт для создания культур
+app.post('/addCrop', async (req, res) => {
+  try {
+    const { cropKey, cropName, fanTemperatureThreshold, lightOnDuration, lightIntervalManual, pumpStartHour, pumpStartMinute, pumpDuration, pumpInterval } = req.body;
+    
+    if (!cropKey || !cropName) {
+      return res.status(400).json({ error: 'Crop key and name are required' });
+    }
+    
+    if (cropSettings[cropKey]) {
+      return res.status(400).json({ error: 'Crop with this key already exists' });
+    }
+    
+    cropSettings[cropKey] = {
+      name: cropName,
+      fanTemperatureThreshold: parseFloat(fanTemperatureThreshold) || 25.0,
+      lightOnDuration: parseInt(lightOnDuration) * 60000 || 7200000,
+      lightIntervalManual: parseInt(lightIntervalManual) * 60000 || 21600000,
+      pumpStartHour: parseInt(pumpStartHour) || 8,
+      pumpStartMinute: parseInt(pumpStartMinute) || 0,
+      pumpDuration: parseInt(pumpDuration) || 15,
+      pumpInterval: parseInt(pumpInterval) || 180
+    };
+    
+    currentCrop = cropKey;
+    await saveCropSettings();
+    console.log('New crop added:', cropKey, cropSettings[cropKey]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error in /addCrop:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Serve the main page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(port, async () => {
+  await loadSensorDataHistory();
+  await loadCropSettings();
   console.log(`Server running on port ${port}`);
 });
