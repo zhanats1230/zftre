@@ -1,0 +1,35 @@
+{
+  "crops": {
+    "potato": {
+      "name": "Potato",
+      "fanTemperatureThreshold": 22,
+      "lightOnDuration": 7200000,
+      "lightIntervalManual": 21600000,
+      "pumpStartHour": 8,
+      "pumpStartMinute": 0,
+      "pumpDuration": 15,
+      "pumpInterval": 180
+    },
+    "carrot": {
+      "name": "Carrot",
+      "fanTemperatureThreshold": 25,
+      "lightOnDuration": 10800000,
+      "lightIntervalManual": 18000000,
+      "pumpStartHour": 7,
+      "pumpStartMinute": 30,
+      "pumpDuration": 10,
+      "pumpInterval": 240
+    },
+    "tomato": {
+      "name": "Tomato",
+      "fanTemperatureThreshold": 28,
+      "lightOnDuration": 14400000,
+      "lightIntervalManual": 28800000,
+      "pumpStartHour": 6,
+      "pumpStartMinute": 0,
+      "pumpDuration": 20,
+      "pumpInterval": 120
+    }
+  },
+  "currentCrop": "potato"
+}
