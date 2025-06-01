@@ -1699,7 +1699,7 @@ app.get('/getSensorStatus', (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-/ Новый эндпоинт для получения истории данных
+// Новый эндпоинт для получения истории данных
 app.get('/getSensorHistory', (req, res) => {
   try {
     const oneDayAgo = Date.now() - 86400000;
