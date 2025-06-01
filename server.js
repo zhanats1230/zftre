@@ -111,7 +111,7 @@ async function saveCropSettings() {
   }
 }
 
-/ Вычисление средних значений (улучшенная версия)
+// Вычисление средних значений (улучшенная версия)
 function computeHourlyAverages() {
   const oneDayAgo = Date.now() - 86400000;
   const hourlyBuckets = {};
