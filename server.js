@@ -7,7 +7,7 @@ const port = 80;
 
 // Paths to store data
 const DATA_FILE = 'sensorDataHistory.json';
-const CROP_SETTINGS_FILE = 'cropSettings.json'; // Новый файл для настроек культур
+const CROP_SETTINGS_FILE = 'cropSettings.json';
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -86,12 +86,14 @@ async function loadCropSettings() {
     cropSettings = settings.crops || cropSettings;
     currentCrop = settings.currentCrop || 'potato';
     console.log(`Loaded crop settings for ${Object.keys(cropSettings).length} crops, current crop: ${currentCrop}`);
+    return cropSettings;
   } catch (error) {
     if (error.code === 'ENOENT') {
       console.log('No crop settings file found, using default settings');
     } else {
       console.error('Error loading crop settings:', error);
     }
+    return cropSettings;
   }
 }
 
@@ -980,34 +982,98 @@ app.get('/', (req, res) => {
     document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
     document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
 
-    // Crop Management Functions
-    async function loadCropSettings() {
-      try {
-        const response = await fetch('/getCropSettings');
-        const data = await response.json();
-        document.getElementById('currentCropName').textContent = data.currentCrop.name;
-        
-        // Fill crop editor form
-        document.getElementById('cropFanTemperatureThreshold').value = data.currentCrop.fanTemperatureThreshold;
-        document.getElementById('cropLightOnDuration').value = data.currentCrop.lightOnDuration / 60000;
-        document.getElementById('cropLightIntervalManual').value = data.currentCrop.lightIntervalManual / 60000;
-        document.getElementById('cropPumpStartHour').value = data.currentCrop.pumpStartHour;
-        document.getElementById('cropPumpStartMinute').value = data.currentCrop.pumpStartMinute;
-        document.getElementById('cropPumpDuration').value = data.currentCrop.pumpDuration;
-        document.getElementById('cropPumpInterval').value = data.currentCrop.pumpInterval;
-        
-        console.log('Crop settings loaded:', data);
-      } catch (error) {
-        console.error('Error loading crop settings:', error);
-      }
-    }
+    let globalCropSettings = null;
+
+async function loadCropSettings() {
+  try {
+    const response = await fetch('/getCropSettings');
+    const data = await response.json();
+    document.getElementById('currentCropName').textContent = data.currentCrop.name;
     
-    async function applyCropSettings() {
+    // Fill crop editor form
+    document.getElementById('cropFanTemperatureThreshold').value = data.currentCrop.fanTemperatureThreshold;
+    document.getElementById('cropLightOnDuration').value = data.currentCrop.lightOnDuration / 60000;
+    document.getElementById('cropLightIntervalManual').value = data.currentCrop.lightIntervalManual / 60000;
+    document.getElementById('cropPumpStartHour').value = data.currentCrop.pumpStartHour;
+    document.getElementById('cropPumpStartMinute').value = data.currentCrop.pumpStartMinute;
+    document.getElementById('cropPumpDuration').value = data.currentCrop.pumpDuration;
+    document.getElementById('cropPumpInterval').value = data.currentCrop.pumpInterval;
+    
+    globalCropSettings = data;
+    console.log('Crop settings loaded:', data);
+    return data;
+  } catch (error) {
+    console.error('Error loading crop settings:', error);
+    return null;
+  }
+}
+
+function updateCropDropdown(cropData) {
+  const cropSelect = document.getElementById('cropSelect');
+  const customFields = document.getElementById('customCropFields');
+  
+  if (!cropSelect) return;
+  
+  // Save current value
+  const currentValue = cropSelect.value;
+  
+  // Clear dropdown
+  cropSelect.innerHTML = '';
+  
+  // Add existing crops
+  if (cropData && cropData.availableCrops) {
+    Object.keys(cropData.availableCrops).forEach(key => {
+      const crop = cropData.availableCrops[key];
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = crop.name;
+      cropSelect.appendChild(option);
+    });
+  }
+  
+  // Add "Custom Crop" option
+  const customOption = document.createElement('option');
+  customOption.value = 'custom';
+  customOption.textContent = 'Custom Crop...';
+  cropSelect.appendChild(customOption);
+  
+  // Restore selection
+  if (cropData && cropData.currentCropKey) {
+    cropSelect.value = cropData.currentCropKey;
+  } else if (currentValue) {
+    cropSelect.value = currentValue;
+  }
+  
+  // Show/hide custom fields
+  if (cropSelect.value === 'custom') {
+    customFields.classList.remove('hidden');
+  } else {
+    customFields.classList.add('hidden');
+  }
+}
+
+async function initializeApp() {
+  switchTab('dashboard');
+  initializeCharts();
+  updateRelayState();
+  updateSensorData();
+  updateMode();
+  updateSettings();
+  checkConnection();
+  
+  // Load crop settings and update dropdown
+  const cropData = await loadCropSettings();
+  updateCropDropdown(cropData);
+  
+  // ... остальные инициализации ...
+}
+
+async function applyCropSettings() {
   const cropSelect = document.getElementById('cropSelect');
   const selectedCrop = cropSelect.value;
   
   if (selectedCrop === 'custom') {
-    // Создание новой культуры
+    // Create new crop
     const cropKey = document.getElementById('newCropKey').value.trim();
     const cropName = document.getElementById('newCropName').value.trim();
     
@@ -1035,13 +1101,9 @@ app.get('/', (req, res) => {
       
       if (response.ok) {
         alert('New crop created successfully!');
-        // Устанавливаем новую культуру как текущую
-        await fetch('/setCurrentCrop', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ crop: cropKey })
-        });
-        loadCropSettings();
+        // Reload and update dropdown
+        const cropData = await loadCropSettings();
+        updateCropDropdown(cropData);
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to create crop');
@@ -1051,7 +1113,7 @@ app.get('/', (req, res) => {
       alert('Error creating crop');
     }
   } else {
-    // Применение существующей культуры
+    // Apply existing crop
     try {
       const response = await fetch('/setCurrentCrop', {
         method: 'POST',
@@ -1072,6 +1134,16 @@ app.get('/', (req, res) => {
     }
   }
 }
+
+// Добавьте этот обработчик в initializeApp
+document.getElementById('cropSelect').addEventListener('change', function() {
+  const customFields = document.getElementById('customCropFields');
+  if (this.value === 'custom') {
+    customFields.classList.remove('hidden');
+  } else {
+    customFields.classList.add('hidden');
+  }
+});
     
     async function saveCropSettings() {
       const settings = {
@@ -1571,8 +1643,9 @@ app.post('/updateLightingSettings', (req, res) => {
 app.get('/getCropSettings', (req, res) => {
   try {
     res.json({
+      currentCropKey: currentCrop,
       currentCrop: cropSettings[currentCrop],
-      availableCrops: Object.keys(cropSettings)
+      availableCrops: cropSettings
     });
   } catch (error) {
     console.error('Error in /getCropSettings:', error);
@@ -1645,7 +1718,6 @@ app.post('/deleteCrop', async (req, res) => {
   }
 });
 
-// Новый эндпоинт для создания культур
 app.post('/addCrop', async (req, res) => {
   try {
     const { cropKey, cropName, fanTemperatureThreshold, lightOnDuration, lightIntervalManual, pumpStartHour, pumpStartMinute, pumpDuration, pumpInterval } = req.body;
@@ -1677,11 +1749,6 @@ app.post('/addCrop', async (req, res) => {
     console.error('Error in /addCrop:', error);
     res.status(500).json({ error: 'Server error' });
   }
-});
-
-// Serve the main page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(port, async () => {
