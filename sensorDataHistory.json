@@ -1,0 +1,9 @@
+{
+  "raw": [],
+  "hourlyAverages": [],
+  "healthyRanges": {
+    "temperature": { "inRange": 0, "total": 0 },
+    "humidity": { "inRange": 0, "total": 0 },
+    "soilMoisture": { "inRange": 0, "total": 0 }
+  }
+}
