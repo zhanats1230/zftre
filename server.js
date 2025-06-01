@@ -159,14 +159,11 @@ app.get('/getSensorHistory', (req, res) => {
   try {
     const oneDayAgo = Date.now() - 86400000;
     
-    // Используем часовые средние для графика
-    const hourlyAverages = sensorDataHistory.hourlyAverages.filter(
-      entry => entry.timestamp >= oneDayAgo
-    );
-    
     res.json({
-    hourlyAverages: sensorDataHistory.hourlyAverages,
-    healthyRanges: HEALTHY_RANGES // Исправлено
+      hourlyAverages: sensorDataHistory.hourlyAverages.filter(
+        entry => entry.timestamp >= oneDayAgo
+      ),
+      healthyRanges: HEALTHY_RANGES
     });
   } catch (error) {
     console.error('Error in /getSensorHistory:', error);
@@ -954,6 +951,7 @@ app.get('/', (req, res) => {
       if (logoutButton) {
         logoutButton.addEventListener('click', handleLogout);
       }
+      initializeCharts();
     });
 
     const tabs = {
@@ -1391,7 +1389,7 @@ async function initializeApp() {
   const cropData = await loadCropSettings();
   updateCropDropdown(cropData);
   
-  document.getElementById('closeTempModal').addEventListener('click', () => toggleModal('tempModal', false));
+document.getElementById('closeTempModal').addEventListener('click', () => toggleModal('tempModal', false));
 document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
 document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
 }
