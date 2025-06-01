@@ -1231,7 +1231,7 @@ app.get('/', (req, res) => {
           maxHealthy
         };
       } catch (error) {
-        console.error(`Error loading ${sensorType} data:`, error);
+        console.error("Error loading " + sensorType + " data:", error);
         return { labels: [], values: [], minHealthy: [], maxHealthy: [] };
       }
     }
