@@ -165,8 +165,8 @@ app.get('/getSensorHistory', (req, res) => {
     );
     
     res.json({
-      hourlyAverages,
-      healthyRanges: HEALTHY_RANGES
+    hourlyAverages: sensorDataHistory.hourlyAverages,
+    healthyRanges: HEALTHY_RANGES // Исправлено
     });
   } catch (error) {
     console.error('Error in /getSensorHistory:', error);
@@ -255,7 +255,7 @@ app.get('/', (req, res) => {
   <title>Greenhouse Control</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     body {
       background: linear-gradient(to bottom, #f9fafb, #e5e7eb);
@@ -980,11 +980,20 @@ app.get('/', (req, res) => {
 
    let tempChart, humidityChart, soilMoistureChart;
     
-    // Форматирование даты для подписей
-    function formatTime(timestamp) {
-      const date = new Date(timestamp);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
+    // Добавьте эти функции в клиентский скрипт
+function toggleModal(modalId, show) {
+  const modal = document.getElementById(modalId);
+  if (show) {
+    modal.classList.remove('hidden');
+  } else {
+    modal.classList.add('hidden');
+  }
+}
+
+function formatTime(timestamp) {
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
     
     // Инициализация графиков
     function initializeCharts() {
@@ -1099,7 +1108,13 @@ app.get('/', (req, res) => {
         options: getChartOptions('Soil Moisture (%)')
       });
     }
-    
+    // Добавьте эту функцию в клиентский скрипт
+function createGradient(ctx, color1, color2) {
+  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  gradient.addColorStop(0, color1);
+  gradient.addColorStop(1, color2);
+  return gradient;
+}
     // Создание градиента для заливки графика
     function createGradient(ctx, color1, color2) {
       const gradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -1376,7 +1391,9 @@ async function initializeApp() {
   const cropData = await loadCropSettings();
   updateCropDropdown(cropData);
   
-  // ... остальные инициализации ...
+  document.getElementById('closeTempModal').addEventListener('click', () => toggleModal('tempModal', false));
+document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
+document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
 }
 
 async function applyCropSettings() {
@@ -1585,7 +1602,8 @@ document.getElementById('soilMoistureProgress').style.width = Math.min(data.soil
         console.error('Error fetching sensor data:', error);
       }
     }
-
+  // Добавьте в начало клиентского скрипта
+  const maxDataPoints = 20; // Максимальное количество точек данных для графиков
     function updateChartData(sensor, timestamp, value) {
       const key = sensor + 'Data';
       let storedData = JSON.parse(localStorage.getItem(key)) || { labels: [], values: [] };
