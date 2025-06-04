@@ -90,12 +90,21 @@ async function loadCropSettings() {
   try {
     const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
     const settings = JSON.parse(data);
+    
+    // Сохраняем загруженные настройки в глобальные переменные
     cropSettings = settings.crops || cropSettings;
     currentCrop = settings.currentCrop || 'potato';
     
     console.log(`Loaded crop settings for ${Object.keys(cropSettings).length} crops, current crop: ${currentCrop}`);
+    
+    // Возвращаем данные для клиента
+    return {
+      currentCropKey: currentCrop,
+      availableCrops: cropSettings
+    };
   } catch (error) {
     console.error('Error loading crop settings:', error);
+    // Возвращаем значения по умолчанию при ошибке
     return {
       currentCropKey: currentCrop,
       availableCrops: cropSettings
@@ -1064,9 +1073,12 @@ function updateCropDropdown(cropData) {
   const customFields = document.getElementById('customCropFields');
   if (!cropSelect) return;
   
+  // Сохраняем текущее выбранное значение
+  const currentValue = cropSelect.value;
+  
   cropSelect.innerHTML = '';
   
-  // Добавляем все культуры из полученных данных
+  // Добавляем все культуры
   Object.keys(cropData.availableCrops).forEach(key => {
     const option = document.createElement('option');
     option.value = key;
@@ -1080,16 +1092,25 @@ function updateCropDropdown(cropData) {
   customOption.textContent = 'Custom Crop...';
   cropSelect.appendChild(customOption);
   
-  // Устанавливаем текущую культуру
-  cropSelect.value = cropData.currentCropKey || 'potato';
+  // Восстанавливаем выбранное значение или устанавливаем текущую культуру
+  if (cropData.availableCrops[currentValue]) {
+    cropSelect.value = currentValue;
+  } else {
+    cropSelect.value = cropData.currentCropKey || 'potato';
+  }
   
-  // Обновляем отображение полей для кастомной культуры
+  // Обновляем имя текущей культуры
+  document.getElementById('currentCropName').textContent = 
+    cropData.availableCrops[cropSelect.value]?.name || cropSelect.value;
+  
+  // Управляем видимостью полей для кастомной культуры
   if (cropSelect.value === 'custom') {
     customFields.classList.remove('hidden');
   } else {
     customFields.classList.add('hidden');
   }
 }
+
 
 async function applyCropSettings() {
   const cropSelect = document.getElementById('cropSelect');
@@ -1168,7 +1189,7 @@ async function initializeApp() {
     updateSettings();
     checkConnection();
     
-    // Загружаем настройки культур и обновляем выпадающий список
+    // Загрузка настроек культур и обновление выпадающего списка
     const cropData = await loadCropSettings();
     updateCropDropdown(cropData);
     
@@ -1300,7 +1321,10 @@ document.getElementById('cropSelect').addEventListener('change', function() {
         });
         
         if (response.ok) {
-          alert('Crop settings saved successfully!');
+           alert('Crop settings saved successfully!');
+    // Обновляем данные и UI
+    const cropData = await loadCropSettings();
+    updateCropDropdown(cropData);
           await loadCropSettings();
         } else {
           const error = await response.json();
