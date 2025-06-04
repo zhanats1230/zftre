@@ -5,6 +5,13 @@ const path = require('path');
 const app = express();
 const port = 80;
 
+const { Octokit } = require("@octokit/rest");
+const octokit = new Octokit({ 
+  auth: process.env.GITHUB_TOKEN 
+});
+const REPO_OWNER = "zhanats1230";
+const REPO_NAME = "ваш_репозиторий";
+
 // Paths to store data
 const DATA_FILE = 'sensorDataHistory.json';
 const CROP_SETTINGS_FILE = 'cropSettings.json';
@@ -104,10 +111,37 @@ async function saveCropSettings() {
       crops: cropSettings,
       currentCrop: currentCrop
     };
-    await fs.writeFile(CROP_SETTINGS_FILE, JSON.stringify(dataToSave, null, 2));
-    console.log('Crop settings saved to file');
+    const content = JSON.stringify(dataToSave, null, 2);
+    
+    // Сохраняем локально
+    await fs.writeFile(CROP_SETTINGS_FILE, content);
+    
+    // Сохраняем в GitHub
+    await octokit.repos.createOrUpdateFileContents({
+      owner: REPO_OWNER,
+      repo: REPO_NAME,
+      path: CROP_SETTINGS_FILE,
+      message: "Update crop settings",
+      content: Buffer.from(content).toString('base64'),
+      sha: await getFileSha(CROP_SETTINGS_FILE)
+    });
+    
+    console.log('Crop settings saved to file and GitHub');
   } catch (error) {
     console.error('Error saving crop settings:', error);
+  }
+}
+
+async function getFileSha(filePath) {
+  try {
+    const { data } = await octokit.repos.getContent({
+      owner: REPO_OWNER,
+      repo: REPO_NAME,
+      path: filePath
+    });
+    return data.sha;
+  } catch (error) {
+    return null; // Файл не существует
   }
 }
 
@@ -635,6 +669,9 @@ app.get('/', (req, res) => {
           </div>
           <div class="flex justify-end">
             <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Apply Crop Settings</button>
+            <button id="deleteCrop" class="logout-btn ripple-btn">
+  <i class="fa-solid fa-trash mr-2"></i> Delete Crop
+</button>
           </div>
         </div>
       </div>
@@ -855,6 +892,26 @@ app.get('/', (req, res) => {
       }
     }
 
+document.getElementById('deleteCrop').addEventListener('click', async () => {
+  if (confirm('Are you sure you want to delete the current crop? This action cannot be undone.')) {
+    try {
+      const response = await fetch('/deleteCrop', { method: 'POST' });
+      if (response.ok) {
+        alert('Crop deleted successfully!');
+        const cropData = await loadCropSettings();
+        updateCropDropdown(cropData);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to delete crop');
+      }
+    } catch (error) {
+      console.error('Error deleting crop:', error);
+      alert('Error deleting crop');
+    }
+  }
+});
+
+
     // Check login status on page load
     document.addEventListener('DOMContentLoaded', () => {
       console.log('DOM fully loaded');
@@ -986,25 +1043,36 @@ app.get('/', (req, res) => {
 
 async function loadCropSettings() {
   try {
-    const response = await fetch('/getCropSettings');
-    const data = await response.json();
-    document.getElementById('currentCropName').textContent = data.currentCrop.name;
+    // Пробуем загрузить из GitHub
+    const { data } = await octokit.repos.getContent({
+      owner: REPO_OWNER,
+      repo: REPO_NAME,
+      path: CROP_SETTINGS_FILE
+    });
     
-    // Fill crop editor form
-    document.getElementById('cropFanTemperatureThreshold').value = data.currentCrop.fanTemperatureThreshold;
-    document.getElementById('cropLightOnDuration').value = data.currentCrop.lightOnDuration / 60000;
-    document.getElementById('cropLightIntervalManual').value = data.currentCrop.lightIntervalManual / 60000;
-    document.getElementById('cropPumpStartHour').value = data.currentCrop.pumpStartHour;
-    document.getElementById('cropPumpStartMinute').value = data.currentCrop.pumpStartMinute;
-    document.getElementById('cropPumpDuration').value = data.currentCrop.pumpDuration;
-    document.getElementById('cropPumpInterval').value = data.currentCrop.pumpInterval;
+    const content = Buffer.from(data.content, 'base64').toString('utf8');
+    const settings = JSON.parse(content);
     
-    globalCropSettings = data;
-    console.log('Crop settings loaded:', data);
-    return data;
+    // Сохраняем локально
+    await fs.writeFile(CROP_SETTINGS_FILE, content);
+    
+    cropSettings = settings.crops || cropSettings;
+    currentCrop = settings.currentCrop || 'potato';
+    console.log("Loaded crop settings from GitHub for " + Object.keys(cropSettings).length + " crops");
+    return cropSettings;
   } catch (error) {
-    console.error('Error loading crop settings:', error);
-    return null;
+    console.log('Loading from local file...');
+    try {
+      const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
+      const settings = JSON.parse(data);
+      cropSettings = settings.crops || cropSettings;
+      currentCrop = settings.currentCrop || 'potato';
+      console.log("Loaded crop settings from file for " + Object.keys(cropSettings).length + " crops");
+      return cropSettings;
+    } catch (err) {
+      console.log('Using default crop settings');
+      return cropSettings;
+    }
   }
 }
 
@@ -1709,8 +1777,9 @@ app.post('/deleteCrop', async (req, res) => {
     
     delete cropSettings[currentCrop];
     currentCrop = 'potato';
-    console.log('Crop deleted, current crop reset to potato');
-    await saveCropSettings();
+    
+    await saveCropSettings(); // Сохраняем в GitHub
+    
     res.json({ success: true });
   } catch (error) {
     console.error('Error in /deleteCrop:', error);
