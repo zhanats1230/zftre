@@ -85,31 +85,7 @@ async function saveSensorDataHistory() {
   }
 }
 
-// Загрузка настроек культур
-// Загрузка настроек культур (СЕРВЕРНАЯ ФУНКЦИЯ)
-async function loadCropSettings() {
-  try {
-    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
-    const parsedData = JSON.parse(data);
-    cropSettings = parsedData.crops || {};
-    currentCrop = parsedData.currentCrop || 'potato';
-    console.log('Loaded crop settings:', parsedData);
-    return {
-      currentCropKey: currentCrop,
-      availableCrops: cropSettings
-    };
-  } catch (error) {
-    console.error('Error loading crop settings:', error);
-    return {
-      currentCropKey: 'potato',
-      availableCrops: {
-        potato: { name: "Potato" },
-        carrot: { name: "Carrot" },
-        tomato: { name: "Tomato" }
-      }
-    };
-  }
-}
+
 
 // Эндпоинт для получения настроек культур
 app.get('/getCropSettings', (req, res) => {
@@ -1070,40 +1046,41 @@ async function loadCropSettings() {
   try {
     const response = await fetch('/getCropSettings');
     if (response.ok) {
-      return await response.json();
+      const data = await response.json();
+      console.log('Loaded crop settings:', data);
+      return data;
     } else {
       console.error('Error loading crop settings:', response.status);
-      return {};
+      return {
+        currentCropKey: 'potato',
+        availableCrops: {}
+      };
     }
   } catch (error) {
     console.error('Error loading crop settings:', error);
-    return {};
+    return {
+      currentCropKey: 'potato',
+      availableCrops: {}
+    };
   }
 }
 
 async function updateCropDropdown(cropData) {
   const cropSelect = document.getElementById('cropSelect');
-  if (!cropSelect) {
-    console.error('cropSelect element not found');
-    return;
-  }
-
-  // Сохраняем текущее выбранное значение
-  const currentValue = cropSelect.value || cropData.currentCropKey;
+  if (!cropSelect) return;
 
   // Очищаем существующие опции
   cropSelect.innerHTML = '';
 
-  // Проверяем, что данные корректны
-  const crops = cropData.availableCrops || {};
-  console.log('Updating crop dropdown with crops:', crops);
-
   // Добавляем все культуры из данных
+  const crops = cropData.availableCrops || {};
   for (const [key, crop] of Object.entries(crops)) {
     const option = document.createElement('option');
     option.value = key;
-    option.textContent = crop.name || key; // Используем имя или ключ
-    option.selected = (key === currentValue || key === cropData.currentCropKey);
+    option.textContent = crop.name || key;
+    if (key === cropData.currentCropKey) {
+      option.selected = true;
+    }
     cropSelect.appendChild(option);
   }
 
@@ -1111,9 +1088,6 @@ async function updateCropDropdown(cropData) {
   const customOption = document.createElement('option');
   customOption.value = 'custom';
   customOption.textContent = 'Custom Crop...';
-  if (currentValue === 'custom') {
-    customOption.selected = true;
-  }
   cropSelect.appendChild(customOption);
 
   // Обновляем имя текущей культуры
@@ -1230,7 +1204,7 @@ async function initializeApp() {
     
     // Загрузка настроек культур и обновление выпадающего списка
     const cropData = await loadCropSettings();
-    await updateCropDropdown(cropData);
+    updateCropDropdown(cropData);
 
     // Инициализация обработчиков событий
     document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
