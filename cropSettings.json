@@ -29,7 +29,17 @@
       "pumpStartMinute": 0,
       "pumpDuration": 20,
       "pumpInterval": 120
+    },
+    "цук": {
+      "name": "wer",
+      "fanTemperatureThreshold": 22.6,
+      "lightOnDuration": 7200000,
+      "lightIntervalManual": 21600000,
+      "pumpStartHour": 8,
+      "pumpStartMinute": 0,
+      "pumpDuration": 15,
+      "pumpInterval": 180
     }
   },
-  "currentCrop": "potato"
+  "currentCrop": "цук"
 }
