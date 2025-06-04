@@ -1081,43 +1081,47 @@ async function loadCropSettings() {
 }
 
 async function updateCropDropdown(cropData) {
-  const cropSelect = document.getElementById('cropSelect');
-  if (!cropSelect) return;
-
-  // Очищаем существующие опции
-  cropSelect.innerHTML = '';
-
-  // Добавляем все культуры из данных
-  const crops = cropData.availableCrops || {};
-  for (const [key, crop] of Object.entries(crops)) {
-    const option = document.createElement('option');
-    option.value = key;
-    option.textContent = crop.name || key;
-    if (key === cropData.currentCropKey) {
-      option.selected = true;
+      const cropSelect = document.getElementById('cropSelect');
+      if (!cropSelect) return;
+      
+      // Сохраняем текущее выбранное значение
+      const currentValue = cropSelect.value;
+      
+      // Очищаем существующие опции
+      cropSelect.innerHTML = '';
+      
+      // Добавляем все культуры из данных
+      const crops = cropData.availableCrops || {};
+      for (const [key, crop] of Object.entries(crops)) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = crop.name || key;
+        cropSelect.appendChild(option);
+      }
+      
+      // Добавляем опцию для создания новой культуры
+      const customOption = document.createElement('option');
+      customOption.value = 'custom';
+      customOption.textContent = 'Custom Crop...';
+      cropSelect.appendChild(customOption);
+      
+      // Восстанавливаем выбранное значение
+      cropSelect.value = currentValue || cropData.currentCropKey || 'potato';
+      
+      // Обновляем имя текущей культуры
+      const currentCropName = crops[cropData.currentCropKey]?.name || cropData.currentCropKey || 'Unknown';
+      const currentCropElement = document.getElementById('currentCropName');
+      if (currentCropElement) {
+        currentCropElement.textContent = currentCropName;
+      }
+      
+      // Показываем/скрываем поля для кастомной культуры
+      const customFields = document.getElementById('customCropFields');
+      if (customFields) {
+        customFields.classList.toggle('hidden', cropSelect.value !== 'custom');
+      }
     }
-    cropSelect.appendChild(option);
-  }
-
-  // Добавляем опцию для создания новой культуры
-  const customOption = document.createElement('option');
-  customOption.value = 'custom';
-  customOption.textContent = 'Custom Crop...';
-  cropSelect.appendChild(customOption);
-
-  // Обновляем имя текущей культуры
-  const currentCropName = crops[cropData.currentCropKey]?.name || cropData.currentCropKey || 'Unknown';
-  const currentCropElement = document.getElementById('currentCropName');
-  if (currentCropElement) {
-    currentCropElement.textContent = currentCropName;
-  }
-
-  // Показываем/скрываем поля для кастомной культуры
-  const customFields = document.getElementById('customCropFields');
-  if (customFields) {
-    customFields.classList.toggle('hidden', cropSelect.value !== 'custom');
-  }
-}
+    
 // Клиентская функция для загрузки настроек
 async function loadCropSettings() {
   try {
