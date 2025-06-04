@@ -88,26 +88,38 @@ async function saveSensorDataHistory() {
 // Загрузка настроек культур
 async function loadCropSettings() {
   try {
-    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
-    const settings = JSON.parse(data);
-    
-    // Сохраняем загруженные настройки в глобальные переменные
-    cropSettings = settings.crops || cropSettings;
-    currentCrop = settings.currentCrop || 'potato';
-    
-    console.log(`Loaded crop settings for ${Object.keys(cropSettings).length} crops, current crop: ${currentCrop}`);
-    
-    // Возвращаем данные для клиента
-    return {
-      currentCropKey: currentCrop,
-      availableCrops: cropSettings
-    };
+    const response = await fetch('/getCropSettings');
+    if (response.ok) {
+      const data = await response.json();
+      // Всегда возвращаем полные данные о культурах
+      return {
+        currentCropKey: data.currentCropKey || 'potato',
+        availableCrops: data.availableCrops || {
+          potato: { name: "Potato" },
+          carrot: { name: "Carrot" },
+          tomato: { name: "Tomato" }
+        }
+      };
+    } else {
+      console.error('Error loading crop settings:', response.status);
+      return {
+        currentCropKey: 'potato',
+        availableCrops: {
+          potato: { name: "Potato" },
+          carrot: { name: "Carrot" },
+          tomato: { name: "Tomato" }
+        }
+      };
+    }
   } catch (error) {
     console.error('Error loading crop settings:', error);
-    // Возвращаем значения по умолчанию при ошибке
     return {
-      currentCropKey: currentCrop,
-      availableCrops: cropSettings
+      currentCropKey: 'potato',
+      availableCrops: {
+        potato: { name: "Potato" },
+        carrot: { name: "Carrot" },
+        tomato: { name: "Tomato" }
+      }
     };
   }
 }
@@ -1078,11 +1090,12 @@ function updateCropDropdown(cropData) {
   
   cropSelect.innerHTML = '';
   
-  // Добавляем все культуры
+  // Добавляем все культуры из полученных данных
   Object.keys(cropData.availableCrops).forEach(key => {
     const option = document.createElement('option');
     option.value = key;
-    option.textContent = cropData.availableCrops[key].name;
+    option.textContent = cropData.availableCrops[key].name || key;
+    option.selected = (key === cropData.currentCropKey);
     cropSelect.appendChild(option);
   });
   
@@ -1090,18 +1103,12 @@ function updateCropDropdown(cropData) {
   const customOption = document.createElement('option');
   customOption.value = 'custom';
   customOption.textContent = 'Custom Crop...';
+  customOption.selected = (cropSelect.value === 'custom');
   cropSelect.appendChild(customOption);
   
-  // Восстанавливаем выбранное значение или устанавливаем текущую культуру
-  if (cropData.availableCrops[currentValue]) {
-    cropSelect.value = currentValue;
-  } else {
-    cropSelect.value = cropData.currentCropKey || 'potato';
-  }
-  
   // Обновляем имя текущей культуры
-  document.getElementById('currentCropName').textContent = 
-    cropData.availableCrops[cropSelect.value]?.name || cropSelect.value;
+  const currentCropName = cropData.availableCrops[cropData.currentCropKey]?.name || cropData.currentCropKey;
+  document.getElementById('currentCropName').textContent = currentCropName;
   
   // Управляем видимостью полей для кастомной культуры
   if (cropSelect.value === 'custom') {
@@ -1110,6 +1117,7 @@ function updateCropDropdown(cropData) {
     customFields.classList.add('hidden');
   }
 }
+
 
 
 async function applyCropSettings() {
@@ -1209,9 +1217,9 @@ async function initializeApp() {
     customFields.classList.remove('hidden');
   } else {
     customFields.classList.add('hidden');
-    // Обновляем отображаемое имя текущей культуры
-    document.getElementById('currentCropName').textContent = 
-      this.options[this.selectedIndex].text;
+    // Обновляем отображаемое имя при выборе существующей культуры
+    const selectedOption = this.options[this.selectedIndex];
+    document.getElementById('currentCropName').textContent = selectedOption.text;
   }
 });
 
