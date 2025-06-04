@@ -49,7 +49,17 @@
       "pumpStartMinute": 0,
       "pumpDuration": 15,
       "pumpInterval": 180
+    },
+    "ыва": {
+      "name": "ыва",
+      "fanTemperatureThreshold": 22,
+      "lightOnDuration": 7200000,
+      "lightIntervalManual": 21600000,
+      "pumpStartHour": 8,
+      "pumpStartMinute": 0,
+      "pumpDuration": 15,
+      "pumpInterval": 180
     }
   },
-  "currentCrop": "eert"
+  "currentCrop": "ыва"
 }
