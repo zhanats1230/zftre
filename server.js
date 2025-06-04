@@ -1231,26 +1231,25 @@ async function initializeApp() {
     document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
     
     document.getElementById('cropSelect').addEventListener('change', function() {
-  const customFields = document.getElementById('customCropFields');
-  if (this.value === 'custom') {
-    customFields.classList.remove('hidden');
-  } else {
-    customFields.classList.add('hidden');
-    // Обновляем отображаемое имя при выборе существующей культуры
-    const selectedOption = this.options[this.selectedIndex];
-    document.getElementById('currentCropName').textContent = selectedOption.text;
-  }
-});
+      const customFields = document.getElementById('customCropFields');
+      if (this.value === 'custom') {
+        customFields.classList.remove('hidden');
+      } else {
+        customFields.classList.add('hidden');
+        // Обновляем отображаемое имя при выборе существующей культуры
+        const selectedOption = this.options[this.selectedIndex];
+        document.getElementById('currentCropName').textContent = selectedOption.text;
+      }
+    });
 
     setInterval(updateSensorData, 5000);
     setInterval(updateRelayState, 5000);
     setInterval(updateMode, 5000);
     setInterval(checkConnection, 10000);
-  try {
-    const cropData = await loadCropSettings();
-    updateCropDropdown(cropData);
   } catch (error) {
-    console.error('Error loading crop settings:', error);
+    console.error('Error initializing app:', error);
+    // Optional: Show a user-friendly error message
+    alert('Failed to initialize the application. Please refresh the page.');
   }
 }
 
