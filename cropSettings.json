@@ -39,7 +39,17 @@
       "pumpStartMinute": 0,
       "pumpDuration": 15,
       "pumpInterval": 180
+    },
+    "eert": {
+      "name": "wer",
+      "fanTemperatureThreshold": 23,
+      "lightOnDuration": 7200000,
+      "lightIntervalManual": 21600000,
+      "pumpStartHour": 8,
+      "pumpStartMinute": 0,
+      "pumpDuration": 15,
+      "pumpInterval": 180
     }
   },
-  "currentCrop": "цук"
+  "currentCrop": "eert"
 }
