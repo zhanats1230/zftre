@@ -127,6 +127,9 @@ async function saveCropSettings() {
       });
       console.log('Crop settings saved to file and GitHub');
     }
+    // После успешного сохранения обновляем данные
+    const cropData = await loadCropSettings();
+    updateCropDropdown(cropData);
   } catch (error) {
     console.error('Error saving crop settings:', error);
   }
@@ -1061,12 +1064,9 @@ function updateCropDropdown(cropData) {
   const customFields = document.getElementById('customCropFields');
   if (!cropSelect) return;
   
-  // Удаляем дублирующий код добавления опции "Custom Crop..."
-  // Оставляем только один блок добавления
-  
   cropSelect.innerHTML = '';
   
-  // Добавляем все культуры
+  // Добавляем все культуры из полученных данных
   Object.keys(cropData.availableCrops).forEach(key => {
     const option = document.createElement('option');
     option.value = key;
@@ -1074,7 +1074,7 @@ function updateCropDropdown(cropData) {
     cropSelect.appendChild(option);
   });
   
-  // Добавляем опцию для кастомной культуры (ОДИН РАЗ)
+  // Добавляем опцию для кастомной культуры
   const customOption = document.createElement('option');
   customOption.value = 'custom';
   customOption.textContent = 'Custom Crop...';
@@ -1083,7 +1083,7 @@ function updateCropDropdown(cropData) {
   // Устанавливаем текущую культуру
   cropSelect.value = cropData.currentCropKey || 'potato';
   
-  // Управляем видимостью полей для кастомной культуры
+  // Обновляем отображение полей для кастомной культуры
   if (cropSelect.value === 'custom') {
     customFields.classList.remove('hidden');
   } else {
@@ -1183,13 +1183,16 @@ async function initializeApp() {
     document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
     
     document.getElementById('cropSelect').addEventListener('change', function() {
-      const customFields = document.getElementById('customCropFields');
-      if (this.value === 'custom') {
-        customFields.classList.remove('hidden');
-      } else {
-        customFields.classList.add('hidden');
-      }
-    });
+  const customFields = document.getElementById('customCropFields');
+  if (this.value === 'custom') {
+    customFields.classList.remove('hidden');
+  } else {
+    customFields.classList.add('hidden');
+    // Обновляем отображаемое имя текущей культуры
+    document.getElementById('currentCropName').textContent = 
+      this.options[this.selectedIndex].text;
+  }
+});
 
     setInterval(updateSensorData, 5000);
     setInterval(updateRelayState, 5000);
@@ -1781,7 +1784,15 @@ app.get('/getCropSettings', (req, res) => {
     });
   } catch (error) {
     console.error('Error in /getCropSettings:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ 
+      error: 'Server error',
+      currentCropKey: 'potato',
+      availableCrops: {
+        potato: { name: "Potato" },
+        carrot: { name: "Carrot" },
+        tomato: { name: "Tomato" }
+      }
+    });
   }
 });
 
