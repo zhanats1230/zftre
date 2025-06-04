@@ -89,23 +89,24 @@ async function saveSensorDataHistory() {
 // Загрузка настроек культур (СЕРВЕРНАЯ ФУНКЦИЯ)
 async function loadCropSettings() {
   try {
-    const response = await fetch('/getCropSettings');
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Fetched crop settings:', data); // Лог для отладки
-      return data;
-    } else {
-      console.error('Error loading crop settings:', response.status);
-      return {
-        currentCropKey: 'potato',
-        availableCrops: {}
-      };
-    }
+    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
+    const parsedData = JSON.parse(data);
+    cropSettings = parsedData.crops || {};
+    currentCrop = parsedData.currentCrop || 'potato';
+    console.log('Loaded crop settings:', parsedData);
+    return {
+      currentCropKey: currentCrop,
+      availableCrops: cropSettings
+    };
   } catch (error) {
     console.error('Error loading crop settings:', error);
     return {
       currentCropKey: 'potato',
-      availableCrops: {}
+      availableCrops: {
+        potato: { name: "Potato" },
+        carrot: { name: "Carrot" },
+        tomato: { name: "Tomato" }
+      }
     };
   }
 }
@@ -1082,24 +1083,30 @@ async function loadCropSettings() {
 
 async function updateCropDropdown(cropData) {
   const cropSelect = document.getElementById('cropSelect');
-  if (!cropSelect) return;
-  
+  if (!cropSelect) {
+    console.error('cropSelect element not found');
+    return;
+  }
+
   // Сохраняем текущее выбранное значение
-  const currentValue = cropSelect.value;
-  
+  const currentValue = cropSelect.value || cropData.currentCropKey;
+
   // Очищаем существующие опции
   cropSelect.innerHTML = '';
-  
-  // Добавляем все культуры из данных
+
+  // Проверяем, что данные корректны
   const crops = cropData.availableCrops || {};
+  console.log('Updating crop dropdown with crops:', crops);
+
+  // Добавляем все культуры из данных
   for (const [key, crop] of Object.entries(crops)) {
     const option = document.createElement('option');
     option.value = key;
     option.textContent = crop.name || key; // Используем имя или ключ
-    option.selected = (key === cropData.currentCropKey);
+    option.selected = (key === currentValue || key === cropData.currentCropKey);
     cropSelect.appendChild(option);
   }
-  
+
   // Добавляем опцию для создания новой культуры
   const customOption = document.createElement('option');
   customOption.value = 'custom';
@@ -1108,13 +1115,19 @@ async function updateCropDropdown(cropData) {
     customOption.selected = true;
   }
   cropSelect.appendChild(customOption);
-  
+
   // Обновляем имя текущей культуры
   const currentCropName = crops[cropData.currentCropKey]?.name || cropData.currentCropKey || 'Unknown';
-  document.getElementById('currentCropName').textContent = currentCropName;
-  
+  const currentCropElement = document.getElementById('currentCropName');
+  if (currentCropElement) {
+    currentCropElement.textContent = currentCropName;
+  }
+
   // Показываем/скрываем поля для кастомной культуры
-  document.getElementById('customCropFields').classList.toggle('hidden', cropSelect.value !== 'custom');
+  const customFields = document.getElementById('customCropFields');
+  if (customFields) {
+    customFields.classList.toggle('hidden', cropSelect.value !== 'custom');
+  }
 }
 // Клиентская функция для загрузки настроек
 async function loadCropSettings() {
@@ -1217,8 +1230,8 @@ async function initializeApp() {
     
     // Загрузка настроек культур и обновление выпадающего списка
     const cropData = await loadCropSettings();
-    updateCropDropdown(cropData);
-    
+    await updateCropDropdown(cropData);
+
     // Инициализация обработчиков событий
     document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
     document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
@@ -1247,7 +1260,6 @@ async function initializeApp() {
     setInterval(checkConnection, 10000);
   } catch (error) {
     console.error('Error initializing app:', error);
-    // Optional: Show a user-friendly error message
     alert('Failed to initialize the application. Please refresh the page.');
   }
 }
