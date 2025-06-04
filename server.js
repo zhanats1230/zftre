@@ -89,24 +89,23 @@ async function saveSensorDataHistory() {
 // Загрузка настроек культур (СЕРВЕРНАЯ ФУНКЦИЯ)
 async function loadCropSettings() {
   try {
-    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
-    const settings = JSON.parse(data);
-    
-    // Сохраняем загруженные настройки в глобальные переменные
-    cropSettings = settings.crops || cropSettings;
-    currentCrop = settings.currentCrop || 'potato';
-    
-    console.log(`Loaded ${Object.keys(cropSettings).length} crops: ${Object.keys(cropSettings).join(', ')}`);
-    
-    return {
-      currentCropKey: currentCrop,
-      availableCrops: cropSettings
-    };
+    const response = await fetch('/getCropSettings');
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Fetched crop settings:', data); // Лог для отладки
+      return data;
+    } else {
+      console.error('Error loading crop settings:', response.status);
+      return {
+        currentCropKey: 'potato',
+        availableCrops: {}
+      };
+    }
   } catch (error) {
     console.error('Error loading crop settings:', error);
     return {
-      currentCropKey: currentCrop,
-      availableCrops: cropSettings
+      currentCropKey: 'potato',
+      availableCrops: {}
     };
   }
 }
