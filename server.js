@@ -85,7 +85,21 @@ async function saveSensorDataHistory() {
   }
 }
 
-
+async function loadCropSettings() {
+  try {
+    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+    cropSettings = settings.crops || cropSettings;
+    currentCrop = settings.currentCrop || currentCrop;
+    console.log(`Crop settings loaded. Current crop: ${currentCrop}`);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log('No crop settings file found, using defaults');
+    } else {
+      console.error('Error loading crop settings:', error);
+    }
+  }
+}
 
 // Эндпоинт для получения настроек культур
 app.get('/getCropSettings', (req, res) => {
@@ -103,21 +117,7 @@ app.get('/getCropSettings', (req, res) => {
     });
   }
 });
-async function loadCropSettings() {
-  try {
-    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
-    const settings = JSON.parse(data);
-    cropSettings = settings.crops || cropSettings;
-    currentCrop = settings.currentCrop || currentCrop;
-    console.log(`Crop settings loaded. Current crop: ${currentCrop}`);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      console.log('No crop settings file found, using defaults');
-    } else {
-      console.error('Error loading crop settings:', error);
-    }
-  }
-}
+
 
 // Сохранение настроек культур
 async function saveCropSettings() {
@@ -1159,27 +1159,7 @@ async function updateCropDropdown(cropData) {
       cropData.availableCrops[cropData.currentCropKey]?.name || 'Unknown';
   }
     
-// Клиентская функция для загрузки настроек
-async function loadCropSettings() {
-  try {
-    const response = await fetch('/getCropSettings');
-    if (response.ok) {
-      return await response.json();
-    } else {
-      console.error('Error loading crop settings:', response.status);
-      return {
-        currentCropKey: 'potato',
-        availableCrops: {}
-      };
-    }
-  } catch (error) {
-    console.error('Error loading crop settings:', error);
-    return {
-      currentCropKey: 'potato',
-      availableCrops: {}
-    };
-  }
-}
+
 
 async function applyCropSettings() {
     const cropSelect = document.getElementById('cropSelect');
