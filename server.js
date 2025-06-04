@@ -193,6 +193,21 @@ function updateHealthyRanges({ temperature, humidity, soilMoisture }) {
   }
 }
 
+async function loadCropSettings() {
+  try {
+    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
+    const parsed = JSON.parse(data);
+    cropSettings = parsed.crops || {};
+    currentCrop = parsed.currentCrop || 'potato';
+    console.log('Crop settings loaded:', Object.keys(cropSettings));
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log('No cropSettings.json found. Using defaults.');
+    } else {
+      console.error('Error loading crop settings:', error);
+    }
+  }
+}
 // Загрузка данных при запуске
 loadSensorDataHistory();
 loadCropSettings();
