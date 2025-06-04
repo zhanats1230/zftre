@@ -10,7 +10,7 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN 
 });
 const REPO_OWNER = "zhanats1230";
-const REPO_NAME = "ваш_репозиторий";
+const REPO_NAME = "https://github.com/zhanats1230/zftre";
 
 // Paths to store data
 const DATA_FILE = 'sensorDataHistory.json';
