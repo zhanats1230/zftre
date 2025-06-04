@@ -32,7 +32,7 @@
     },
     "цук": {
       "name": "wer",
-      "fanTemperatureThreshold": 22.6,
+      "fanTemperatureThreshold": 23,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
       "pumpStartHour": 8,
