@@ -675,11 +675,8 @@ app.get('/', (req, res) => {
           <div>
             <label class="block text-gray-700 font-bold mb-2" for="cropSelect">Select Crop</label>
             <select id="cropSelect" class="crop-select">
-              <option value="potato">Potato</option>
-              <option value="carrot">Carrot</option>
-              <option value="tomato">Tomato</option>
-              <option value="custom">Custom Crop...</option>
-            </select>
+  <!-- Опции будут добавляться через JavaScript -->
+</select>
           </div>
           <div id="customCropFields" class="hidden">
             <div class="grid grid-cols-1 gap-4">
@@ -1084,26 +1081,27 @@ async function loadCropSettings() {
   }
 }
 
-function updateCropDropdown(cropData) {
+async function updateCropDropdown(cropData) {
   const cropSelect = document.getElementById('cropSelect');
-  const customFields = document.getElementById('customCropFields');
   if (!cropSelect) return;
   
   // Сохраняем текущее выбранное значение
   const currentValue = cropSelect.value;
   
+  // Очищаем существующие опции
   cropSelect.innerHTML = '';
   
-  // Добавляем все культуры
-  for (const [key, crop] of Object.entries(cropData.availableCrops)) {
+  // Добавляем все культуры из данных
+  const crops = cropData.availableCrops || {};
+  for (const [key, crop] of Object.entries(crops)) {
     const option = document.createElement('option');
     option.value = key;
-    option.textContent = crop.name;
+    option.textContent = crop.name || key; // Используем имя или ключ
     option.selected = (key === cropData.currentCropKey);
     cropSelect.appendChild(option);
   }
   
-  // Добавляем опцию для кастомной культуры
+  // Добавляем опцию для создания новой культуры
   const customOption = document.createElement('option');
   customOption.value = 'custom';
   customOption.textContent = 'Custom Crop...';
@@ -1113,15 +1111,11 @@ function updateCropDropdown(cropData) {
   cropSelect.appendChild(customOption);
   
   // Обновляем имя текущей культуры
-  const currentCropName = cropData.availableCrops[cropData.currentCropKey]?.name || cropData.currentCropKey;
+  const currentCropName = crops[cropData.currentCropKey]?.name || cropData.currentCropKey || 'Unknown';
   document.getElementById('currentCropName').textContent = currentCropName;
   
-  // Управляем видимостью полей для кастомной культуры
-  if (cropSelect.value === 'custom') {
-    customFields.classList.remove('hidden');
-  } else {
-    customFields.classList.add('hidden');
-  }
+  // Показываем/скрываем поля для кастомной культуры
+  document.getElementById('customCropFields').classList.toggle('hidden', cropSelect.value !== 'custom');
 }
 // Клиентская функция для загрузки настроек
 async function loadCropSettings() {
@@ -1252,8 +1246,11 @@ async function initializeApp() {
     setInterval(updateRelayState, 5000);
     setInterval(updateMode, 5000);
     setInterval(checkConnection, 10000);
+  try {
+    const cropData = await loadCropSettings();
+    updateCropDropdown(cropData);
   } catch (error) {
-    console.error('Error initializing app:', error);
+    console.error('Error loading crop settings:', error);
   }
 }
 
@@ -1954,12 +1951,14 @@ app.post('/addCrop', async (req, res) => {
 
 app.listen(port, async () => {
   await loadSensorDataHistory();
-  // Загружаем настройки культур при запуске
+  
   try {
-    await loadCropSettings(); // Серверная функция
-    console.log(`Loaded ${Object.keys(cropSettings).length} crops`);
+    // Загружаем настройки культур
+    const cropData = await loadCropSettings();
+    console.log(`Loaded ${Object.keys(cropData.availableCrops).length} crops: ${Object.keys(cropData.availableCrops).join(', ')}`);
   } catch (e) {
     console.error('Error loading crops:', e);
   }
+  
   console.log(`Server running on port ${port}`);
 });
