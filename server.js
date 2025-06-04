@@ -1080,33 +1080,34 @@ async function loadCropSettings() {
   }
 }
 
-async function updateCropDropdown(cropData) {
+async function updateCropDropdown() {
+  try {
+    const response = await fetch('/getCropsList');
+    const crops = await response.json();
     const cropSelect = document.getElementById('cropSelect');
-    if (!cropSelect) return;
     
+    // Очищаем существующие опции
     cropSelect.innerHTML = '';
     
-    // Добавляем существующие культуры
-    for (const [key, crop] of Object.entries(cropData.availableCrops)) {
+    // Добавляем культуры в выпадающий список
+    crops.forEach(crop => {
       const option = document.createElement('option');
-      option.value = key;
+      option.value = crop.key;
       option.textContent = crop.name;
-      if (key === cropData.currentCropKey) {
-        option.selected = true;
-      }
       cropSelect.appendChild(option);
-    }
+    });
     
-    // Добавляем опцию для создания новой
+    // Добавляем опцию для создания новой культуры
     const customOption = document.createElement('option');
     customOption.value = 'custom';
     customOption.textContent = 'Custom Crop...';
     cropSelect.appendChild(customOption);
     
-    // Обновляем имя текущей культуры
-    document.getElementById('currentCropName').textContent = 
-      cropData.availableCrops[cropData.currentCropKey]?.name || 'Unknown';
+    console.log('Crop dropdown updated with', crops.length, 'items');
+  } catch (error) {
+    console.error('Error updating crop dropdown:', error);
   }
+}
     
 
 
@@ -1186,7 +1187,7 @@ async function initializeApp() {
     updateMode();
     updateSettings();
     checkConnection();
-    
+    await updateCropDropdown(); // Добавьте эту строку
     // Загрузка настроек культур и обновление выпадающего списка
     const cropData = await loadCropSettings();
     updateCropDropdown(cropData);
@@ -1202,16 +1203,16 @@ async function initializeApp() {
     document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
     
     document.getElementById('cropSelect').addEventListener('change', function() {
-      const customFields = document.getElementById('customCropFields');
-      if (this.value === 'custom') {
-        customFields.classList.remove('hidden');
-      } else {
-        customFields.classList.add('hidden');
-        // Обновляем отображаемое имя при выборе существующей культуры
-        const selectedOption = this.options[this.selectedIndex];
-        document.getElementById('currentCropName').textContent = selectedOption.text;
-      }
-    });
+  const customFields = document.getElementById('customCropFields');
+  if (this.value === 'custom') {
+    customFields.classList.remove('hidden');
+  } else {
+    customFields.classList.add('hidden');
+    // Установка названия выбранной культуры
+    const selectedOption = this.options[this.selectedIndex];
+    document.getElementById('currentCropName').textContent = selectedOption.text;
+  }
+});
 
     setInterval(updateSensorData, 5000);
     setInterval(updateRelayState, 5000);
@@ -1616,7 +1617,23 @@ app.get('/getSensorStatus', (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
+app.get('/getCropsList', async (req, res) => {
+  try {
+    // Загружаем текущие настройки культур
+    await loadCropSettings();
+    
+    // Формируем список только с названиями культур
+    const cropsList = Object.keys(cropSettings).map(key => ({
+      key: key,
+      name: cropSettings[key].name || key
+    }));
+    
+    res.json(cropsList);
+  } catch (error) {
+    console.error('Error getting crops list:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 app.get('/getRelayState', (req, res) => {
   try {
     res.json(relayState);
