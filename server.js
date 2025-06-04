@@ -3,14 +3,14 @@ const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
 const app = express();
-const port = 80;
+const port = process.env.PORT || 80;
 
 const { Octokit } = require("@octokit/rest");
 const octokit = new Octokit({ 
   auth: process.env.GITHUB_TOKEN 
 });
 const REPO_OWNER = "zhanats1230";
-const REPO_NAME = "https://github.com/zhanats1230/zftre";
+const REPO_NAME = "zftre";  // Just the repository name
 
 // Paths to store data
 const DATA_FILE = 'sensorDataHistory.json';
