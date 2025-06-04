@@ -1058,7 +1058,11 @@ async function loadCropSettings() {
 
 function updateCropDropdown(cropData) {
   const cropSelect = document.getElementById('cropSelect');
+  const customFields = document.getElementById('customCropFields');
   if (!cropSelect) return;
+  
+  // Удаляем дублирующий код добавления опции "Custom Crop..."
+  // Оставляем только один блок добавления
   
   cropSelect.innerHTML = '';
   
@@ -1070,7 +1074,7 @@ function updateCropDropdown(cropData) {
     cropSelect.appendChild(option);
   });
   
-  // Добавляем опцию для кастомной культуры
+  // Добавляем опцию для кастомной культуры (ОДИН РАЗ)
   const customOption = document.createElement('option');
   customOption.value = 'custom';
   customOption.textContent = 'Custom Crop...';
@@ -1078,22 +1082,8 @@ function updateCropDropdown(cropData) {
   
   // Устанавливаем текущую культуру
   cropSelect.value = cropData.currentCropKey || 'potato';
-}
   
-  // Add "Custom Crop" option
-  const customOption = document.createElement('option');
-  customOption.value = 'custom';
-  customOption.textContent = 'Custom Crop...';
-  cropSelect.appendChild(customOption);
-  
-  // Restore selection
-  if (cropData && cropData.currentCropKey) {
-    cropSelect.value = cropData.currentCropKey;
-  } else if (currentValue) {
-    cropSelect.value = currentValue;
-  }
-  
-  // Show/hide custom fields
+  // Управляем видимостью полей для кастомной культуры
   if (cropSelect.value === 'custom') {
     customFields.classList.remove('hidden');
   } else {
@@ -1169,20 +1159,47 @@ async function applyCropSettings() {
 }
 
 async function initializeApp() {
-  switchTab('dashboard');
-  initializeCharts();
-  updateRelayState();
-  updateSensorData();
-  updateMode();
-  updateSettings();
-  checkConnection();
-  
-  // Load crop settings and update dropdown
-  const cropData = await loadCropSettings();
-  updateCropDropdown(cropData);
-  
-  // ... остальные инициализации ...
+  try {
+    switchTab('dashboard');
+    initializeCharts();
+    updateRelayState();
+    updateSensorData();
+    updateMode();
+    updateSettings();
+    checkConnection();
+    
+    // Загружаем настройки культур и обновляем выпадающий список
+    const cropData = await loadCropSettings();
+    updateCropDropdown(cropData);
+    
+    // Инициализация обработчиков событий
+    document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
+    document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
+    document.getElementById('toggleMode').addEventListener('click', toggleMode);
+    document.getElementById('saveLightingSettings').addEventListener('click', saveLightingSettings);
+    document.getElementById('savePumpSettings').addEventListener('click', savePumpSettings);
+    document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
+    document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
+    document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
+    
+    document.getElementById('cropSelect').addEventListener('change', function() {
+      const customFields = document.getElementById('customCropFields');
+      if (this.value === 'custom') {
+        customFields.classList.remove('hidden');
+      } else {
+        customFields.classList.add('hidden');
+      }
+    });
+
+    setInterval(updateSensorData, 5000);
+    setInterval(updateRelayState, 5000);
+    setInterval(updateMode, 5000);
+    setInterval(checkConnection, 10000);
+  } catch (error) {
+    console.error('Error initializing app:', error);
+  }
 }
+
 
 async function applyCropSettings() {
   const cropSelect = document.getElementById('cropSelect');
