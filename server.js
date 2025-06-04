@@ -93,14 +93,16 @@ async function loadCropSettings() {
     cropSettings = settings.crops || cropSettings;
     currentCrop = settings.currentCrop || 'potato';
     console.log(`Loaded crop settings for ${Object.keys(cropSettings).length} crops, current crop: ${currentCrop}`);
-    return cropSettings;
+    return {
+      currentCropKey: currentCrop,
+      availableCrops: cropSettings
+    };
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      console.log('No crop settings file found, using default settings');
-    } else {
-      console.error('Error loading crop settings:', error);
-    }
-    return cropSettings;
+    console.error('Error loading crop settings:', error);
+    return {
+      currentCropKey: currentCrop,
+      availableCrops: cropSettings
+    };
   }
 }
 
@@ -125,7 +127,17 @@ async function saveCropSettings() {
       content: Buffer.from(content).toString('base64'),
       sha: await getFileSha(CROP_SETTINGS_FILE)
     });
-    
+    if (process.env.GITHUB_TOKEN) {
+      await octokit.repos.createOrUpdateFileContents({
+        owner: REPO_OWNER,
+        repo: REPO_NAME,
+        path: CROP_SETTINGS_FILE,
+        message: "Update crop settings",
+        content: Buffer.from(content).toString('base64'),
+        sha: await getFileSha(CROP_SETTINGS_FILE)
+      });
+      console.log('Crop settings saved to GitHub');
+    }
     console.log('Crop settings saved to file and GitHub');
   } catch (error) {
     console.error('Error saving crop settings:', error);
@@ -1043,36 +1055,16 @@ document.getElementById('deleteCrop').addEventListener('click', async () => {
 
 async function loadCropSettings() {
   try {
-    // Пробуем загрузить из GitHub
-    const { data } = await octokit.repos.getContent({
-      owner: REPO_OWNER,
-      repo: REPO_NAME,
-      path: CROP_SETTINGS_FILE
-    });
-    
-    const content = Buffer.from(data.content, 'base64').toString('utf8');
-    const settings = JSON.parse(content);
-    
-    // Сохраняем локально
-    await fs.writeFile(CROP_SETTINGS_FILE, content);
-    
-    cropSettings = settings.crops || cropSettings;
-    currentCrop = settings.currentCrop || 'potato';
-    console.log("Loaded crop settings from GitHub for " + Object.keys(cropSettings).length + " crops");
-    return cropSettings;
-  } catch (error) {
-    console.log('Loading from local file...');
-    try {
-      const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
-      const settings = JSON.parse(data);
-      cropSettings = settings.crops || cropSettings;
-      currentCrop = settings.currentCrop || 'potato';
-      console.log("Loaded crop settings from file for " + Object.keys(cropSettings).length + " crops");
-      return cropSettings;
-    } catch (err) {
-      console.log('Using default crop settings');
-      return cropSettings;
+    const response = await fetch('/getCropSettings');
+    if (response.ok) {
+      return await response.json();
+    } else {
+      console.error('Error loading crop settings:', response.status);
+      return {};
     }
+  } catch (error) {
+    console.error('Error loading crop settings:', error);
+    return {};
   }
 }
 
@@ -1117,6 +1109,73 @@ function updateCropDropdown(cropData) {
     customFields.classList.remove('hidden');
   } else {
     customFields.classList.add('hidden');
+  }
+}
+
+async function applyCropSettings() {
+  const cropSelect = document.getElementById('cropSelect');
+  const selectedCrop = cropSelect.value;
+  
+  if (selectedCrop === 'custom') {
+    const cropKey = document.getElementById('newCropKey').value.trim();
+    const cropName = document.getElementById('newCropName').value.trim();
+    
+    if (!cropKey || !cropName) {
+      alert('Please enter both crop key and name');
+      return;
+    }
+    
+    try {
+      const settings = {
+        cropKey,
+        cropName,
+        fanTemperatureThreshold: parseFloat(document.getElementById('cropFanTemperatureThreshold').value) || 25.0,
+        lightOnDuration: parseInt(document.getElementById('cropLightOnDuration').value) * 60000 || 7200000,
+        lightIntervalManual: parseInt(document.getElementById('cropLightIntervalManual').value) * 60000 || 21600000,
+        pumpStartHour: parseInt(document.getElementById('cropPumpStartHour').value) || 8,
+        pumpStartMinute: parseInt(document.getElementById('cropPumpStartMinute').value) || 0,
+        pumpDuration: parseInt(document.getElementById('cropPumpDuration').value) || 15,
+        pumpInterval: parseInt(document.getElementById('cropPumpInterval').value) || 180
+      };
+      
+      const response = await fetch('/addCrop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      });
+      
+      if (response.ok) {
+        alert('New crop created successfully!');
+        const cropData = await loadCropSettings();
+        updateCropDropdown(cropData);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to create crop');
+      }
+    } catch (error) {
+      console.error('Error creating crop:', error);
+      alert('Error creating crop: ' + error.message);
+    }
+  } else {
+    try {
+      const response = await fetch('/setCurrentCrop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ crop: selectedCrop })
+      });
+      
+      if (response.ok) {
+        const cropData = await loadCropSettings();
+        updateCropDropdown(cropData);
+        alert('Crop settings applied successfully!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to apply crop settings');
+      }
+    } catch (error) {
+      console.error('Error applying crop settings:', error);
+      alert('Error applying crop settings: ' + error.message);
+    }
   }
 }
 
