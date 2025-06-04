@@ -230,58 +230,7 @@ let pumpSettings = {
 let cropSettings = {};
 let currentCrop = 'potato';
 
-// Функция загрузки настроек культур
-async function loadCropSettings() {
-  try {
-    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
-    const { crops, current } = JSON.parse(data);
-    cropSettings = crops || {};
-    currentCrop = current || 'potato';
-    console.log(`Loaded ${Object.keys(cropSettings).length} crops: ${Object.keys(cropSettings).join(', ')}`);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      console.log('No crop settings file found, creating with default');
-      
-      // Создаем настройки по умолчанию
-      cropSettings = {
-        "potato": {
-          name: "Potato",
-          fanTemperatureThreshold: 22.0,
-          lightOnDuration: 7200000,
-          lightIntervalManual: 21600000,
-          pumpStartHour: 8,
-          pumpStartMinute: 0,
-          pumpDuration: 15,
-          pumpInterval: 180
-        },
-        "carrot": {
-          name: "Carrot",
-          fanTemperatureThreshold: 25.0,
-          lightOnDuration: 10800000,
-          lightIntervalManual: 18000000,
-          pumpStartHour: 7,
-          pumpStartMinute: 30,
-          pumpDuration: 10,
-          pumpInterval: 240
-        },
-        "tomato": {
-          name: "Tomato",
-          fanTemperatureThreshold: 28.0,
-          lightOnDuration: 14400000,
-          lightIntervalManual: 28800000,
-          pumpStartHour: 6,
-          pumpStartMinute: 0,
-          pumpDuration: 20,
-          pumpInterval: 120
-        }
-      };
-      
-      await saveCropSettings();
-    } else {
-      console.error('Error loading crop settings:', error);
-    }
-  }
-}
+
 
 // Сохранение настроек культур
 async function saveCropSettings() {
