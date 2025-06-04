@@ -106,18 +106,19 @@ app.get('/getCropSettings', (req, res) => {
 async function loadCropSettings() {
   try {
     const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
-    const parsed = JSON.parse(data);
-    cropSettings = parsed.crops || {};
-    currentCrop = parsed.currentCrop || 'potato';
-    console.log('Crop settings loaded:', Object.keys(cropSettings));
+    const settings = JSON.parse(data);
+    cropSettings = settings.crops || cropSettings;
+    currentCrop = settings.currentCrop || currentCrop;
+    console.log(`Crop settings loaded. Current crop: ${currentCrop}`);
   } catch (error) {
     if (error.code === 'ENOENT') {
-      console.log('No cropSettings.json found. Using defaults.');
+      console.log('No crop settings file found, using defaults');
     } else {
       console.error('Error loading crop settings:', error);
     }
   }
 }
+
 // Сохранение настроек культур
 async function saveCropSettings() {
   try {
@@ -130,7 +131,7 @@ async function saveCropSettings() {
     // Сохраняем локально
     await fs.writeFile(CROP_SETTINGS_FILE, content);
     
-    // Сохраняем в GitHub (только один раз)
+    // Сохраняем в GitHub
     if (process.env.GITHUB_TOKEN) {
       await octokit.repos.createOrUpdateFileContents({
         owner: REPO_OWNER,
@@ -142,9 +143,6 @@ async function saveCropSettings() {
       });
       console.log('Crop settings saved to file and GitHub');
     }
-    // После успешного сохранения обновляем данные
-    const cropData = await loadCropSettings();
-    updateCropDropdown(cropData);
   } catch (error) {
     console.error('Error saving crop settings:', error);
   }
