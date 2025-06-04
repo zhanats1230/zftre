@@ -86,43 +86,47 @@ async function saveSensorDataHistory() {
 }
 
 // Загрузка настроек культур
+// Загрузка настроек культур (СЕРВЕРНАЯ ФУНКЦИЯ)
 async function loadCropSettings() {
   try {
-    const response = await fetch('/getCropSettings');
-    if (response.ok) {
-      const data = await response.json();
-      // Всегда возвращаем полные данные о культурах
-      return {
-        currentCropKey: data.currentCropKey || 'potato',
-        availableCrops: data.availableCrops || {
-          potato: { name: "Potato" },
-          carrot: { name: "Carrot" },
-          tomato: { name: "Tomato" }
-        }
-      };
-    } else {
-      console.error('Error loading crop settings:', response.status);
-      return {
-        currentCropKey: 'potato',
-        availableCrops: {
-          potato: { name: "Potato" },
-          carrot: { name: "Carrot" },
-          tomato: { name: "Tomato" }
-        }
-      };
-    }
+    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+    
+    // Сохраняем загруженные настройки в глобальные переменные
+    cropSettings = settings.crops || cropSettings;
+    currentCrop = settings.currentCrop || 'potato';
+    
+    console.log(`Loaded ${Object.keys(cropSettings).length} crops: ${Object.keys(cropSettings).join(', ')}`);
+    
+    return {
+      currentCropKey: currentCrop,
+      availableCrops: cropSettings
+    };
   } catch (error) {
     console.error('Error loading crop settings:', error);
     return {
-      currentCropKey: 'potato',
-      availableCrops: {
-        potato: { name: "Potato" },
-        carrot: { name: "Carrot" },
-        tomato: { name: "Tomato" }
-      }
+      currentCropKey: currentCrop,
+      availableCrops: cropSettings
     };
   }
 }
+
+// Эндпоинт для получения настроек культур
+app.get('/getCropSettings', (req, res) => {
+  try {
+    res.json({
+      currentCropKey: currentCrop,
+      availableCrops: cropSettings
+    });
+  } catch (error) {
+    console.error('Error in /getCropSettings:', error);
+    res.status(500).json({ 
+      error: 'Server error',
+      currentCropKey: 'potato',
+      availableCrops: cropSettings
+    });
+  }
+});
 
 // Сохранение настроек культур
 async function saveCropSettings() {
@@ -1090,20 +1094,22 @@ function updateCropDropdown(cropData) {
   
   cropSelect.innerHTML = '';
   
-  // Добавляем все культуры из полученных данных
-  Object.keys(cropData.availableCrops).forEach(key => {
+  // Добавляем все культуры
+  for (const [key, crop] of Object.entries(cropData.availableCrops)) {
     const option = document.createElement('option');
     option.value = key;
-    option.textContent = cropData.availableCrops[key].name || key;
+    option.textContent = crop.name;
     option.selected = (key === cropData.currentCropKey);
     cropSelect.appendChild(option);
-  });
+  }
   
   // Добавляем опцию для кастомной культуры
   const customOption = document.createElement('option');
   customOption.value = 'custom';
   customOption.textContent = 'Custom Crop...';
-  customOption.selected = (cropSelect.value === 'custom');
+  if (currentValue === 'custom') {
+    customOption.selected = true;
+  }
   cropSelect.appendChild(customOption);
   
   // Обновляем имя текущей культуры
@@ -1117,8 +1123,27 @@ function updateCropDropdown(cropData) {
     customFields.classList.add('hidden');
   }
 }
-
-
+// Клиентская функция для загрузки настроек
+async function loadCropSettings() {
+  try {
+    const response = await fetch('/getCropSettings');
+    if (response.ok) {
+      return await response.json();
+    } else {
+      console.error('Error loading crop settings:', response.status);
+      return {
+        currentCropKey: 'potato',
+        availableCrops: {}
+      };
+    }
+  } catch (error) {
+    console.error('Error loading crop settings:', error);
+    return {
+      currentCropKey: 'potato',
+      availableCrops: {}
+    };
+  }
+}
 
 async function applyCropSettings() {
   const cropSelect = document.getElementById('cropSelect');
@@ -1931,7 +1956,7 @@ app.listen(port, async () => {
   await loadSensorDataHistory();
   // Загружаем настройки культур при запуске
   try {
-    await loadCropSettings();
+    await loadCropSettings(); // Серверная функция
     console.log(`Loaded ${Object.keys(cropSettings).length} crops`);
   } catch (e) {
     console.error('Error loading crops:', e);
