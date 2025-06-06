@@ -1166,9 +1166,19 @@ document.getElementById('cropSelect').addEventListener('change', async function(
     setInterval(updateRelayState, 5000);
     setInterval(updateMode, 5000);
     setInterval(checkConnection, 10000);
+  try {
+    const response = await fetch('/getCropSettings');
+    const data = await response.json();
+    
+    // Устанавливаем текущую культуру в интерфейсе
+    const cropSelect = document.getElementById('cropSelect');
+    if (cropSelect) {
+      cropSelect.value = data.currentCrop;
+      document.getElementById('currentCropName').textContent = 
+        cropSelect.options[cropSelect.selectedIndex].text;
+    }
   } catch (error) {
-    console.error('Error initializing app:', error);
-    alert('Failed to initialize the application. Please refresh the page.');
+    console.error('Error loading crop settings:', error);
   }
 }
 
@@ -1727,13 +1737,14 @@ app.get('/getCropSettings', (req, res) => {
   }
 });
 
+/ Эндпоинт для установки текущей культуры
 app.post('/setCurrentCrop', async (req, res) => {
   try {
     const { crop } = req.body;
+    
     if (cropSettings[crop]) {
       currentCrop = crop;
-      console.log('Current crop set to:', currentCrop);
-      await saveCropSettings();
+      await saveCropSettings(); // Сохраняем изменения
       res.json({ success: true });
     } else {
       res.status(400).json({ error: 'Invalid crop selection' });
