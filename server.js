@@ -1309,27 +1309,17 @@ document.getElementById('cropSelect').addEventListener('change', function() {
 }
     
     async function deleteCurrentCrop() {
-  const cropSelect = document.getElementById('cropSelect');
-  const cropToDelete = cropSelect.value;
-  
-  if (cropToDelete === 'custom') {
-    alert('Please select an existing crop to delete');
-    return;
-  }
-
-if (confirm("Are you sure you want to delete \"" + cropToDelete + "\" crop? This action cannot be undone.")) {
+  if (confirm('Are you sure you want to delete the current crop? This action cannot be undone.')) {
     try {
       const response = await fetch('/deleteCrop', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crop: cropToDelete })
+        body: JSON.stringify({ crop: currentCrop })
       });
       
       if (response.ok) {
-        const result = await response.json();
         alert('Crop deleted successfully!');
         await updateCropDropdown();
-        await loadCurrentCropSettings();
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to delete crop');
@@ -1361,6 +1351,7 @@ if (confirm("Are you sure you want to delete \"" + cropToDelete + "\" crop? This
     
     document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
     document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
+    document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
     
     setInterval(updateSensorData, 5000);
     setInterval(updateRelayState, 5000);
@@ -1816,29 +1807,20 @@ app.post('/deleteCrop', async (req, res) => {
   try {
     const { crop } = req.body;
     
-    if (!crop || !cropSettings[crop]) {
+    if (!cropSettings[crop]) {
       return res.status(400).json({ error: 'Crop not found' });
-    }
-    
-    // Нельзя удалить последнюю культуру
-    if (Object.keys(cropSettings).length <= 1) {
-      return res.status(400).json({ error: 'Cannot delete the last crop' });
     }
     
     delete cropSettings[crop];
     
-    // Если удаляем текущую культуру, устанавливаем другую доступную
+    // Если удаляем текущую культуру, устанавливаем первую доступную или 'potato'
     if (currentCrop === crop) {
       const availableCrops = Object.keys(cropSettings);
-      currentCrop = availableCrops[0]; // Берем первую доступную
+      currentCrop = availableCrops.length > 0 ? availableCrops[0] : 'potato';
     }
     
     await saveCropSettings();
-    res.json({ 
-      success: true,
-      currentCropKey: currentCrop,
-      availableCrops: cropSettings
-    });
+    res.json({ success: true });
     
   } catch (error) {
     console.error('Error in /deleteCrop:', error);
