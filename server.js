@@ -656,157 +656,97 @@ app.get('/', (req, res) => {
     </div>
 
     <div id="settingsContent" class="tab-content hidden">
-      <!-- Crop Selection -->
-      <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
-        <div class="section-header">
-          <i class="fa-solid fa-seedling"></i>
-          <h3>Crop Selection</h3>
-        </div>
-        <div class="grid grid-cols-1 gap-6">
+  <!-- Crop Selection -->
+  <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
+    <div class="section-header">
+      <i class="fa-solid fa-seedling"></i>
+      <h3>Crop Selection</h3>
+    </div>
+    <div class="grid grid-cols-1 gap-6">
+      <div>
+        <label class="block text-gray-700 font-bold mb-2" for="cropSelect">Select Crop</label>
+        <select id="cropSelect" class="crop-select">
+          <!-- Опции будут добавляться через JavaScript -->
+        </select>
+      </div>
+      <div id="customCropFields" class="hidden">
+        <div class="grid grid-cols-1 gap-4">
           <div>
-            <label class="block text-gray-700 font-bold mb-2" for="cropSelect">Select Crop</label>
-            <select id="cropSelect" class="crop-select">
-  <!-- Опции будут добавляться через JavaScript -->
-</select>
+            <label class="block text-gray-700 font-bold mb-2" for="newCropName">Crop Name</label>
+            <input id="newCropName" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Enter crop name">
           </div>
-          <div id="customCropFields" class="hidden">
-            <div class="grid grid-cols-1 gap-4">
-              <div>
-                <label class="block text-gray-700 font-bold mb-2" for="newCropName">Crop Name</label>
-                <input id="newCropName" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Enter crop name">
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-gray-700 font-bold mb-2" for="newCropKey">Crop Key</label>
-                  <input id="newCropKey" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Unique key (e.g. custom_crop)">
-                </div>
-              </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-gray-700 font-bold mb-2" for="newCropKey">Crop Key</label>
+              <input id="newCropKey" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Unique key (e.g. custom_crop)">
             </div>
           </div>
-          <div class="flex justify-end">
-            <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Apply Crop Settings</button>
-            <button id="deleteCrop" class="logout-btn ripple-btn">
-  <i class="fa-solid fa-trash mr-2"></i> Delete Crop
-</button>
-          </div>
         </div>
       </div>
-
-      <!-- Crop Settings Editor -->
-      <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
-        <div class="section-header">
-          <i class="fa-solid fa-sliders-h"></i>
-          <h3>Crop Settings Editor</h3>
-        </div>
-        <div class="mb-4">
-          <p class="text-gray-700">Current Crop: <span id="currentCropName" class="crop-badge">Potato</span></p>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          <div class="input-card">
-            <label class="input-label">Temp Threshold (°C)</label>
-            <div class="icon-circle"><i class="fa-solid fa-temperature-half"></i></div>
-            <input id="cropFanTemperatureThreshold" type="number" step="0.1" value="22.0" placeholder="Enter °C">
-          </div>
-          <div class="input-card">
-            <label class="input-label">Light Duration (min)</label>
-            <div class="icon-circle"><i class="fa-solid fa-sun"></i></div>
-            <input id="cropLightOnDuration" type="number" value="120" placeholder="Enter minutes">
-          </div>
-          <div class="input-card">
-            <label class="input-label">Light Interval (min)</label>
-            <div class="icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
-            <input id="cropLightIntervalManual" type="number" value="360" placeholder="Enter minutes">
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-8 mt-4">
-          <div class="input-card">
-            <label class="input-label">Pump Start Hour</label>
-            <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
-            <input id="cropPumpStartHour" type="number" min="0" max="23" value="8" placeholder="0-23">
-          </div>
-          <div class="input-card">
-            <label class="input-label">Pump Start Minute</label>
-            <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
-            <input id="cropPumpStartMinute" type="number" min="0" max="59" value="0" placeholder="0-59">
-          </div>
-          <div class="input-card">
-            <label class="input-label">Pump Duration (sec)</label>
-            <div class="icon-circle"><i class="fa-solid fa-stopwatch-20"></i></div>
-            <input id="cropPumpDuration" type="number" min="1" value="15" placeholder="Seconds">
-          </div>
-          <div class="input-card">
-            <label class="input-label">Pump Interval (min)</label>
-            <div class="icon-circle"><i class="fa-solid fa-hourglass-half"></i></div>
-            <input id="cropPumpInterval" type="number" min="1" value="180" placeholder="Minutes">
-          </div>
-        </div>
-        <div class="wave-divider"></div>
-        <div class="flex justify-between mt-4">
-          <button id="saveCropSettings" class="ripple-btn"><i class="fa-solid fa-save mr-2"></i> Save Crop Settings</button>
-          <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Delete Crop</button>
-        </div>
-      </div>
-
-      <!-- Manual Mode Settings -->
-      <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
-        <div class="section-header">
-          <i class="fa-solid fa-sliders-h"></i>
-          <h3>Manual Mode Settings</h3>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          <div class="input-card">
-            <label class="input-label">Temp Threshold (°C)</label>
-            <div class="icon-circle"><i class="fa-solid fa-temperature-half"></i></div>
-            <input id="fanTemperatureThreshold" type="number" step="0.1" value="31.0" placeholder="Enter °C">
-          </div>
-          <div class="input-card">
-            <label class="input-label">Light Duration (min)</label>
-            <div class="icon-circle"><i class="fa-solid fa-sun"></i></div>
-            <input id="lightOnDuration" type="number" value="1" placeholder="Enter minutes">
-          </div>
-          <div class="input-card">
-            <label class="input-label">Light Interval (min)</label>
-            <div class="icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
-            <input id="lightIntervalManual" type="number" value="1" placeholder="Enter minutes">
-          </div>
-        </div>
-        <div class="wave-divider"></div>
-        <button id="saveLightingSettings" class="ripple-btn w-full mt-4"><i class="fa-solid fa-save"></i> Save Settings</button>
-      </div>
-
-      <!-- Pump Settings -->
-      <div class="bg-white p-6 rounded-2xl shadow-lg card">
-        <div class="section-header">
-          <i class="fa-solid fa-droplet"></i>
-          <h3>Pump Settings</h3>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-8">
-          <div class="input-card">
-            <label class="input-label">Start Hour</label>
-            <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
-            <input id="pumpStartHour" type="number" min="0" max="23" value="18" placeholder="0-23">
-          </div>
-          <div class="input-card">
-            <label class="input-label">Start Minute</label>
-            <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
-            <input id="pumpStartMinute" type="number" min="0" max="59" value="0" placeholder="0-59">
-          </div>
-          <div class="input-card">
-            <label class="input-label">Duration (sec)</label>
-            <div class="icon-circle"><i class="fa-solid fa-stopwatch-20"></i></div>
-            <input id="pumpDuration" type="number" min="1" value="10" placeholder="Seconds">
-          </div>
-          <div class="input-card">
-            <label class="input-label">Interval (min)</label>
-            <div class="icon-circle"><i class="fa-solid fa-hourglass-half"></i></div>
-            <input id="pumpInterval" type="number" min="1" value="240" placeholder="Minutes">
-          </div>
-        </div>
-        <div class="wave-divider"></div>
-        <button id="savePumpSettings" class="ripple-btn w-full mt-4"><i class="fa-solid fa-save"></i> Save Settings</button>
+      <div class="flex justify-end">
+        <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Apply Crop Settings</button>
+        <button id="deleteCrop" class="logout-btn ripple-btn">
+          <i class="fa-solid fa-trash mr-2"></i> Delete Crop
+        </button>
       </div>
     </div>
   </div>
+
+  <!-- Crop Settings Editor -->
+  <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
+    <div class="section-header">
+      <i class="fa-solid fa-sliders-h"></i>
+      <h3>Crop Settings Editor</h3>
+    </div>
+    <div class="mb-4">
+      <p class="text-gray-700">Current Crop: <span id="currentCropName" class="crop-badge">Potato</span></p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+      <div class="input-card">
+        <label class="input-label">Temp Threshold (°C)</label>
+        <div class="icon-circle"><i class="fa-solid fa-temperature-half"></i></div>
+        <input id="cropFanTemperatureThreshold" type="number" step="0.1" value="22.0" placeholder="Enter °C">
+      </div>
+      <div class="input-card">
+        <label class="input-label">Light Duration (min)</label>
+        <div class="icon-circle"><i class="fa-solid fa-sun"></i></div>
+        <input id="cropLightOnDuration" type="number" value="120" placeholder="Enter minutes">
+      </div>
+      <div class="input-card">
+        <label class="input-label">Light Interval (min)</label>
+        <div class="icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        <input id="cropLightIntervalManual" type="number" value="360" placeholder="Enter minutes">
+      </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-8 mt-4">
+      <div class="input-card">
+        <label class="input-label">Pump Start Hour</label>
+        <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
+        <input id="cropPumpStartHour" type="number" min="0" max="23" value="8" placeholder="0-23">
+      </div>
+      <div class="input-card">
+        <label class="input-label">Pump Start Minute</label>
+        <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
+        <input id="cropPumpStartMinute" type="number" min="0" max="59" value="0" placeholder="0-59">
+      </div>
+      <div class="input-card">
+        <label class="input-label">Pump Duration (sec)</label>
+        <div class="icon-circle"><i class="fa-solid fa-stopwatch-20"></i></div>
+        <input id="cropPumpDuration" type="number" min="1" value="15" placeholder="Seconds">
+      </div>
+      <div class="input-card">
+        <label class="input-label">Pump Interval (min)</label>
+        <div class="icon-circle"><i class="fa-solid fa-hourglass-half"></i></div>
+        <input id="cropPumpInterval" type="number" min="1" value="180" placeholder="Minutes">
+      </div>
+    </div>
+    <div class="wave-divider"></div>
+    <div class="flex justify-between mt-4">
+      <button id="saveCropSettings" class="ripple-btn"><i class="fa-solid fa-save mr-2"></i> Save Crop Settings</button>
+      <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Delete Crop</button>
+    </div>
+  </div>
+</div>
 
   <script>
     console.log('Script loaded');
