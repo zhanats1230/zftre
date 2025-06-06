@@ -1737,7 +1737,6 @@ app.get('/getCropSettings', (req, res) => {
   }
 });
 
-/ Эндпоинт для установки текущей культуры
 app.post('/setCurrentCrop', async (req, res) => {
   try {
     const { crop } = req.body;
