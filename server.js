@@ -205,11 +205,6 @@ function updateHealthyRanges({ temperature, humidity, soilMoisture }) {
   }
 }
 
-
-// Загрузка данных при запуске
-loadSensorDataHistory();
-loadCropSettings();
-
 let mode = 'auto';
 
 let lightingSettings = {
@@ -233,31 +228,7 @@ let currentCrop = 'potato';
 
 
 // Сохранение настроек культур
-async function saveCropSettings() {
-  try {
-    const dataToSave = {
-      crops: cropSettings,
-      current: currentCrop
-    };
-    
-    const content = JSON.stringify(dataToSave, null, 2);
-    await fs.writeFile(CROP_SETTINGS_FILE, content);
-    
-    if (process.env.GITHUB_TOKEN) {
-      await octokit.repos.createOrUpdateFileContents({
-        owner: REPO_OWNER,
-        repo: REPO_NAME,
-        path: CROP_SETTINGS_FILE,
-        message: "Update crop settings",
-        content: Buffer.from(content).toString('base64'),
-        sha: await getFileSha(CROP_SETTINGS_FILE)
-      });
-    }
-    console.log('Crop settings saved');
-  } catch (error) {
-    console.error('Error saving crop settings:', error);
-  }
-}
+
 
 // Загрузка данных при запуске
 loadSensorDataHistory();
