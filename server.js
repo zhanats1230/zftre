@@ -655,7 +655,8 @@ app.get('/', (req, res) => {
       </div>
     </div>
 
-    <div id="settingsContent" class="tab-content hidden">
+    // В HTML-части (внутри блока settingsContent) заменим следующий код:
+<div id="settingsContent" class="tab-content hidden">
   <!-- Crop Selection -->
   <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
     <div class="section-header">
@@ -1171,8 +1172,8 @@ async function initializeApp() {
     document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
     document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
     document.getElementById('toggleMode').addEventListener('click', toggleMode);
-    document.getElementById('saveLightingSettings').addEventListener('click', saveLightingSettings);
-    document.getElementById('savePumpSettings').addEventListener('click', savePumpSettings);
+    //document.getElementById('saveLightingSettings').addEventListener('click', saveLightingSettings);
+    //document.getElementById('savePumpSettings').addEventListener('click', savePumpSettings);
     document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
     document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
     document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
