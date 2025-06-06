@@ -204,9 +204,6 @@ function updateHealthyRanges({ temperature, humidity, soilMoisture }) {
 }
 
 
-// Загрузка данных при запуске
-loadSensorDataHistory();
-loadCropSettings();
 
 let mode = 'auto';
 
@@ -230,32 +227,6 @@ let currentCrop = 'potato';
 
 
 
-// Сохранение настроек культур
-async function saveCropSettings() {
-  try {
-    const dataToSave = {
-      crops: cropSettings,
-      current: currentCrop
-    };
-    
-    const content = JSON.stringify(dataToSave, null, 2);
-    await fs.writeFile(CROP_SETTINGS_FILE, content);
-    
-    if (process.env.GITHUB_TOKEN) {
-      await octokit.repos.createOrUpdateFileContents({
-        owner: REPO_OWNER,
-        repo: REPO_NAME,
-        path: CROP_SETTINGS_FILE,
-        message: "Update crop settings",
-        content: Buffer.from(content).toString('base64'),
-        sha: await getFileSha(CROP_SETTINGS_FILE)
-      });
-    }
-    console.log('Crop settings saved');
-  } catch (error) {
-    console.error('Error saving crop settings:', error);
-  }
-}
 
 // Загрузка данных при запуске
 loadSensorDataHistory();
@@ -1003,17 +974,22 @@ async function loadCropSettings() {
     // Загружаем настройки культур
     cropSettings = settings.crops || {};
     
-    // Восстанавливаем текущую культуру из сохраненных данных
+    // Восстанавливаем текущую культуру
     currentCrop = settings.currentCrop || 'potato';
     
-console.log("Crop settings loaded. Current crop: " + currentCrop);  } catch (error) {
+    console.log("Crop settings loaded. Current crop: " + currentCrop);
+  } catch (error) {
     if (error.code === 'ENOENT') {
       console.log('No crop settings file found, using defaults');
+      // Инициализация по умолчанию
+      cropSettings = {};
+      currentCrop = 'potato';
     } else {
       console.error('Error loading crop settings:', error);
     }
   }
 }
+
 
 async function updateCropDropdown() {
   try {
@@ -1157,19 +1133,23 @@ async function initializeApp() {
     updateMode();
     updateSettings();
     checkConnection();
-    await updateCropDropdown(); // Добавьте эту строку
-    // Загрузка настроек культур и обновление выпадающего списка
-    const cropData = await loadCropSettings();
-    updateCropDropdown(cropData);
- const cropResponse = await fetch('/getCropSettings');
+    
+    // Загрузка текущих настроек культур
+    const cropResponse = await fetch('/getCropSettings');
     const cropData = await cropResponse.json();
     
     // Установка выбранной культуры в интерфейсе
     const cropSelect = document.getElementById('cropSelect');
     if (cropSelect) {
-      cropSelect.value = cropData.currentCropKey;
-      document.getElementById('currentCropName').textContent = 
-        cropData.availableCrops[cropData.currentCropKey]?.name || cropData.currentCropKey;
+      // Ищем опцию с текущей культурой
+      for (let option of cropSelect.options) {
+        if (option.value === cropData.currentCropKey) {
+          cropSelect.value = cropData.currentCropKey;
+          document.getElementById('currentCropName').textContent = 
+            cropData.availableCrops[cropData.currentCropKey]?.name || cropData.currentCropKey;
+          break;
+        }
+      }
     }
     // Инициализация обработчиков событий
     document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
