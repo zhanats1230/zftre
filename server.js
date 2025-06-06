@@ -686,8 +686,8 @@ app.get('/', (req, res) => {
       <div class="flex justify-end">
         <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Apply Crop Settings</button>
         <button id="deleteCrop" class="logout-btn ripple-btn">
-          <i class="fa-solid fa-trash mr-2"></i> Delete Crop
-        </button>
+  <i class="fa-solid fa-trash mr-2"></i> Delete Crop
+</button>
       </div>
     </div>
   </div>
@@ -1309,25 +1309,27 @@ document.getElementById('cropSelect').addEventListener('change', function() {
 }
     
     async function deleteCurrentCrop() {
-      if (confirm('Are you sure you want to delete the current crop settings? This action cannot be undone.')) {
-        try {
-          const response = await fetch('/deleteCrop', {
-            method: 'POST'
-          });
-          
-          if (response.ok) {
-            alert('Crop settings deleted successfully!');
-            await loadCropSettings();
-          } else {
-            const error = await response.json();
-            alert(error.error || 'Failed to delete crop settings');
-          }
-        } catch (error) {
-          console.error('Error deleting crop settings:', error);
-          alert('Error deleting crop settings');
-        }
+  if (confirm('Are you sure you want to delete the current crop? This action cannot be undone.')) {
+    try {
+      const response = await fetch('/deleteCrop', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ crop: currentCrop })
+      });
+      
+      if (response.ok) {
+        alert('Crop deleted successfully!');
+        await updateCropDropdown();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to delete crop');
       }
+    } catch (error) {
+      console.error('Error deleting crop:', error);
+      alert('Error deleting crop');
     }
+  }
+}
 
     async function initializeApp() {
   try {
@@ -1803,17 +1805,23 @@ app.post('/saveCropSettings', async (req, res) => {
 
 app.post('/deleteCrop', async (req, res) => {
   try {
-    if (['potato', 'carrot', 'tomato'].includes(currentCrop)) {
-      res.status(400).json({ error: 'Cannot delete default crops' });
-      return;
+    const { crop } = req.body;
+    
+    if (!cropSettings[crop]) {
+      return res.status(400).json({ error: 'Crop not found' });
     }
     
-    delete cropSettings[currentCrop];
-    currentCrop = 'potato';
+    delete cropSettings[crop];
     
-    await saveCropSettings(); // Сохраняем в GitHub
+    // Если удаляем текущую культуру, устанавливаем первую доступную или 'potato'
+    if (currentCrop === crop) {
+      const availableCrops = Object.keys(cropSettings);
+      currentCrop = availableCrops.length > 0 ? availableCrops[0] : 'potato';
+    }
     
+    await saveCropSettings();
     res.json({ success: true });
+    
   } catch (error) {
     console.error('Error in /deleteCrop:', error);
     res.status(500).json({ error: 'Server error' });
