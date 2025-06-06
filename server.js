@@ -1006,8 +1006,7 @@ async function loadCropSettings() {
     // Восстанавливаем текущую культуру из сохраненных данных
     currentCrop = settings.currentCrop || 'potato';
     
-    console.log(`Crop settings loaded. Current crop: ${currentCrop}`);
-  } catch (error) {
+console.log("Crop settings loaded. Current crop: " + currentCrop);  } catch (error) {
     if (error.code === 'ENOENT') {
       console.log('No crop settings file found, using defaults');
     } else {
