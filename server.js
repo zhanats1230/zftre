@@ -124,14 +124,12 @@ async function saveCropSettings() {
   try {
     const dataToSave = {
       crops: cropSettings,
-      currentCrop: currentCrop
+      currentCrop: currentCrop  // Сохраняем ключ текущей культуры
     };
-    const content = JSON.stringify(dataToSave, null, 2);
     
-    // Сохраняем локально
+    const content = JSON.stringify(dataToSave, null, 2);
     await fs.writeFile(CROP_SETTINGS_FILE, content);
     
-    // Сохраняем в GitHub
     if (process.env.GITHUB_TOKEN) {
       await octokit.repos.createOrUpdateFileContents({
         owner: REPO_OWNER,
@@ -141,8 +139,8 @@ async function saveCropSettings() {
         content: Buffer.from(content).toString('base64'),
         sha: await getFileSha(CROP_SETTINGS_FILE)
       });
-      console.log('Crop settings saved to file and GitHub');
     }
+    console.log('Crop settings saved');
   } catch (error) {
     console.error('Error saving crop settings:', error);
   }
@@ -999,24 +997,22 @@ document.getElementById('deleteCrop').addEventListener('click', async () => {
 
 async function loadCropSettings() {
   try {
-    const response = await fetch('/getCropSettings');
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Loaded crop settings:', data);
-      return data;
-    } else {
-      console.error('Error loading crop settings:', response.status);
-      return {
-        currentCropKey: 'potato',
-        availableCrops: {}
-      };
-    }
+    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+    
+    // Загружаем настройки культур
+    cropSettings = settings.crops || {};
+    
+    // Восстанавливаем текущую культуру из сохраненных данных
+    currentCrop = settings.currentCrop || 'potato';
+    
+    console.log(`Crop settings loaded. Current crop: ${currentCrop}`);
   } catch (error) {
-    console.error('Error loading crop settings:', error);
-    return {
-      currentCropKey: 'potato',
-      availableCrops: {}
-    };
+    if (error.code === 'ENOENT') {
+      console.log('No crop settings file found, using defaults');
+    } else {
+      console.error('Error loading crop settings:', error);
+    }
   }
 }
 
@@ -1055,7 +1051,7 @@ async function loadCurrentCropSettings() {
     const response = await fetch('/getCurrentCropSettings');
     const data = await response.json();
     
-    // Устанавливаем выбранную культуру в dropdown
+    // Всегда обновляем название текущей культуры
     const cropSelect = document.getElementById('cropSelect');
     if (cropSelect) {
       cropSelect.value = data.currentCrop;
@@ -1166,7 +1162,16 @@ async function initializeApp() {
     // Загрузка настроек культур и обновление выпадающего списка
     const cropData = await loadCropSettings();
     updateCropDropdown(cropData);
-
+ const cropResponse = await fetch('/getCropSettings');
+    const cropData = await cropResponse.json();
+    
+    // Установка выбранной культуры в интерфейсе
+    const cropSelect = document.getElementById('cropSelect');
+    if (cropSelect) {
+      cropSelect.value = cropData.currentCropKey;
+      document.getElementById('currentCropName').textContent = 
+        cropData.availableCrops[cropData.currentCropKey]?.name || cropData.currentCropKey;
+    }
     // Инициализация обработчиков событий
     document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
     document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
@@ -1217,6 +1222,14 @@ async function applyCropSettings() {
     }
     
     try {
+    const cropResponse = await fetch('/getCropSettings');
+    const cropData = await cropResponse.json();
+    
+    // Обновляем интерфейс
+    const cropSelect = document.getElementById('cropSelect');
+    cropSelect.value = cropData.currentCropKey;
+    document.getElementById('currentCropName').textContent = 
+      cropData.availableCrops[cropData.currentCropKey]?.name || cropData.currentCropKey;
       const response = await fetch('/addCrop', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1331,37 +1344,7 @@ document.getElementById('cropSelect').addEventListener('change', function() {
   }
 }
 
-    async function initializeApp() {
-  try {
-    switchTab('dashboard');
-    initializeCharts();
-    updateRelayState();
-    updateSensorData();
-    updateMode();
-    updateSettings();
-    checkConnection();
     
-    // Инициализация работы с культурами
-    await updateCropDropdown();
-    
-    // Инициализация обработчиков событий
-    document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
-    document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
-    document.getElementById('toggleMode').addEventListener('click', toggleMode);
-    
-    document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
-    document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
-    document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
-    
-    setInterval(updateSensorData, 5000);
-    setInterval(updateRelayState, 5000);
-    setInterval(updateMode, 5000);
-    setInterval(checkConnection, 10000);
-  } catch (error) {
-    console.error('Error initializing app:', error);
-    alert('Failed to initialize the application. Please refresh the page.');
-  }
-}
 
     async function updateRelayState() {
       try {
@@ -1743,14 +1726,14 @@ app.post('/updateLightingSettings', (req, res) => {
 app.get('/getCropSettings', (req, res) => {
   try {
     res.json({
-      currentCropKey: currentCrop,
+      currentCropKey: currentCrop,  // Всегда возвращаем текущую культуру
       availableCrops: cropSettings
     });
   } catch (error) {
     console.error('Error in /getCropSettings:', error);
     res.status(500).json({ 
       error: 'Server error',
-      currentCropKey: 'potato',
+      currentCropKey: currentCrop || 'potato',
       availableCrops: cropSettings
     });
   }
