@@ -1346,8 +1346,7 @@ document.getElementById('cropSelect').addEventListener('change', function() {
     document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
     document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
     document.getElementById('toggleMode').addEventListener('click', toggleMode);
-    document.getElementById('saveLightingSettings').addEventListener('click', saveLightingSettings);
-    document.getElementById('savePumpSettings').addEventListener('click', savePumpSettings);
+    
     document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
     document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
     document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
@@ -1513,62 +1512,9 @@ document.getElementById('soilMoistureProgress').style.width = Math.min(data.soil
       }
     }
 
-    async function saveLightingSettings() {
-      try {
-        const settings = {
-          fanTemperatureThreshold: parseFloat(document.getElementById('fanTemperatureThreshold').value),
-          lightOnDuration: parseInt(document.getElementById('lightOnDuration').value) * 60000,
-          lightIntervalManual: parseInt(document.getElementById('lightIntervalManual').value) * 60000
-        };
-        const response = await fetch('/updateLightingSettings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(settings)
-        });
-        if (response.ok) {
-          localStorage.setItem('lightingSettings', JSON.stringify({
-            fanTemperatureThreshold: settings.fanTemperatureThreshold,
-            lightOnDuration: settings.lightOnDuration,
-            lightIntervalManual: settings.lightIntervalManual
-          }));
-          alert('Lighting settings saved!');
-          await updateSettings();
-        } else {
-          const error = await response.json();
-          alert(error.error || 'Failed to save settings');
-        }
-      } catch (error) {
-        console.error('Error saving lighting settings:', error);
-        alert('Error saving settings');
-      }
-    }
+    
 
-    async function savePumpSettings() {
-      try {
-        const settings = {
-          pumpStartHour: parseInt(document.getElementById('pumpStartHour').value),
-          pumpStartMinute: parseInt(document.getElementById('pumpStartMinute').value),
-          pumpDuration: parseInt(document.getElementById('pumpDuration').value),
-          pumpInterval: parseInt(document.getElementById('pumpInterval').value)
-        };
-        const response = await fetch('/updatePumpSettings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(settings)
-        });
-        if (response.ok) {
-          localStorage.setItem('pumpSettings', JSON.stringify(settings));
-          alert('Pump settings saved!');
-          await updateSettings();
-        } else {
-          const error = await response.json();
-          alert(error.error || 'Failed to save settings');
-        }
-      } catch (error) {
-        console.error('Error saving pump settings:', error);
-        alert('Error saving settings');
-      }
-    }
+    
   </script>
 </body>
 </html>
