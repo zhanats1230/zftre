@@ -1317,7 +1317,7 @@ document.getElementById('cropSelect').addEventListener('change', function() {
     return;
   }
 
-  if (confirm(`Are you sure you want to delete "${cropToDelete}" crop? This action cannot be undone.`)) {
+if (confirm("Are you sure you want to delete \"" + cropToDelete + "\" crop? This action cannot be undone.")) {
     try {
       const response = await fetch('/deleteCrop', { 
         method: 'POST',
