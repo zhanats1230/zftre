@@ -272,8 +272,10 @@ app.get('/', (req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Greenhouse Control</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@latest/dist/apexcharts.min.css">
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@latest"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  
   <style>
     body {
       background: linear-gradient(to bottom, #f9fafb, #e5e7eb);
@@ -340,6 +342,10 @@ app.get('/', (req, res) => {
     .modal-overlay {
       transition: opacity 0.3s ease;
     }
+    #tempChart, #humidityChart, #soilMoistureChart {
+  min-height: 350px;
+  width: 100%;
+}
     .section-header {
       background: linear-gradient(to right, #14b8a6, #2dd4bf);
       color: white;
@@ -616,7 +622,7 @@ app.get('/', (req, res) => {
           <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Temperature Trends</h3>
           <button id="closeTempModal" class="text-gray-600 hover:text-gray-900"><i class="fa-solid fa-times"></i></button>
         </div>
-        <canvas id="tempChart"></canvas>
+        <div id="tempChart"></div>
       </div>
     </div>
     <div id="humidityModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
@@ -625,7 +631,7 @@ app.get('/', (req, res) => {
           <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Humidity Trends</h3>
           <button id="closeHumidityModal" class="text-gray-600 hover:text-gray-900"><i class="fa-solid fa-times"></i></button>
         </div>
-        <canvas id="humidityChart"></canvas>
+        <div id="humidityChart"></div>
       </div>
     </div>
     <div id="soilMoistureModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
@@ -634,7 +640,7 @@ app.get('/', (req, res) => {
           <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Soil Moisture Trends</h3>
           <button id="closeSoilMoistureModal" class="text-gray-600 hover:text-gray-900"><i class="fa-solid fa-times"></i></button>
         </div>
-        <canvas id="soilMoistureChart"></canvas>
+        <div id="soilMoistureChart"></div>
       </div>
     </div>
 
@@ -914,69 +920,7 @@ document.getElementById('deleteCrop').addEventListener('click', async () => {
 
     let tempChart, humidityChart, soilMoistureChart;
     const maxDataPoints = 30;
-    function initializeCharts() {
-      const ctxTemp = document.getElementById('tempChart').getContext('2d');
-      const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
-      const ctxSoilMoisture = document.getElementById('soilMoistureChart').getContext('2d');
-
-      tempChart = new Chart(ctxTemp, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Temperature (°C)',
-            data: [],
-            borderColor: '#14b8a6',
-            backgroundColor: 'rgba(20, 184, 166, 0.2)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: { y: { beginAtZero: true, max: 40 } }
-        }
-      });
-
-      humidityChart = new Chart(ctxHumidity, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Humidity (%)',
-            data: [],
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: { y: { beginAtZero: true, max: 100 } }
-        }
-      });
-
-      soilMoistureChart = new Chart(ctxSoilMoisture, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Soil Moisture (%)',
-            data: [],
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.2)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: { y: { viewingAtZero: true, max: 100 } }
-        }
-      });
-    }
-
+    
     function toggleModal(modalId, show) {
       const modal = document.getElementById(modalId);
       if (show) {
@@ -1404,29 +1348,62 @@ document.getElementById('soilMoistureProgress').style.width = Math.min(data.soil
       }
     }
 
-    function updateChartData(sensor, timestamp, value) {
-      const key = sensor + 'Data';
-      let storedData = JSON.parse(localStorage.getItem(key)) || { labels: [], values: [] };
-      storedData.labels.push(timestamp);
-      storedData.values.push(value);
+    async function loadAndRenderChart(modalId, chartId, title, color) {
+  try {
+    const type = chartId.replace('Chart', '');
+    const response = await fetch('/getSensorHistory/' + type);
+    const data = await response.json();
 
-      if (storedData.labels.length > maxDataPoints) {
-        storedData.labels.shift();
-        storedData.values.shift();
-      }
+    const options = {
+      series: [{
+        name: title,
+        data: data
+      }],
+      chart: {
+        type: 'line',
+        height: 350,
+        zoom: { enabled: true }
+      },
+      colors: [color],
+      dataLabels: { enabled: false },
+      stroke: { curve: 'smooth', width: 3 },
+      xaxis: { 
+        type: 'datetime',
+        labels: { datetimeUTC: false } 
+      },
+      tooltip: {
+        x: { format: 'HH:mm dd.MM.yy' }
+      },
+      markers: { size: 0 }
+    };
 
-      localStorage.setItem(key, JSON.stringify(storedData));
+    if (window[chartId]) window[chartId].destroy();
+    
+    window[chartId] = new ApexCharts(
+      document.querySelector('#' + chartId);
+      options
+    );
+    
+    window[chartId].render();
+    toggleModal(modalId, true);
+    
+  } catch (error) {
+    console.error('Error loading ' + type + ' chart:', error);
+  }
+}
 
-      const chart = {
-        temperature: tempChart,
-        humidity: humidityChart,
-        soilMoisture: soilMoistureChart
-      }[sensor];
+// Обновите обработчики кнопок
+document.getElementById('tempChartBtn').addEventListener('click', () => 
+  loadAndRenderChart('tempModal', 'tempChart', 'Temperature (°C)', '#14b8a6')
+);
 
-      chart.data.labels = storedData.labels;
-      chart.data.datasets[0].data = storedData.values;
-      chart.update();
-    }
+document.getElementById('humidityChartBtn').addEventListener('click', () => 
+  loadAndRenderChart('humidityModal', 'humidityChart', 'Humidity (%)', '#3b82f6')
+);
+
+document.getElementById('soilMoistureChartBtn').addEventListener('click', () => 
+  loadAndRenderChart('soilMoistureModal', 'soilMoistureChart', 'Soil Moisture (%)', '#10b981')
+);
 
     async function updateMode() {
       try {
@@ -1530,6 +1507,23 @@ app.get('/getSensorStatus', (req, res) => {
     res.json({ isOnline });
   } catch (error) {
     console.error('Error in /getSensorStatus:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+app.get('/getSensorHistory/:type', (req, res) => {
+  try {
+    const { type } = req.params;
+    const oneDayAgo = Date.now() - 86400000;
+    
+    const filteredData = sensorDataHistory.hourlyAverages
+      .filter(entry => entry.timestamp >= oneDayAgo)
+      .map(entry => ({
+        x: new Date(entry.timestamp),
+        y: entry[type]
+      }));
+
+    res.json(filteredData);
+  } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
 });
