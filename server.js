@@ -205,6 +205,11 @@ function updateHealthyRanges({ temperature, humidity, soilMoisture }) {
   }
 }
 
+
+// Загрузка данных при запуске
+loadSensorDataHistory();
+loadCropSettings();
+
 let mode = 'auto';
 
 let lightingSettings = {
@@ -228,7 +233,31 @@ let currentCrop = 'potato';
 
 
 // Сохранение настроек культур
-
+async function saveCropSettings() {
+  try {
+    const dataToSave = {
+      crops: cropSettings,
+      current: currentCrop
+    };
+    
+    const content = JSON.stringify(dataToSave, null, 2);
+    await fs.writeFile(CROP_SETTINGS_FILE, content);
+    
+    if (process.env.GITHUB_TOKEN) {
+      await octokit.repos.createOrUpdateFileContents({
+        owner: REPO_OWNER,
+        repo: REPO_NAME,
+        path: CROP_SETTINGS_FILE,
+        message: "Update crop settings",
+        content: Buffer.from(content).toString('base64'),
+        sha: await getFileSha(CROP_SETTINGS_FILE)
+      });
+    }
+    console.log('Crop settings saved');
+  } catch (error) {
+    console.error('Error saving crop settings:', error);
+  }
+}
 
 // Загрузка данных при запуске
 loadSensorDataHistory();
@@ -1166,19 +1195,9 @@ document.getElementById('cropSelect').addEventListener('change', async function(
     setInterval(updateRelayState, 5000);
     setInterval(updateMode, 5000);
     setInterval(checkConnection, 10000);
-  try {
-    const response = await fetch('/getCropSettings');
-    const data = await response.json();
-    
-    // Устанавливаем текущую культуру в интерфейсе
-    const cropSelect = document.getElementById('cropSelect');
-    if (cropSelect) {
-      cropSelect.value = data.currentCrop;
-      document.getElementById('currentCropName').textContent = 
-        cropSelect.options[cropSelect.selectedIndex].text;
-    }
   } catch (error) {
-    console.error('Error loading crop settings:', error);
+    console.error('Error initializing app:', error);
+    alert('Failed to initialize the application. Please refresh the page.');
   }
 }
 
@@ -1740,10 +1759,10 @@ app.get('/getCropSettings', (req, res) => {
 app.post('/setCurrentCrop', async (req, res) => {
   try {
     const { crop } = req.body;
-    
     if (cropSettings[crop]) {
       currentCrop = crop;
-      await saveCropSettings(); // Сохраняем изменения
+      console.log('Current crop set to:', currentCrop);
+      await saveCropSettings();
       res.json({ success: true });
     } else {
       res.status(400).json({ error: 'Invalid crop selection' });
