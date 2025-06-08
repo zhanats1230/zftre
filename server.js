@@ -1046,54 +1046,6 @@ async function applyCropSettings() {
     }
   }
 
-async function initializeApp() {
-  try {
-    switchTab('dashboard');
-    initializeCharts();
-    updateRelayState();
-    updateSensorData();
-    updateMode();
-    updateSettings();
-    checkConnection();
-    await updateCropDropdown(); // Добавьте эту строку
-    // Загрузка настроек культур и обновление выпадающего списка
-    const cropData = await loadCropSettings();
-    updateCropDropdown(cropData);
-
-    // Инициализация обработчиков событий
-    document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
-    document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
-    document.getElementById('toggleMode').addEventListener('click', toggleMode);
-    document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
-    document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
-    document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
-    
-   // Обновим обработчик изменения выбора культуры
-document.getElementById('cropSelect').addEventListener('change', async function() {
-  const customFields = document.getElementById('customCropFields');
-  if (this.value === 'custom') {
-    customFields.classList.remove('hidden');
-    // Очищаем поля для новой культуры
-    document.getElementById('newCropKey').value = '';
-    document.getElementById('newCropName').value = '';
-  } else {
-    customFields.classList.add('hidden');
-    // Загружаем настройки выбранной культуры
-    await loadCurrentCropSettings();
-  }
-});
-
-
-    setInterval(updateSensorData, 5000);
-    setInterval(updateRelayState, 5000);
-    setInterval(updateMode, 5000);
-    setInterval(checkConnection, 10000);
-  } catch (error) {
-    console.error('Error initializing app:', error);
-    alert('Failed to initialize the application. Please refresh the page.');
-  }
-}
-
 
 async function applyCropSettings() {
   const cropSelect = document.getElementById('cropSelect');
@@ -1224,28 +1176,52 @@ document.getElementById('cropSelect').addEventListener('change', function() {
   }
 }
 
-    async function initializeApp() {
+   async function initializeApp() {
   try {
     switchTab('dashboard');
-    initializeCharts();
+    // Удален вызов initializeCharts()
     updateRelayState();
     updateSensorData();
     updateMode();
-    updateSettings();
+    // updateSettings(); // Устаревшая функция, можно удалить
     checkConnection();
     
-    // Инициализация работы с культурами
+    // Загрузка настроек культур
+    const cropData = await loadCropSettings();
     await updateCropDropdown();
+    await loadCurrentCropSettings();
     
     // Инициализация обработчиков событий
-    document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
-    document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
-    document.getElementById('toggleMode').addEventListener('click', toggleMode);
+    document.getElementById('toggleRelay1')?.addEventListener('click', () => toggleRelay(1));
+    document.getElementById('toggleRelay2')?.addEventListener('click', () => toggleRelay(2));
+    document.getElementById('toggleMode')?.addEventListener('click', toggleMode);
     
-    document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
-    document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
-    document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
+    if (document.getElementById('applyCrop')) {
+      document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
+    }
     
+    if (document.getElementById('saveCropSettings')) {
+      document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
+    }
+    
+    if (document.getElementById('deleteCrop')) {
+      document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
+    }
+    
+    // Обработчик для выбора культуры
+    const cropSelect = document.getElementById('cropSelect');
+    if (cropSelect) {
+      cropSelect.addEventListener('change', async function() {
+        const customFields = document.getElementById('customCropFields');
+        if (this.value === 'custom') {
+          customFields.classList.remove('hidden');
+        } else {
+          customFields.classList.add('hidden');
+          await loadCurrentCropSettings();
+        }
+      });
+    }
+
     setInterval(updateSensorData, 5000);
     setInterval(updateRelayState, 5000);
     setInterval(updateMode, 5000);
