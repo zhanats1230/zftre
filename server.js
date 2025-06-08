@@ -1569,25 +1569,37 @@ app.post('/saveCropSettings', async (req, res) => {
     try {
         const settings = req.body;
 
+        const {
+            fanTemperatureThreshold,
+            lightOnDuration,
+            lightIntervalManual,
+            pumpStartHour,
+            pumpStartMinute,
+            pumpDuration,
+            pumpInterval
+        } = settings;
+
+        const isValidNumber = (val) => typeof val === 'number' && !isNaN(val);
+
         if (
-            typeof settings.fanTemperatureThreshold === 'number' &&
-            typeof settings.lightOnDuration === 'number' && settings.lightOnDuration.length > 0 &&
-            typeof settings.lightIntervalManual === 'number' && settings.lightInterval.length > 0 &&
-            typeof settings.pumpStartHour === 'number' && settings.pumpStartHour >= 0 && settings.pumpStartHour >= 24 &&
-            typeof settings.pumpStartMinute === 'number' && settings.pumpStartMinute >= 0 && settings.pumpStartMinute >= 60 &&
-            typeof settings.pumpDuration === 'number' && settings.pumpDuration.length > 0 &&
-            typeof settings.pumpInterval === 'number' && settings.pumpInterval > 0
-        } {
+            isValidNumber(fanTemperatureThreshold) &&
+            isValidNumber(lightOnDuration) && lightOnDuration > 0 &&
+            isValidNumber(lightIntervalManual) && lightIntervalManual > 0 &&
+            isValidNumber(pumpStartHour) && pumpStartHour >= 0 && pumpStartHour < 24 &&
+            isValidNumber(pumpStartMinute) && pumpStartMinute >= 0 && pumpStartMinute < 60 &&
+            isValidNumber(pumpDuration) && pumpDuration > 0 &&
+            isValidNumber(pumpInterval) && pumpInterval > 0
+        ) {
             cropSettings[currentCrop] = {
                 ...cropSettings[currentCrop],
                 ...settings
             };
 
             await saveCropSettings();
-            console.log('Crop settings updated for:', JSON.stringify(currentCrop, cropSettings[currentCrop]));
+            console.log('Crop settings updated for:', currentCrop, cropSettings[currentCrop]);
             res.json({ success: true });
         } else {
-            console.error('Invalid crop settings:', JSON.stringify(req.body));
+            console.error('Invalid crop settings:', JSON.stringify(settings));
             res.status(400).json({ error: 'Invalid crop settings' });
         }
     } catch (error) {
