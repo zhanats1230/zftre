@@ -4,7 +4,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const app = express();
 const port = process.env.PORT || 80;
-
+const MAX_HISTORY_HOURS = 48;
 const { Octokit } = require("@octokit/rest");
 const octokit = new Octokit({ 
   auth: process.env.GITHUB_TOKEN 
@@ -78,13 +78,20 @@ async function loadSensorDataHistory() {
 // Сохранение истории данных сенсоров
 async function saveSensorDataHistory() {
   try {
-    await fs.writeFile(DATA_FILE, JSON.stringify(sensorDataHistory, null, 2));
+    // Сохраняем только последние MAX_HISTORY_HOURS часов
+    const cutoff = Date.now() - (MAX_HISTORY_HOURS * 3600000);
+    const dataToSave = {
+      raw: sensorDataHistory.raw.filter(entry => entry.timestamp >= cutoff),
+      hourlyAverages: sensorDataHistory.hourlyAverages,
+      healthyRanges: sensorDataHistory.healthyRanges
+    };
+    
+    await fs.writeFile(DATA_FILE, JSON.stringify(dataToSave, null, 2));
     console.log('Sensor data history saved to file');
   } catch (error) {
     console.error('Error saving sensor data history:', error);
   }
 }
-
 async function loadCropSettings() {
   try {
     const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
@@ -163,8 +170,10 @@ async function getFileSha(filePath) {
 
 // Вычисление средних значений
 function computeHourlyAverages() {
+  const cutoff = Date.now() - (MAX_HISTORY_HOURS * 3600000);
   const oneDayAgo = Date.now() - 86400000;
   const hourlyBuckets = {};
+  sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= cutoff);
 
   sensorDataHistory.raw.forEach(entry => {
     const date = new Date(entry.timestamp);
@@ -584,27 +593,56 @@ app.get('/', (req, res) => {
           <h3 class="text-xl font-semibold"><i class="fa-solid fa-thermometer mr-2"></i> Environmental Sensors</h3>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <!-- Temperature -->
-          <div class="bg-white p-6 rounded-2xl shadow-lg card">
-            <h4 class="text-lg font-semibold text-gray-900 mb-3"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Temperature</h4>
-            <p id="temperature" class="text-lg mb-3">— °C</p>
-            <div class="progress-bar"><div id="temperatureProgress" class="progress-bar-fill" style="width: 0%"></div></div>
-            <button id="tempChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
-          </div>
-          <!-- Humidity -->
-          <div class="bg-white p-6 rounded-2xl shadow-lg card">
-            <h4 class="text-lg font-semibold text-gray-900 mb-3"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Humidity</h4>
-            <p id="humidity" class="text-lg mb-3">— %</p>
-            <div class="progress-bar"><div id="humidityProgress" class="progress-bar-fill" style="width: 0%"></div></div>
-            <button id="humidityChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
-          </div>
-          <!-- Soil Moisture -->
-          <div class="bg-white p-6 rounded-2xl shadow-lg card">
-            <h4 class="text-lg font-semibold text-gray-900 mb-3"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Soil Moisture</h4>
-            <p id="soilMoisture" class="text-lg mb-3">— %</p>
-            <div class="progress-bar"><div id="soilMoistureProgress" class="progress-bar-fill" style="width: 0%"></div></div>
-            <button id="soilMoistureChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
-          </div>
+          <div id="tempModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
+  <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-900">
+        <i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> 
+        Temperature Trends (24h)
+      </h3>
+      <button id="closeTempModal" class="text-gray-600 hover:text-gray-900 text-2xl">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    <div class="chart-container flex-grow">
+      <canvas id="tempChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div id="humidityModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
+  <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-900">
+        <i class="fa-solid fa-tint mr-2 text-teal-500"></i> 
+        Humidity Trends (24h)
+      </h3>
+      <button id="closeHumidityModal" class="text-gray-600 hover:text-gray-900 text-2xl">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    <div class="chart-container flex-grow">
+      <canvas id="humidityChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div id="soilMoistureModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
+  <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-900">
+        <i class="fa-solid fa-seedling mr-2 text-teal-500"></i> 
+        Soil Moisture Trends (24h)
+      </h3>
+      <button id="closeSoilMoistureModal" class="text-gray-600 hover:text-gray-900 text-2xl">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    <div class="chart-container flex-grow">
+      <canvas id="soilMoistureChart"></canvas>
+    </div>
+  </div>
+</div>
         </div>
       </div>
     </div>
@@ -1514,6 +1552,145 @@ document.getElementById('soilMoistureProgress').style.width = Math.min(data.soil
       }
     }
 
+
+
+
+  let tempChart, humidityChart, soilMoistureChart;
+  let chartUpdateInterval;
+
+  async function loadChartData(sensorType) {
+    try {
+      const response = await fetch('/getChartData');
+      const data = await response.json();
+      
+      const labels = data.map(item => {
+        const date = new Date(item.timestamp);
+        return date.getHours() + ':00';
+      });
+
+      const values = data.map(item => item[sensorType]);
+      
+      return { labels, values };
+    } catch (error) {
+      console.error('Error loading ' + sensorType + ' data:', error);
+      return { labels: [], values: [] };
+    }
+  }
+
+  function initializeChart(ctx, label, color) {
+    return new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: label,
+          data: [],
+          borderColor: color,
+          backgroundColor: color + '20',
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: { display: false },
+            title: { display: true, text: 'Time (last 24 hours)' }
+          },
+          y: {
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'Value' }
+          }
+        }
+      }
+    });
+  }
+
+  async function updateChart(chart, sensorType) {
+  try {
+    const { labels, values } = await loadChartData(sensorType);
+    
+    if (values.length === 0) {
+      chart.data.labels = ['No data available'];
+      chart.data.datasets[0].data = [0];
+      chart.options.scales.y.min = 0;
+      chart.options.scales.y.max = 100;
+    } else {
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = values;
+      
+      // Автоматическое масштабирование
+      const minVal = Math.min(...values) * 0.9;
+      const maxVal = Math.max(...values) * 1.1;
+      chart.options.scales.y.min = minVal > 0 ? minVal : 0;
+      chart.options.scales.y.max = maxVal < 100 ? maxVal : 100;
+    }
+    
+    chart.update();
+  } catch (error) {
+    console.error(`Error updating ${sensorType} chart:`, error);
+  }
+}
+  function setupChartModal(modalId, chartId, sensorType, color) {
+    const modal = document.getElementById(modalId);
+    const ctx = document.getElementById(chartId).getContext('2d');
+    const chart = initializeChart(ctx, sensorType, color);
+    
+    document.querySelector('#' + modalId + ' .chart-container').style.height = '70vh';
+    
+    return {
+      open: async () => {
+        toggleModal(modalId, true);
+        await updateChart(chart, sensorType);
+        chartUpdateInterval = setInterval(
+          async () => await updateChart(chart, sensorType), 
+          30000
+        );
+      },
+      close: () => {
+        toggleModal(modalId, false);
+        clearInterval(chartUpdateInterval);
+      }
+    };
+  }
+
+  // Инициализация графиков при запуске приложения
+  async function initializeCharts() {
+    const tempChart = setupChartModal(
+      'tempModal', 
+      'tempChart', 
+      'temperature', 
+      '#14b8a6'
+    );
+    
+    const humidityChart = setupChartModal(
+      'humidityModal', 
+      'humidityChart', 
+      'humidity', 
+      '#3b82f6'
+    );
+    
+    const soilChart = setupChartModal(
+      'soilMoistureModal', 
+      'soilMoistureChart', 
+      'soilMoisture', 
+      '#10b981'
+    );
+
+    document.getElementById('tempChartBtn').addEventListener('click', tempChart.open);
+    document.getElementById('closeTempModal').addEventListener('click', tempChart.close);
+    
+    document.getElementById('humidityChartBtn').addEventListener('click', humidityChart.open);
+    document.getElementById('closeHumidityModal').addEventListener('click', humidityChart.close);
+    
+    document.getElementById('soilMoistureChartBtn').addEventListener('click', soilChart.open);
+    document.getElementById('closeSoilMoistureModal').addEventListener('click', soilChart.close);
+  }
     
 
     
@@ -1634,7 +1811,52 @@ app.get('/getSensorTrends', (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+app.get('/getChartData', async (req, res) => {
+  try {
+    const oneDayAgo = Date.now() - 86400000;
+    
+    // Фильтруем данные за последние 24 часа
+    const rawData = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
+    
+    // Группируем данные по часам для сглаживания
+    const hourlyData = {};
+    rawData.forEach(entry => {
+      const hour = new Date(entry.timestamp).getHours();
+      if (!hourlyData[hour]) {
+        hourlyData[hour] = {
+          temperature: [],
+          humidity: [],
+          soilMoisture: [],
+          count: 0
+        };
+      }
+      hourlyData[hour].temperature.push(entry.temperature);
+      hourlyData[hour].humidity.push(entry.humidity);
+      hourlyData[hour].soilMoisture.push(entry.soilMoisture);
+      hourlyData[hour].count++;
+    });
 
+    // Рассчитываем средние значения
+    const processedData = [];
+    for (const [hour, data] of Object.entries(hourlyData)) {
+      processedData.push({
+        hour: parseInt(hour),
+        timestamp: new Date().setHours(hour, 0, 0, 0),
+        temperature: data.temperature.reduce((a, b) => a + b, 0) / data.count,
+        humidity: data.humidity.reduce((a, b) => a + b, 0) / data.count,
+        soilMoisture: data.soilMoisture.reduce((a, b) => a + b, 0) / data.count
+      });
+    }
+
+    // Сортируем по времени
+    processedData.sort((a, b) => a.timestamp - b.timestamp);
+
+    res.json(processedData);
+  } catch (error) {
+    console.error('Error in /getChartData:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 app.get('/getMode', (req, res) => {
   try {
     res.json({ mode });
