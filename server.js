@@ -89,7 +89,7 @@ async function loadCropSettings() {
   try {
     const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
     const settings = JSON.parse(data);
-    cropSettings = settings.crops || cropSettings;
+    cropSettings = settings.crops || {};
     currentCrop = settings.currentCrop || currentCrop;
     console.log(`Crop settings loaded. Current crop: ${currentCrop}`);
   } catch (error) {
@@ -120,33 +120,8 @@ app.get('/getCropSettings', (req, res) => {
 
 
 // Сохранение настроек культур
-async function saveCropSettings() {
-  try {
-    const dataToSave = {
-      crops: cropSettings,
-      currentCrop: currentCrop
-    };
-    const content = JSON.stringify(dataToSave, null, 2);
-    
-    // Сохраняем локально
-    await fs.writeFile(CROP_SETTINGS_FILE, content);
-    
-    // Сохраняем в GitHub
-    if (process.env.GITHUB_TOKEN) {
-      await octokit.repos.createOrUpdateFileContents({
-        owner: REPO_OWNER,
-        repo: REPO_NAME,
-        path: CROP_SETTINGS_FILE,
-        message: "Update crop settings",
-        content: Buffer.from(content).toString('base64'),
-        sha: await getFileSha(CROP_SETTINGS_FILE)
-      });
-      console.log('Crop settings saved to file and GitHub');
-    }
-  } catch (error) {
-    console.error('Error saving crop settings:', error);
-  }
-}
+
+
 
 async function getFileSha(filePath) {
   try {
@@ -168,7 +143,7 @@ function computeHourlyAverages() {
 
   sensorDataHistory.raw.forEach(entry => {
     const date = new Date(entry.timestamp);
-    const hourKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}`;
+const hourKey = `${date.getUTCFullYear()}-${date.getUTCMonth() + 1}-${date.getUTCDate()}-${date.getUTCHours()}`;
     if (!hourlyBuckets[hourKey]) {
       hourlyBuckets[hourKey] = { temperature: [], humidity: [], soilMoisture: [], timestamp: date.setMinutes(0, 0, 0) };
     }
@@ -232,32 +207,7 @@ let currentCrop = 'potato';
 
 
 
-// Сохранение настроек культур
-async function saveCropSettings() {
-  try {
-    const dataToSave = {
-      crops: cropSettings,
-      current: currentCrop
-    };
-    
-    const content = JSON.stringify(dataToSave, null, 2);
-    await fs.writeFile(CROP_SETTINGS_FILE, content);
-    
-    if (process.env.GITHUB_TOKEN) {
-      await octokit.repos.createOrUpdateFileContents({
-        owner: REPO_OWNER,
-        repo: REPO_NAME,
-        path: CROP_SETTINGS_FILE,
-        message: "Update crop settings",
-        content: Buffer.from(content).toString('base64'),
-        sha: await getFileSha(CROP_SETTINGS_FILE)
-      });
-    }
-    console.log('Crop settings saved');
-  } catch (error) {
-    console.error('Error saving crop settings:', error);
-  }
-}
+
 
 // Загрузка данных при запуске
 loadSensorDataHistory();
@@ -749,7 +699,6 @@ app.get('/', (req, res) => {
     <div class="wave-divider"></div>
     <div class="flex justify-between mt-4">
       <button id="saveCropSettings" class="ripple-btn"><i class="fa-solid fa-save mr-2"></i> Save Crop Settings</button>
-      <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Delete Crop</button>
     </div>
   </div>
 </div>
@@ -1340,9 +1289,7 @@ document.getElementById('humidityProgress').style.width = Math.min(data.humidity
 document.getElementById('soilMoistureProgress').style.width = Math.min(data.soilMoisture, 100) + '%';
 
         const timestamp = new Date().toLocaleTimeString();
-        updateChartData('temperature', timestamp, data.temperature);
-        updateChartData('humidity', timestamp, data.humidity);
-        updateChartData('soilMoisture', timestamp, data.soilMoisture);
+        
       } catch (error) {
         console.error('Error fetching sensor data:', error);
       }
@@ -1380,9 +1327,9 @@ document.getElementById('soilMoistureProgress').style.width = Math.min(data.soil
     if (window[chartId]) window[chartId].destroy();
     
     window[chartId] = new ApexCharts(
-      document.querySelector('#' + chartId);
-      options
-    );
+  document.querySelector('#' + chartId), // Убрать точку с запятой
+  options
+);
     
     window[chartId].render();
     toggleModal(modalId, true);
@@ -1517,10 +1464,10 @@ app.get('/getSensorHistory/:type', (req, res) => {
     
     const filteredData = sensorDataHistory.hourlyAverages
       .filter(entry => entry.timestamp >= oneDayAgo)
-      .map(entry => ({
-        x: new Date(entry.timestamp),
-        y: entry[type]
-      }));
+      .map(entry => [
+        entry.timestamp, // timestamp
+        entry[type]     // value
+      ]);
 
     res.json(filteredData);
   } catch (error) {
