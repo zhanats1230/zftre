@@ -10,7 +10,7 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN 
 });
 const REPO_OWNER = "zhanats1230";
-const REPO_NAME = "zftre";  // Just the repository name
+const REPO_NAME = "zftre";
 
 // Paths to store data
 const DATA_FILE = 'sensorDataHistory.json';
@@ -48,6 +48,11 @@ const HEALTHY_RANGES = {
   soilMoisture: { min: 30, max: 70 }
 };
 
+let mode = 'auto';
+
+let cropSettings = {};
+let currentCrop = 'potato';
+
 // Загрузка истории данных сенсоров
 async function loadSensorDataHistory() {
   try {
@@ -81,7 +86,7 @@ async function saveSensorDataHistory() {
     const cutoff = Date.now() - (MAX_HISTORY_HOURS * 3600000);
     const dataToSave = {
       raw: sensorDataHistory.raw.filter(entry => entry.timestamp >= cutoff),
-      hourlyAverages: sensorDataHistory.hourlyAverages.filter(entry => entry.timestamp >= cutoff), // Добавлено
+      hourlyAverages: sensorDataHistory.hourlyAverages.filter(entry => entry.timestamp >= cutoff),
       healthyRanges: sensorDataHistory.healthyRanges
     };
     
@@ -91,6 +96,8 @@ async function saveSensorDataHistory() {
     console.error('Error saving sensor data history:', error);
   }
 }
+
+// Загрузка настроек культур
 async function loadCropSettings() {
   try {
     const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
@@ -103,7 +110,6 @@ async function loadCropSettings() {
   } catch (error) {
     if (error.code === 'ENOENT') {
       console.log('No crop settings file found, using defaults');
-      // Инициализация значений по умолчанию
       cropSettings = {
         potato: {
           name: "Potato",
@@ -124,26 +130,34 @@ async function loadCropSettings() {
   }
 }
 
-// Эндпоинт для получения настроек культур
-app.get('/getCropSettings', (req, res) => {
+// Сохранение настроек культур
+async function saveCropSettings() {
   try {
-    res.json({
-      currentCropKey: currentCrop,
-      availableCrops: cropSettings
-    });
+    const dataToSave = {
+      crops: cropSettings,
+      currentCrop: currentCrop
+    };
+    
+    const content = JSON.stringify(dataToSave, null, 2);
+    await fs.writeFile(CROP_SETTINGS_FILE, content);
+    
+    if (process.env.GITHUB_TOKEN) {
+      await octokit.repos8786.createOrUpdateFileContents({
+        owner: REPO_OWNER,
+        repo: REPO_NAME,
+        path: CROP_SETTINGS_FILE,
+        message: "Update crop settings",
+        content: Buffer.from(content).toString('base64'),
+        sha: await getFileSha(CROP_SETTINGS_FILE)
+      });
+    }
+    console.log('Crop settings saved');
   } catch (error) {
-    console.error('Error in /getCropSettings:', error);
-    res.status(500).json({ 
-      error: 'Server error',
-      currentCropKey: 'potato',
-      availableCrops: cropSettings
-    });
+    console.error('Error saving crop settings:', error);
   }
-});
+}
 
-
-
-
+// Получение SHA файла для GitHub
 async function getFileSha(filePath) {
   try {
     const { data } = await octokit.repos.getContent({
@@ -203,60 +217,7 @@ function updateHealthyRanges({ temperature, humidity, soilMoisture }) {
   }
 }
 
-
-
-
-let mode = 'auto';
-
-let lightingSettings = {
-  fanTemperatureThreshold: 31.0,
-  lightOnDuration: 60000,
-  lightIntervalManual: 60000
-};
-
-let pumpSettings = {
-  pumpStartHour: 18,
-  pumpStartMinute: 0,
-  pumpDuration: 10,
-  pumpInterval: 240
-};
-
-// Настройки культур по умолчанию
-// Начальные настройки культур
-let cropSettings = {};
-let currentCrop = 'potato';
-
-
-
-// Сохранение настроек культур
-async function saveCropSettings() {
-  try {
-    const dataToSave = {
-      crops: cropSettings,
-      currentCrop: currentCrop
-    };
-    
-    const content = JSON.stringify(dataToSave, null, 2);
-    await fs.writeFile(CROP_SETTINGS_FILE, content);
-    
-    if (process.env.GITHUB_TOKEN) {
-      await octokit.repos.createOrUpdateFileContents({
-        owner: REPO_OWNER,
-        repo: REPO_NAME,
-        path: CROP_SETTINGS_FILE,
-        message: "Update crop settings",
-        content: Buffer.from(content).toString('base64'),
-        sha: await getFileSha(CROP_SETTINGS_FILE)
-      });
-    }
-    console.log('Crop settings saved');
-  } catch (error) {
-    console.error('Error saving crop settings:', error);
-  }
-}
-
-
-
+// HTML и клиентский JavaScript
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -573,91 +534,65 @@ app.get('/', (req, res) => {
       </div>
 
       <!-- Sensors -->
-      <div>
+      <div class="mb-8">
         <div class="section-header" style="margin: 0 0 1.5rem;">
           <h3 class="text-xl font-semibold"><i class="fa-solid fa-thermometer mr-2"></i> Environmental Sensors</h3>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div id="tempModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
-  <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-semibold text-gray-900">
-        <i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> 
-        Temperature Trends (24h)
-      </h3>
-      <button id="closeTempModal" class="text-gray-600 hover:text-gray-900 text-2xl">
-        <i class="fa-solid fa-times"></i>
-      </button>
-    </div>
-    <div class="chart-container flex-grow">
-      <canvas id="tempChart"></canvas>
-    </div>
-  </div>
-</div>
-
-<div id="humidityModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
-  <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-semibold text-gray-900">
-        <i class="fa-solid fa-tint mr-2 text-teal-500"></i> 
-        Humidity Trends (24h)
-      </h3>
-      <button id="closeHumidityModal" class="text-gray-600 hover:text-gray-900 text-2xl">
-        <i class="fa-solid fa-times"></i>
-      </button>
-    </div>
-    <div class="chart-container flex-grow">
-      <canvas id="humidityChart"></canvas>
-    </div>
-  </div>
-</div>
-
-<div id="soilMoistureModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
-  <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-semibold text-gray-900">
-        <i class="fa-solid fa-seedling mr-2 text-teal-500"></i> 
-        Soil Moisture Trends (24h)
-      </h3>
-      <button id="closeSoilMoistureModal" class="text-gray-600 hover:text-gray-900 text-2xl">
-        <i class="fa-solid fa-times"></i>
-      </button>
-    </div>
-    <div class="chart-container flex-grow">
-      <canvas id="soilMoistureChart"></canvas>
-    </div>
-  </div>
-</div>
+          <div class="bg-white p-6 rounded-2xl shadow-lg card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Temperature</h3>
+            <p class="text-2xl font-bold" id="temperature">— °C</p>
+            <div class="progress-bar mt-2"><div id="temperatureProgress" class="progress-bar-fill" style="width: 0%;"></div></div>
+            <button id="tempChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-lg card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Humidity</h3>
+            <p class="text-2xl font-bold" id="humidity">— %</p>
+            <div class="progress-bar mt-2"><div id="humidityProgress" class="progress-bar-fill" style="width: 0%;"></div></div>
+            <button id="humidityChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-lg card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Soil Moisture</h3>
+            <p class="text-2xl font-bold" id="soilMoisture">— %</p>
+            <div class="progress-bar mt-2"><div id="soilMoistureProgress" class="progress-bar-fill" style="width: 0%;"></div></div>
+            <button id="soilMoistureChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Chart Modals -->
     <div id="tempModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
-      <div class="bg-white p-6 rounded-2xl max-w-2xl w-full">
+      <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Temperature Trends</h3>
-          <button id="closeTempModal" class="text-gray-600 hover:text-gray-900"><i class="fa-solid fa-times"></i></button>
+          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Temperature Trends (24h)</h3>
+          <button id="closeTempModal" class="text-gray-600 hover:text-gray-900 text-2xl"><i class="fa-solid fa-times"></i></button>
         </div>
-        <canvas id="tempChart"></canvas>
+        <div class="chart-container flex-grow">
+          <canvas id="tempChart"></canvas>
+        </div>
       </div>
     </div>
     <div id="humidityModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
-      <div class="bg-white p-6 rounded-2xl max-w-2xl w-full">
+      <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Humidity Trends</h3>
-          <button id="closeHumidityModal" class="text-gray-600 hover:text-gray-900"><i class="fa-solid fa-times"></i></button>
+          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Humidity Trends (24h)</h3>
+          <button id="closeHumidityModal" class="text-gray-600 hover:text-gray-900 text-2xl"><i class="fa-solid fa-times"></i></button>
         </div>
-        <canvas id="humidityChart"></canvas>
+        <div class="chart-container flex-grow">
+          <canvas id="humidityChart"></canvas>
+        </div>
       </div>
     </div>
     <div id="soilMoistureModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
-      <div class="bg-white p-6 rounded-2xl max-w-2xl w-full">
+      <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Soil Moisture Trends</h3>
-          <button id="closeSoilMoistureModal" class="text-gray-600 hover:text-gray-900"><i class="fa-solid fa-times"></i></button>
+          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Soil Moisture Trends (24h)</h3>
+          <button id="closeSoilMoistureModal" class="text-gray-600 hover:text-gray-900 text-2xl"><i class="fa-solid fa-times"></i></button>
         </div>
-        <canvas id="soilMoistureChart"></canvas>
+        <div class="chart-container flex-grow">
+          <canvas id="soilMoistureChart"></canvas>
+        </div>
       </div>
     </div>
 
@@ -678,917 +613,722 @@ app.get('/', (req, res) => {
       </div>
     </div>
 
-<div id="settingsContent" class="tab-content hidden">
-  <!-- Crop Selection -->
-  <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
-    <div class="section-header">
-      <i class="fa-solid fa-seedling"></i>
-      <h3>Crop Selection</h3>
-    </div>
-    <div class="grid grid-cols-1 gap-6">
-      <div>
-        <label class="block text-gray-700 font-bold mb-2" for="cropSelect">Select Crop</label>
-        <select id="cropSelect" class="crop-select">
-          <!-- Опции будут добавляться через JavaScript -->
-        </select>
-      </div>
-      <div id="customCropFields" class="hidden">
-        <div class="grid grid-cols-1 gap-4">
+    <div id="settingsContent" class="tab-content hidden">
+      <!-- Crop Selection -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
+        <div class="section-header">
+          <i class="fa-solid fa-seedling"></i>
+          <h3>Crop Selection</h3>
+        </div>
+        <div class="grid grid-cols-1 gap-6">
           <div>
-            <label class="block text-gray-700 font-bold mb-2" for="newCropName">Crop Name</label>
-            <input id="newCropName" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Enter crop name">
+            <label class="block text-gray-700 font-bold mb-2" for="cropSelect">Select Crop</label>
+            <select id="cropSelect" class="crop-select"></select>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-gray-700 font-bold mb-2" for="newCropKey">Crop Key</label>
-              <input id="newCropKey" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Unique key (e.g. custom_crop)">
+          <div id="customCropFields" class="hidden">
+            <div class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="block text-gray-700 font-bold mb-2" for="newCropName">Crop Name</label>
+                <input id="newCropName" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Enter crop name">
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-gray-700 font-bold mb-2" for="newCropKey">Crop Key</label>
+                  <input id="newCropKey" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Unique key (e.g. custom_crop)">
+                </div>
+              </div>
             </div>
+          </div>
+          <div class="flex justify-end">
+            <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Apply Crop Settings</button>
+            <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Delete Crop</button>
           </div>
         </div>
       </div>
-      <div class="flex justify-end">
-        <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Apply Crop Settings</button>
-        <button id="deleteCrop" class="logout-btn ripple-btn">
-  <i class="fa-solid fa-trash mr-2"></i> Delete Crop
-</button>
+
+      <!-- Crop Settings Editor -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
+        <div class="section-header">
+          <i class="fa-solid fa-sliders-h"></i>
+          <h3>Crop Settings Editor</h3>
+        </div>
+        <div class="mb-4">
+          <p class="text-gray-700">Current Crop: <span id="currentCropName" class="crop-badge">Potato</span></p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          <div class="input-card">
+            <label class="input-label">Temp Threshold (°C)</label>
+            <div class="icon-circle"><i class="fa-solid fa-temperature-half"></i></div>
+            <input id="cropFanTemperatureThreshold" type="number" step="0.1" value="25.0" placeholder="Enter °C">
+          </div>
+          <div class="input-card">
+            <label class="input-label">Light Duration (min)</label>
+            <div class="icon-circle"><i class="fa-solid fa-sun"></i></div>
+            <input id="cropLightOnDuration" type="number" value="120" placeholder="Enter minutes">
+          </div>
+          <div class="input-card">
+            <label class="input-label">Light Interval (min)</label>
+            <div class="icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <input id="cropLightIntervalManual" type="number" value="360" placeholder="Enter minutes">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-8 mt-4">
+          <div class="input-card">
+            <label class="input-label">Pump Start Hour</label>
+            <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
+            <input id="cropPumpStartHour" type="number" min="0" max="23" value="8" placeholder="0-23">
+          </div>
+          <div class="input-card">
+            <label class="input-label">Pump Start Minute</label>
+            <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
+            <input id="cropPumpStartMinute" type="number" min="0" max="59" value="0" placeholder="0-59">
+          </div>
+          <div class="input-card">
+            <label class="input-label">Pump Duration (sec)</label>
+            <div class="icon-circle"><i class="fa-solid fa-stopwatch-20"></i></div>
+            <input id="cropPumpDuration" type="number" min="1" value="15" placeholder="Seconds">
+          </div>
+          <div class="input-card">
+            <label class="input-label">Pump Interval (min)</label>
+            <div class="icon-circle"><i class="fa-solid fa-hourglass-half"></i></div>
+            <input id="cropPumpInterval" type="number" min="1" value="180" placeholder="Minutes">
+          </div>
+        </div>
+        <div class="wave-divider"></div>
+        <div class="flex justify-between mt-4">
+          <button id="saveCropSettings" class="ripple-btn"><i class="fa-solid fa-save mr-2"></i> Save Crop Settings</button>
+          <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Delete Crop</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Crop Settings Editor -->
-  <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
-    <div class="section-header">
-      <i class="fa-solid fa-sliders-h"></i>
-      <h3>Crop Settings Editor</h3>
-    </div>
-    <div class="mb-4">
-      <p class="text-gray-700">Current Crop: <span id="currentCropName" class="crop-badge">Potato</span></p>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-      <div class="input-card">
-        <label class="input-label">Temp Threshold (°C)</label>
-        <div class="icon-circle"><i class="fa-solid fa-temperature-half"></i></div>
-        <input id="cropFanTemperatureThreshold" type="number" step="0.1" value="22.0" placeholder="Enter °C">
-      </div>
-      <div class="input-card">
-        <label class="input-label">Light Duration (min)</label>
-        <div class="icon-circle"><i class="fa-solid fa-sun"></i></div>
-        <input id="cropLightOnDuration" type="number" value="120" placeholder="Enter minutes">
-      </div>
-      <div class="input-card">
-        <label class="input-label">Light Interval (min)</label>
-        <div class="icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
-        <input id="cropLightIntervalManual" type="number" value="360" placeholder="Enter minutes">
-      </div>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-8 mt-4">
-      <div class="input-card">
-        <label class="input-label">Pump Start Hour</label>
-        <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
-        <input id="cropPumpStartHour" type="number" min="0" max="23" value="8" placeholder="0-23">
-      </div>
-      <div class="input-card">
-        <label class="input-label">Pump Start Minute</label>
-        <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
-        <input id="cropPumpStartMinute" type="number" min="0" max="59" value="0" placeholder="0-59">
-      </div>
-      <div class="input-card">
-        <label class="input-label">Pump Duration (sec)</label>
-        <div class="icon-circle"><i class="fa-solid fa-stopwatch-20"></i></div>
-        <input id="cropPumpDuration" type="number" min="1" value="15" placeholder="Seconds">
-      </div>
-      <div class="input-card">
-        <label class="input-label">Pump Interval (min)</label>
-        <div class="icon-circle"><i class="fa-solid fa-hourglass-half"></i></div>
-        <input id="cropPumpInterval" type="number" min="1" value="180" placeholder="Minutes">
-      </div>
-    </div>
-    <div class="wave-divider"></div>
-    <div class="flex justify-between mt-4">
-      <button id="saveCropSettings" class="ripple-btn"><i class="fa-solid fa-save mr-2"></i> Save Crop Settings</button>
-      <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Delete Crop</button>
-    </div>
-  </div>
-</div>
+    <script>
+      console.log('Script loaded');
+      const correctPassword = 'admin';
 
-  <script>
-    console.log('Script loaded');
-    const correctPassword = 'admin';
+      function handleLogin() {
+        console.log('handleLogin called');
+        const passwordInput = document.getElementById('passwordInput');
+        const passwordError = document.getElementById('passwordError');
+        const passwordSection = document.getElementById('passwordSection');
+        const controlSection = document.getElementById('controlSection');
 
-    function handleLogin() {
-      console.log('handleLogin called');
-      const passwordInput = document.getElementById('passwordInput');
-      const passwordError = document.getElementById('passwordError');
-      const passwordSection = document.getElementById('passwordSection');
-      const controlSection = document.getElementById('controlSection');
+        if (!passwordInput || !passwordError || !passwordSection || !controlSection) {
+          console.error('DOM elements missing:', { passwordInput, passwordError, passwordSection, controlSection });
+          alert('Error: Page elements not found. Please refresh the page.');
+          return;
+        }
 
-      if (!passwordInput || !passwordError || !passwordSection || !controlSection) {
-        console.error('DOM elements missing:', { passwordInput, passwordError, passwordSection, controlSection });
-        alert('Error: Page elements not found. Please refresh the page.');
-        return;
-      }
+        const password = passwordInput.value.trim().toLowerCase();
+        console.log('Password entered:', password);
 
-      const password = passwordInput.value.trim().toLowerCase();
-      console.log('Password entered:', password);
-
-      if (password === correctPassword.toLowerCase()) {
-        console.log('Password correct, showing control section');
-        localStorage.setItem('isLoggedIn', 'true');
-        passwordSection.classList.add('hidden');
-        controlSection.classList.remove('hidden');
-        passwordInput.value = '';
-        passwordError.classList.add('hidden');
-        initializeApp();
-      } else {
-        console.log('Incorrect password');
-        passwordError.classList.remove('hidden');
-        alert('Incorrect password, please try again.');
-      }
-    }
-
-    function handleLogout() {
-      console.log('Logging out');
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('lightingSettings');
-      localStorage.removeItem('pumpSettings');
-      const passwordSection = document.getElementById('passwordSection');
-      const controlSection = document.getElementById('controlSection');
-      controlSection.classList.add('hidden');
-      passwordSection.classList.remove('hidden');
-    }
-
-    function setupLoginListeners() {
-      console.log('Setting up login listeners');
-      const submitButton = document.getElementById('submitPassword');
-      const passwordInput = document.getElementById('passwordInput');
-
-      if (submitButton) {
-        console.log('Submit button found, attaching click listener');
-        submitButton.addEventListener('click', () => {
-          console.log('Login button clicked');
-          handleLogin();
-        });
-      } else {
-        console.error('Submit button not found');
-        alert('Error: Submit button not found. Please refresh the page.');
-      }
-
-      if (passwordInput) {
-        console.log('Password input found, attaching keypress listener');
-        passwordInput.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
-            console.log('Enter key pressed');
-            handleLogin();
-          }
-        });
-      } else {
-        console.error('Password input not found');
-        alert('Error: Password input not found. Please refresh the page.');
-      }
-    }
-
-    async function checkConnection() {
-      const indicator = document.getElementById('connectionIndicator');
-      try {
-        const response = await fetch('/getSensorStatus', { method: 'GET', cache: 'no-store' });
-        const data = await response.json();
-        if (data.isOnline) {
-          indicator.classList.remove('offline');
-          indicator.classList.add('online');
-          indicator.innerHTML = '<i class="fa-solid fa-wifi"></i> Online';
-          console.log('Greenhouse is online');
+        if (password === correctPassword.toLowerCase()) {
+          console.log('Password correct, showing control section');
+          localStorage.setItem('isLoggedIn', 'true');
+          passwordSection.classList.add('hidden');
+          controlSection.classList.remove('hidden');
+          passwordInput.value = '';
+          passwordError.classList.add('hidden');
+          initializeApp();
         } else {
+          console.log('Incorrect password');
+          passwordError.classList.remove('hidden');
+          alert('Incorrect password, please try again.');
+        }
+      }
+
+      function handleLogout() {
+        console.log('Logging out');
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('lightingSettings');
+        localStorage.removeItem('pumpSettings');
+        const passwordSection = document.getElementById('passwordSection');
+        const controlSection = document.getElementById('controlSection');
+        controlSection.classList.add('hidden');
+        passwordSection.classList.remove('hidden');
+      }
+
+      function setupLoginListeners() {
+        console.log('Setting up login listeners');
+        const submitButton = document.getElementById('submitPassword');
+        const passwordInput = document.getElementById('passwordInput');
+
+        if (submitButton) {
+          console.log('Submit button found, attaching click listener');
+          submitButton.addEventListener('click', () => {
+            console.log('Login button clicked');
+            handleLogin();
+          });
+        } else {
+          console.error('Submit button not found');
+          alert('Error: Submit button not found. Please refresh the page.');
+        }
+
+        if (passwordInput) {
+          console.log('Password input found, attaching keypress listener');
+          passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              console.log('Enter key pressed');
+              handleLogin();
+            }
+          });
+        } else {
+          console.error('Password input not found');
+          alert('Error: Password input not found. Please refresh the page.');
+        }
+      }
+
+      async function checkConnection() {
+        const indicator = document.getElementById('connectionIndicator');
+        try {
+          const response = await fetch('/getSensorStatus', { method: 'GET', cache: 'no-store' });
+          const data = await response.json();
+          if (data.isOnline) {
+            indicator.classList.remove('offline');
+            indicator.classList.add('online');
+            indicator.innerHTML = '<i class="fa-solid fa-wifi"></i> Online';
+            console.log('Greenhouse is online');
+          } else {
+            indicator.classList.remove('online');
+            indicator.classList.add('offline');
+            indicator.innerHTML = '<i class="fa-solid fa-wifi-slash"></i> Offline';
+            console.log('Greenhouse is offline');
+          }
+        } catch (error) {
           indicator.classList.remove('online');
           indicator.classList.add('offline');
           indicator.innerHTML = '<i class="fa-solid fa-wifi-slash"></i> Offline';
-          console.log('Greenhouse is offline');
+          console.log('Error checking greenhouse status:', error);
         }
-      } catch (error) {
-        indicator.classList.remove('online');
-        indicator.classList.add('offline');
-        indicator.innerHTML = '<i class="fa-solid fa-wifi-slash"></i> Offline';
-        console.log('Error checking greenhouse status:', error);
-      }
-    }
-
-document.getElementById('deleteCrop').addEventListener('click', async () => {
-  if (confirm('Are you sure you want to delete the current crop? This action cannot be undone.')) {
-    try {
-      const response = await fetch('/deleteCrop', { method: 'POST' });
-      if (response.ok) {
-        alert('Crop deleted successfully!');
-        const cropData = await loadCropSettings();
-        updateCropDropdown(cropData);
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to delete crop');
-      }
-    } catch (error) {
-      console.error('Error deleting crop:', error);
-      alert('Error deleting crop');
-    }
-  }
-});
-
-
-    // Check login status on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('DOM fully loaded');
-      setupLoginListeners();
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      const passwordSection = document.getElementById('passwordSection');
-      const controlSection = document.getElementById('controlSection');
-
-      if (isLoggedIn && passwordSection && controlSection) {
-        console.log('User is logged in, bypassing password section');
-        passwordSection.classList.add('hidden');
-        controlSection.classList.remove('hidden');
-        initializeApp();
       }
 
-      // Setup logout button
-      const logoutButton = document.getElementById('logoutButton');
-      if (logoutButton) {
-        logoutButton.addEventListener('click', handleLogout);
-      }
-    });
-
-    const tabs = {
-      dashboard: document.getElementById('dashboardContent'),
-      relays: document.getElementById('relaysContent'),
-      settings: document.getElementById('settingsContent')
-    };
-    const tabButtons = {
-      dashboard: document.getElementById('tabDashboard'),
-      relays: document.getElementById('tabRelays'),
-      settings: document.getElementById('tabSettings')
-    };
-
-    function switchTab(tabName) {
-      Object.values(tabs).forEach(tab => tab.classList.add('hidden'));
-      Object.values(tabButtons).forEach(btn => btn.classList.remove('active'));
-      tabs[tabName].classList.remove('hidden');
-      tabButtons[tabName].classList.add('active');
-    }
-
-    Object.keys(tabButtons).forEach(tabName => {
-      tabButtons[tabName].addEventListener('click', () => switchTab(tabName));
-    });
-
-    let tempChart, humidityChart, soilMoistureChart;
-    const maxDataPoints = 30;
-    function initializeCharts() {
-      const ctxTemp = document.getElementById('tempChart')?.getContext('2d');
-      const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
-      const ctxSoilMoisture = document.getElementById('soilMoistureChart').getContext('2d');
-
-      tempChart = new Chart(ctxTemp, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Temperature (°C)',
-            data: [],
-            borderColor: '#14b8a6',
-            backgroundColor: 'rgba(20, 184, 166, 0.2)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: { y: { beginAtZero: true, max: 40 } }
-        }
-      });
-
-      humidityChart = new Chart(ctxHumidity, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Humidity (%)',
-            data: [],
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: { y: { beginAtZero: true, max: 100 } }
-        }
-      });
-
-      soilMoistureChart = new Chart(ctxSoilMoisture, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Soil Moisture (%)',
-            data: [],
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.2)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: { y: { viewingAtZero: true, max: 100 } }
-        }
-      });
-    }
-
-    function toggleModal(modalId, show) {
-      const modal = document.getElementById(modalId);
-      if (show) {
-        modal.classList.remove('hidden');
-        setTimeout(() => modal.classList.add('show'), 10);
-      } else {
-        modal.classList.remove('show');
-        setTimeout(() => modal.classList.add('hidden'), 300);
-      }
-    }
-
-    document.getElementById('tempChartBtn').addEventListener('click', () => toggleModal('tempModal', true));
-    document.getElementById('humidityChartBtn').addEventListener('click', () => toggleModal('humidityModal', true));
-    document.getElementById('soilMoistureChartBtn').addEventListener('click', () => toggleModal('soilMoistureModal', true));
-    document.getElementById('closeTempModal').addEventListener('click', () => toggleModal('tempModal', false));
-    document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
-    document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
-
-    let globalCropSettings = null;
-
-async function loadCropSettings() {
-  try {
-    const response = await fetch('/getCropSettings');
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Loaded crop settings:', data);
-      return data;
-    } else {
-      console.error('Error loading crop settings:', response.status);
-      return {
-        currentCropKey: 'potato',
-        availableCrops: {}
+      const tabs = {
+        dashboard: document.getElementById('dashboardContent'),
+        relays: document.getElementById('relaysContent'),
+        settings: document.getElementById('settingsContent')
       };
-    }
-  } catch (error) {
-    console.error('Error loading crop settings:', error);
-    return {
-      currentCropKey: 'potato',
-      availableCrops: {}
-    };
-  }
-}
+      const tabButtons = {
+        dashboard: document.getElementById('tabDashboard'),
+        relays: document.getElementById('tabRelays'),
+        settings: document.getElementById('tabSettings')
+      };
 
-async function updateCropDropdown() {
-  try {
-    const response = await fetch('/getCropsList');
-    const crops = await response.json();
-    const cropSelect = document.getElementById('cropSelect');
-    
-    // Очищаем существующие опции
-    cropSelect.innerHTML = '';
-    
-    // Добавляем культуры в выпадающий список
-    crops.forEach(crop => {
-      const option = document.createElement('option');
-      option.value = crop.key;
-      option.textContent = crop.name;
-      cropSelect.appendChild(option);
-    });
-    
-    // Добавляем опцию для создания новой культуры
-    const customOption = document.createElement('option');
-    customOption.value = 'custom';
-    customOption.textContent = 'Custom Crop...';
-    cropSelect.appendChild(customOption);
-    
-    // Загружаем текущую культуру и ее настройки
-    await loadCurrentCropSettings();
-  } catch (error) {
-    console.error('Error updating crop dropdown:', error);
-  }
-}
-// Добавим новую функцию для загрузки настроек текущей культуры
-async function loadCurrentCropSettings() {
-  try {
-    const response = await fetch('/getCurrentCropSettings');
-    const data = await response.json();
-    
-    const cropSelect = document.getElementById('cropSelect');
-    if (cropSelect) {
-      cropSelect.value = data.currentCrop;
-      document.getElementById('currentCropName').textContent = 
-        cropSettings[data.currentCrop]?.name || data.currentCrop;
-    }
-    
-    if (data.settings) {
-      document.getElementById('cropFanTemperatureThreshold').value = 
-        data.settings.fanTemperatureThreshold || 25.0;
-      document.getElementById('cropLightOnDuration').value = 
-        (data.settings.lightOnDuration || 7200000) / 60000;
-      document.getElementById('cropLightIntervalManual').value = 
-        (data.settings.lightIntervalManual || 21600000) / 60000;
-      document.getElementById('cropPumpStartHour').value = 
-        data.settings.pumpStartHour || 8;
-      document.getElementById('cropPumpStartMinute').value = 
-        data.settings.pumpStartMinute || 0;
-      document.getElementById('cropPumpDuration').value = 
-        data.settings.pumpDuration || 15;
-      document.getElementById('cropPumpInterval').value = 
-        data.settings.pumpInterval || 180;
-    }
-  } catch (error) {
-    console.error('Error loading current crop settings:', error);
-  }
-}
-
-
-async function applyCropSettings() {
-    const cropSelect = document.getElementById('cropSelect');
-    const selectedCrop = cropSelect.value;
-    
-    if (selectedCrop === 'custom') {
-      // Создание новой культуры
-      const cropKey = document.getElementById('newCropKey').value.trim();
-      const cropName = document.getElementById('newCropName').value.trim();
-      
-      if (!cropKey || !cropName) {
-        alert('Please enter both crop key and name');
-        return;
-      }
-      
-      try {
-        const response = await fetch('/addCrop', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            cropKey,
-            cropName,
-            fanTemperatureThreshold: document.getElementById('cropFanTemperatureThreshold').value,
-            lightOnDuration: document.getElementById('cropLightOnDuration').value,
-            lightIntervalManual: document.getElementById('cropLightIntervalManual').value,
-            pumpStartHour: document.getElementById('cropPumpStartHour').value,
-            pumpStartMinute: document.getElementById('cropPumpStartMinute').value,
-            pumpDuration: document.getElementById('cropPumpDuration').value,
-            pumpInterval: document.getElementById('cropPumpInterval').value
-          })
-        });
-        
-        if (response.ok) {
-          alert('New crop created!');
-          const cropData = await loadCropSettings();
-          updateCropDropdown(cropData);
-        } else {
-          const error = await response.text();
-          alert(error || 'Failed to create crop');
-        }
-      } catch (error) {
-        console.error('Error creating crop:', error);
-        alert('Error creating crop');
-      }
-    } else {
-      // Применение существующей культуры
-      try {
-        const response = await fetch('/setCurrentCrop', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ crop: selectedCrop })
-        });
-        
-        if (response.ok) {
-          const cropData = await loadCropSettings();
-          updateCropDropdown(cropData);
-          alert('Crop applied!');
-        } else {
-          const error = await response.text();
-          alert(error || 'Failed to apply crop');
-        }
-      } catch (error) {
-        console.error('Error applying crop:', error);
-        alert('Error applying crop');
-      }
-    }
-  }
-
-async function initializeApp() {
-  try {
-    switchTab('dashboard');
-    initializeCharts();
-    updateRelayState();
-    updateSensorData();
-    updateMode();
-    updateSettings();
-    checkConnection();
-    await updateCropDropdown(); // Добавьте эту строку
-    // Загрузка настроек культур и обновление выпадающего списка
-    const cropData = await loadCropSettings();
-    updateCropDropdown(cropData);
-
-    // Инициализация обработчиков событий
-    document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
-    document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
-    document.getElementById('toggleMode').addEventListener('click', toggleMode);
-    document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
-    document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
-    document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
-    
-   // Обновим обработчик изменения выбора культуры
-document.getElementById('cropSelect').addEventListener('change', async function() {
-  const customFields = document.getElementById('customCropFields');
-  if (this.value === 'custom') {
-    customFields.classList.remove('hidden');
-    // Очищаем поля для новой культуры
-    document.getElementById('newCropKey').value = '';
-    document.getElementById('newCropName').value = '';
-  } else {
-    customFields.classList.add('hidden');
-    // Загружаем настройки выбранной культуры
-    await loadCurrentCropSettings();
-  }
-});
-
-
-    setInterval(updateSensorData, 5000);
-    setInterval(updateRelayState, 5000);
-    setInterval(updateMode, 5000);
-    setInterval(checkConnection, 10000);
-  } catch (error) {
-    console.error('Error initializing app:', error);
-    alert('Failed to initialize the application. Please refresh the page.');
-  }
-}
-
-
-
-
-// Добавьте этот обработчик в initializeApp
-document.getElementById('cropSelect').addEventListener('change', function() {
-  const customFields = document.getElementById('customCropFields');
-  if (this.value === 'custom') {
-    customFields.classList.remove('hidden');
-  } else {
-    customFields.classList.add('hidden');
-  }
-});
-    
-    async function saveCropSettings() {
-  try {
-    const settings = {
-      fanTemperatureThreshold: parseFloat(document.getElementById('cropFanTemperatureThreshold').value),
-      lightOnDuration: parseInt(document.getElementById('cropLightOnDuration').value) * 60000,
-      lightIntervalManual: parseInt(document.getElementById('cropLightIntervalManual').value) * 60000,
-      pumpStartHour: parseInt(document.getElementById('cropPumpStartHour').value),
-      pumpStartMinute: parseInt(document.getElementById('cropPumpStartMinute').value),
-      pumpDuration: parseInt(document.getElementById('cropPumpDuration').value),
-      pumpInterval: parseInt(document.getElementById('cropPumpInterval').value)
-    };
-    
-    const response = await fetch('/saveCropSettings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(settings)
-    });
-    
-    if (response.ok) {
-      alert('Crop settings saved successfully!');
-      await loadCurrentCropSettings();
-    } else {
-      const error = await response.json();
-      alert(error.error || 'Failed to save crop settings');
-    }
-  } catch (error) {
-    console.error('Error saving crop settings:', error);
-    alert('Error saving crop settings');
-  }
-}
-    
-    async function deleteCurrentCrop() {
-  if (confirm('Are you sure you want to delete the current crop? This action cannot be undone.')) {
-    try {
-      const response = await fetch('/deleteCrop', { 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crop: currentCrop })
-      });
-      
-      if (response.ok) {
-        alert('Crop deleted successfully!');
-        await updateCropDropdown();
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to delete crop');
-      }
-    } catch (error) {
-      console.error('Error deleting crop:', error);
-      alert('Error deleting crop');
-    }
-  }
-}
-
-    
-
-    async function updateRelayState() {
-      try {
-        const response = await fetch('/getRelayState');
-        const data = await response.json();
-        const relay1Badge = document.getElementById('relayState1');
-        const relay2Badge = document.getElementById('relayState2');
-        const relay1Control = document.getElementById('relayState1Control');
-        const relay2Control = document.getElementById('relayState2Control');
-
-        relay1Badge.textContent = data.relayState1 ? 'ON' : 'OFF';
-        relay1Badge.className = 'status-badge ' + (data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800');
-relay2Badge.textContent = data.relayState2 ? 'ON' : 'OFF';
-relay2Badge.className = 'status-badge ' + (data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800');
-relay1Control.textContent = 'Lighting: ' + (data.relayState1 ? 'ON' : 'OFF');
-relay2Control.textContent = 'Ventilation: ' + (data.relayState2 ? 'ON' : 'OFF');
-      } catch (error) {
-        console.error('Error fetching relay state:', error);
-      }
-    }
-
-    async function updateSensorData() {
-      try {
-        const response = await fetch('/getSensorData');
-        const data = await response.json();
-        document.getElementById('temperature').textContent = data.temperature + ' °C';
-document.getElementById('humidity').textContent = data.humidity + ' %';
-document.getElementById('soilMoisture').textContent = data.soilMoisture + ' %';
-
-document.getElementById('temperatureProgress').style.width = Math.min((data.temperature / 40) * 100, 100) + '%';
-document.getElementById('humidityProgress').style.width = Math.min(data.humidity, 100) + '%';
-document.getElementById('soilMoistureProgress').style.width = Math.min(data.soilMoisture, 100) + '%';
-
-        const timestamp = new Date().toLocaleTimeString();
-        updateChartData('temperature', timestamp, data.temperature);
-        updateChartData('humidity', timestamp, data.humidity);
-        updateChartData('soilMoisture', timestamp, data.soilMoisture);
-      } catch (error) {
-        console.error('Error fetching sensor data:', error);
-      }
-    }
-
-    function updateChartData(sensor, timestamp, value) {
-      const key = sensor + 'Data';
-      let storedData = JSON.parse(localStorage.getItem(key)) || { labels: [], values: [] };
-      storedData.labels.push(timestamp);
-      storedData.values.push(value);
-
-      if (storedData.labels.length > maxDataPoints) {
-        storedData.labels.shift();
-        storedData.values.shift();
+      function switchTab(tabName) {
+        Object.values(tabs).forEach(tab => tab.classList.add('hidden'));
+        Object.values(tabButtons).forEach(btn => btn.classList.remove('active'));
+        tabs[tabName].classList.remove('hidden');
+        tabButtons[tabName].classList.add('active');
       }
 
-      localStorage.setItem(key, JSON.stringify(storedData));
-
-      const chart = {
-        temperature: tempChart,
-        humidity: humidityChart,
-        soilMoisture: soilMoistureChart
-      }[sensor];
-
-      chart.data.labels = storedData.labels;
-      chart.data.datasets[0].data = storedData.values;
-      chart.update();
-    }
-
-    async function updateMode() {
-      try {
-        const response = await fetch('/getMode');
-        const data = await response.json();
-        const modeBadge = document.getElementById('currentMode');
-        modeBadge.textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
-        modeBadge.className = 'status-badge ' + (data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800');
-      } catch (error) {
-        console.error('Error fetching mode:', error);
-      }
-    }
-
-    async function updateSettings() {
-      try {
-        // Check localStorage first
-        const storedLighting = JSON.parse(localStorage.getItem('lightingSettings'));
-        const storedPump = JSON.parse(localStorage.getItem('pumpSettings'));
-
-        if (storedLighting) {
-          document.getElementById('fanTemperatureThreshold').value = storedLighting.fanTemperatureThreshold;
-          document.getElementById('lightOnDuration').value = storedLighting.lightOnDuration / 60000;
-          document.getElementById('lightIntervalManual').value = storedLighting.lightIntervalManual / 60000;
-        } else {
-          const lightingResponse = await fetch('/getLightingSettings');
-          const lightingData = await lightingResponse.json();
-          document.getElementById('fanTemperatureThreshold').value = lightingData.fanTemperatureThreshold;
-          document.getElementById('lightOnDuration').value = lightingData.lightOnDuration / 60000;
-          document.getElementById('lightIntervalManual').value = lightingData.lightOnDuration / 60000;
-        }
-
-        if (storedPump) {
-          document.getElementById('pumpStartHour').value = storedPump.pumpStartHour;
-          document.getElementById('pumpStartMinute').value = storedPump.pumpStartMinute;
-          document.getElementById('pumpDuration').value = storedPump.pumpDuration;
-          document.getElementById('pumpInterval').value = storedPump.pumpInterval;
-        } else {
-          const pumpResponse = await fetch('/getPumpSettings');
-          const pumpData = await pumpResponse.json();
-          document.getElementById('pumpStartHour').value = pumpData.pumpStartHour;
-          document.getElementById('pumpStartMinute').value = pumpData.pumpStartMinute;
-          document.getElementById('pumpDuration').value = pumpData.pumpDuration;
-          document.getElementById('pumpInterval').value = pumpData.pumpInterval;
-        }
-      } catch (error) {
-        console.error('Error fetching settings:', error);
-      }
-    }
-
-    async function toggleRelay(relayNumber) {
-      try {
-        const response = await fetch('/toggleRelay/' + relayNumber, {
-          method: 'POST'
-        });
-        if (response.ok) {
-          await updateRelayState();
-        } else {
-          const error = await response.json();
-          alert(error.error || 'Failed to toggle relay');
-        }
-      } catch (error) {
-        console.error('Error toggling relay:', error);
-        alert('Error toggling relay');
-      }
-    }
-
-    async function toggleMode() {
-      try {
-        const currentMode = document.getElementById('currentMode').textContent.toLowerCase();
-        const newMode = currentMode.includes('auto') ? 'manual' : 'auto';
-        const response = await fetch('/setMode', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: newMode })
-        });
-        if (response.ok) {
-          await updateMode();
-        } else {
-          const error = await response.json();
-          alert(error.error || 'Failed to switch mode');
-        }
-      } catch (error) {
-        console.error('Error switching mode:', error);
-        alert('Error switching mode');
-      }
-    }
-
-
-
-
-  let tempChart, humidityChart, soilMoistureChart;
-  let chartUpdateInterval;
-
-  async function loadChartData(sensorType) {
-    try {
-      const response = await fetch('/getChartData');
-      const data = await response.json();
-      
-      const labels = data.map(item => {
-        const date = new Date(item.timestamp);
-        return date.getHours() + ':00';
+      Object.keys(tabButtons).forEach(tabName => {
+        tabButtons[tabName].addEventListener('click', () => switchTab(tabName));
       });
 
-      const values = data.map(item => item[sensorType]);
-      
-      return { labels, values };
-    } catch (error) {
-      console.error('Error loading ' + sensorType + ' data:', error);
-      return { labels: [], values: [] };
-    }
-  }
+      let tempChart, humidityChart, soilMoistureChart;
+      const maxDataPoints = 30;
 
-  function initializeChart(ctx, label, color) {
-    return new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: label,
-          data: [],
-          borderColor: color,
-          backgroundColor: color + '20',
-          borderWidth: 2,
-          pointRadius: 3,
-          tension: 0.3,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            grid: { display: false },
-            title: { display: true, text: 'Time (last 24 hours)' }
+      function initializeCharts() {
+        const ctxTemp = document.getElementById('tempChart')?.getContext('2d');
+        const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
+        const ctxSoilMoisture = document.getElementById('soilMoistureChart').getContext('2d');
+
+        tempChart = new Chart(ctxTemp, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'Temperature (°C)',
+              data: [],
+              borderColor: '#14b8a6',
+              backgroundColor: 'rgba(20, 184, 166, 0.2)',
+              fill: true,
+              tension: 0.4
+            }]
           },
-          y: {
-            min: 0,
-            max: 100,
-            title: { display: true, text: 'Value' }
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, max: 40 } }
+          }
+        });
+
+        humidityChart = new Chart(ctxHumidity, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'Humidity (%)',
+              data: [],
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, max: 100 } }
+          }
+        });
+
+        soilMoistureChart = new Chart(ctxSoilMoisture, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'Soil Moisture (%)',
+              data: [],
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.2)',
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, max: 100 } }
+          }
+        });
+      }
+
+      function toggleModal(modalId, show) {
+        const modal = document.getElementById(modalId);
+        if (show) {
+          modal.classList.remove('hidden');
+          setTimeout(() => modal.classList.add('show'), 10);
+        } else {
+          modal.classList.remove('show');
+          setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+      }
+
+      async function loadCropSettings() {
+        try {
+          const response = await fetch('/getCropSettings');
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Loaded crop settings:', data);
+            return data;
+          } else {
+            console.error('Error loading crop settings:', response.status);
+            return {
+              currentCropKey: 'potato',
+              availableCrops: {
+                potato: {
+                  name: "Potato",
+                  fanTemperatureThreshold: 25.0,
+                  lightOnDuration: 7200000,
+                  lightIntervalManual: 21600000,
+                  pumpStartHour: 8,
+                  pumpStartMinute: 0,
+                  pumpDuration: 15,
+                  pumpInterval: 180
+                }
+              }
+            };
+          }
+        } catch (error) {
+          console.error('Error loading crop settings:', error);
+          return {
+            currentCropKey: 'potato',
+            availableCrops: {
+              potato: {
+                name: "Potato",
+                fanTemperatureThreshold: 25.0,
+                lightOnDuration: 7200000,
+                lightIntervalManual: 21600000,
+                pumpStartHour: 8,
+                pumpStartMinute: 0,
+                pumpDuration: 15,
+                pumpInterval: 180
+              }
+            }
+          };
+        }
+      }
+
+      async function updateCropDropdown(cropData) {
+        const cropSelect = document.getElementById('cropSelect');
+        const currentCropName = document.getElementById('currentCropName');
+        if (!cropSelect || !currentCropName) {
+          console.error('DOM elements missing for crop dropdown');
+          return;
+        }
+
+        cropSelect.innerHTML = '';
+
+        if (!cropData.availableCrops || Object.keys(cropData.availableCrops).length === 0) {
+          console.warn('No crops available in cropData:', cropData);
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No crops available';
+          option.disabled = true;
+          cropSelect.appendChild(option);
+        } else {
+          for (const [key, crop] of Object.entries(cropData.availableCrops)) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = crop.name || key;
+            if (key === cropData.currentCropKey) {
+              option.selected = true;
+            }
+            cropSelect.appendChild(option);
+          }
+        }
+
+        const customOption = document.createElement('option');
+        customOption.value = 'custom';
+        customOption.textContent = 'Custom Crop...';
+        cropSelect.appendChild(customOption);
+
+        currentCropName.textContent = cropData.availableCrops[cropData.currentCropKey]?.name || 'Unknown';
+        await loadCurrentCropSettings(cropData.currentCropKey);
+      }
+
+      async function loadCurrentCropSettings(cropKey) {
+        try {
+          const response = await fetch('/getCurrentCropSettings');
+          const data = await response.json();
+          if (data.settings) {
+            document.getElementById('cropFanTemperatureThreshold').value = data.settings.fanTemperatureThreshold || 25.0;
+            document.getElementById('cropLightOnDuration').value = (data.settings.lightOnDuration || 7200000) / 60000;
+            document.getElementById('cropLightIntervalManual').value = (data.settings.lightIntervalManual || 21600000) / 60000;
+            document.getElementById('cropPumpStartHour').value = data.settings.pumpStartHour || 8;
+            document.getElementById('cropPumpStartMinute').value = data.settings.pumpStartMinute || 0;
+            document.getElementById('cropPumpDuration').value = data.settings.pumpDuration || 15;
+            document.getElementById('cropPumpInterval').value = data.settings.pumpInterval || 180;
+          }
+        } catch (error) {
+          console.error('Error loading current crop settings:', error);
+        }
+      }
+
+      async function applyCropSettings() {
+        const cropSelect = document.getElementById('cropSelect');
+        const selectedCrop = cropSelect.value;
+
+        if (selectedCrop === 'custom') {
+          const cropKey = document.getElementById('newCropKey').value.trim();
+          const cropName = document.getElementById('newCropName').value.trim();
+
+          if (!cropKey || !cropName) {
+            alert('Please enter both crop key and name');
+            return;
+          }
+
+          try {
+            const response = await fetch('/addCrop', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                cropKey,
+                cropName,
+                fanTemperatureThreshold: parseFloat(document.getElementById('cropFanTemperatureThreshold').value),
+                lightOnDuration: parseInt(document.getElementById('cropLightOnDuration').value) * 60000,
+                lightIntervalManual: parseInt(document.getElementById('cropLightIntervalManual').value) * 60000,
+                pumpStartHour: parseInt(document.getElementById('cropPumpStartHour').value),
+                pumpStartMinute: parseInt(document.getElementById('cropPumpStartMinute').value),
+                pumpDuration: parseInt(document.getElementById('cropPumpDuration').value),
+                pumpInterval: parseInt(document.getElementById('cropPumpInterval').value)
+              })
+            });
+
+            if (response.ok) {
+              alert('New crop created!');
+              const cropData = await loadCropSettings();
+              await updateCropDropdown(cropData);
+            } else {
+              const error = await response.json();
+              alert(error.error || 'Failed to create crop');
+            }
+          } catch (error) {
+            console.error('Error creating crop:', error);
+            alert('Error creating crop');
+          }
+        } else {
+          try {
+            const response = await fetch('/setCurrentCrop', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ crop: selectedCrop })
+            });
+
+            if (response.ok) {
+              const cropData = await loadCropSettings();
+              await updateCropDropdown(cropData);
+              alert('Crop applied!');
+            } else {
+              const error = await response.json();
+              alert(error.error || 'Failed to apply crop');
+            }
+          } catch (error) {
+            console.error('Error applying crop:', error);
+            alert('Error applying crop');
           }
         }
       }
-    });
-  }
 
-  async function updateChart(chart, sensorType) {
-  try {
-    const { labels, values } = await loadChartData(sensorType);
-    
-    if (values.length === 0) {
-      chart.data.labels = ['No data available'];
-      chart.data.datasets[0].data = [0];
-      chart.options.scales.y.min = 0;
-      chart.options.scales.y.max = 100;
-    } else {
-      chart.data.labels = labels;
-      chart.data.datasets[0].data = values;
-      
-      // Автоматическое масштабирование
-      const minVal = Math.min(...values) * 0.9;
-      const maxVal = Math.max(...values) * 1.1;
-      chart.options.scales.y.min = minVal > 0 ? minVal : 0;
-      chart.options.scales.y.max = maxVal < 100 ? maxVal : 100;
-    }
-    
-    chart.update();
-  } catch (error) {
-    console.error('Error updating ' + sensorType + ' chart:', error);
-  }
-}
-  function setupChartModal(modalId, chartId, sensorType, color) {
-    const modal = document.getElementById(modalId);
-    const ctx = document.getElementById(chartId).getContext('2d');
-    const chart = initializeChart(ctx, sensorType, color);
-    
-    document.querySelector('#' + modalId + ' .chart-container').style.height = '70vh';
-    
-    return {
-      open: async () => {
-        toggleModal(modalId, true);
-        await updateChart(chart, sensorType);
-        chartUpdateInterval = setInterval(
-          async () => await updateChart(chart, sensorType), 
-          30000
-        );
-      },
-      close: () => {
-        toggleModal(modalId, false);
-        clearInterval(chartUpdateInterval);
+      async function saveCropSettingsClient() {
+        try {
+          const settings = {
+            fanTemperatureThreshold: parseFloat(document.getElementById('cropFanTemperatureThreshold').value),
+            lightOnDuration: parseInt(document.getElementById('cropLightOnDuration').value) * 60000,
+            lightIntervalManual: parseInt(document.getElementById('cropLightIntervalManual').value) * 60000,
+            pumpStartHour: parseInt(document.getElementById('cropPumpStartHour').value),
+            pumpStartMinute: parseInt(document.getElementById('cropPumpStartMinute').value),
+            pumpDuration: parseInt(document.getElementById('cropPumpDuration').value),
+            pumpInterval: parseInt(document.getElementById('cropPumpInterval').value)
+          };
+
+          const response = await fetch('/saveCropSettings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+          });
+
+          if (response.ok) {
+            alert('Crop settings saved successfully!');
+            await loadCurrentCropSettings();
+          } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to save crop settings');
+          }
+        } catch (error) {
+          console.error('Error saving crop settings:', error);
+          alert('Error saving crop settings');
+        }
       }
-    };
-  }
 
-  // Инициализация графиков при запуске приложения
-  async function initializeCharts() {
-    const tempChart = setupChartModal(
-      'tempModal', 
-      'tempChart', 
-      'temperature', 
-      '#14b8a6'
-    );
-    
-    const humidityChart = setupChartModal(
-      'humidityModal', 
-      'humidityChart', 
-      'humidity', 
-      '#3b82f6'
-    );
-    
-    const soilChart = setupChartModal(
-      'soilMoistureModal', 
-      'soilMoistureChart', 
-      'soilMoisture', 
-      '#10b981'
-    );
+      async function deleteCurrentCrop() {
+        if (confirm('Are you sure you want to delete the current crop? This action cannot be undone.')) {
+          try {
+            const response = await fetch('/deleteCrop', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
 
-    document.getElementById('tempChartBtn').addEventListener('click', tempChart.open);
-    document.getElementById('closeTempModal').addEventListener('click', tempChart.close);
-    
-    document.getElementById('humidityChartBtn').addEventListener('click', humidityChart.open);
-    document.getElementById('closeHumidityModal').addEventListener('click', humidityChart.close);
-    
-    document.getElementById('soilMoistureChartBtn').addEventListener('click', soilChart.open);
-    document.getElementById('closeSoilMoistureModal').addEventListener('click', soilChart.close);
-  }
-    
+            if (response.ok) {
+              alert('Crop deleted successfully!');
+              const cropData = await loadCropSettings();
+              await updateCropDropdown(cropData);
+            } else {
+              const error = await response.json();
+              alert(error.error || 'Failed to delete crop');
+            }
+          } catch (error) {
+            console.error('Error deleting crop:', error);
+            alert('Error deleting crop');
+          }
+        }
+      }
 
-    
-  </script>
+      async function updateRelayState() {
+        try {
+          const response = await fetch('/getRelayState');
+          const data = await response.json();
+          const relay1Badge = document.getElementById('relayState1');
+          const relay2Badge = document.getElementById('relayState2');
+          const relay1Control = document.getElementById('relayState1Control');
+          const relay2Control = document.getElementById('relayState2Control');
+
+          relay1Badge.textContent = data.relayState1 ? 'ON' : 'OFF';
+          relay1Badge.className = 'status-badge ' + (data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800');
+          relay2Badge.textContent = data.relayState2 ? 'ON' : 'OFF';
+          relay2Badge.className = 'status-badge ' + (data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800');
+          relay1Control.textContent = 'Lighting: ' + (data.relayState1 ? 'ON' : 'OFF');
+          relay2Control.textContent = 'Ventilation: ' + (data.relayState2 ? 'ON' : 'OFF');
+        } catch (error) {
+          console.error('Error fetching relay state:', error);
+        }
+      }
+
+      async function updateSensorData() {
+        try {
+          const response = await fetch('/getSensorData');
+          const data = await response.json();
+          document.getElementById('temperature').textContent = data.temperature + ' °C';
+          document.getElementById('humidity').textContent = data.humidity + ' %';
+          document.getElementById('soilMoisture').textContent = data.soilMoisture + ' %';
+
+          document.getElementById('temperatureProgress').style.width = Math.min((data.temperature / 40) * 100, 100) + '%';
+          document.getElementById('humidityProgress').style.width = Math.min(data.humidity, 100) + '%';
+          document.getElementById('soilMoistureProgress').style.width = Math.min(data.soilMoisture, 100) + '%';
+
+          const timestamp = new Date().toLocaleTimeString();
+          updateChartData('temperature', timestamp, data.temperature);
+          updateChartData('humidity', timestamp, data.humidity);
+          updateChartData('soilMoisture', timestamp, data.soilMoisture);
+        } catch (error) {
+          console.error('Error fetching sensor data:', error);
+        }
+      }
+
+      function updateChartData(sensor, timestamp, value) {
+        const key = sensor + 'Data';
+        let storedData = JSON.parse(localStorage.getItem(key)) || { labels: [], values: [] };
+        storedData.labels.push(timestamp);
+        storedData.values.push(value);
+
+        if (storedData.labels.length > maxDataPoints) {
+          storedData.labels.shift();
+          storedData.values.shift();
+        }
+
+        localStorage.setItem(key, JSON.stringify(storedData));
+
+        const chart = {
+          temperature: tempChart,
+          humidity: humidityChart,
+          soilMoisture: soilMoistureChart
+        }[sensor];
+
+        chart.data.labels = storedData.labels;
+        chart.data.datasets[0].data = storedData.values;
+        chart.update();
+      }
+
+      async function updateMode() {
+        try {
+          const response = await fetch('/getMode');
+          const data = await response.json();
+          const modeBadge = document.getElementById('currentMode');
+          modeBadge.textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
+          modeBadge.className = 'status-badge ' + (data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800');
+        } catch (error) {
+          console.error('Error fetching mode:', error);
+        }
+      }
+
+      async function updateSettings() {
+        try {
+          const lightingResponse = await fetch('/getLightingSettings');
+          const lightingData = await lightingResponse.json();
+          document.getElementById('fanTemperatureThreshold').value = lightingData.fanTemperatureThreshold || 31.0;
+          document.getElementById('lightOnDuration').value = (lightingData.lightOnDuration || 60000) / 60000;
+          document.getElementById('lightIntervalManual').value = (lightingData.lightIntervalManual || 60000) / 60000;
+
+          const pumpResponse = await fetch('/getPumpSettings');
+          const pumpData = await pumpResponse.json();
+          document.getElementById('pumpStartHour').value = pumpData.pumpStartHour || 18;
+          document.getElementById('pumpStartMinute').value = pumpData.pumpStartMinute || 0;
+          document.getElementById('pumpDuration').value = pumpData.pumpDuration || 10;
+          document.getElementById('pumpInterval').value = pumpData.pumpInterval || 240;
+        } catch (error) {
+          console.error('Error fetching settings:', error);
+        }
+      }
+
+      async function toggleRelay(relayNumber) {
+        try {
+          const response = await fetch('/toggleRelay/' + relayNumber, {
+            method: 'POST'
+          });
+          if (response.ok) {
+            await updateRelayState();
+          } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to toggle relay');
+          }
+        } catch (error) {
+          console.error('Error toggling relay:', error);
+          alert('Error toggling relay');
+        }
+      }
+
+      async function toggleMode() {
+        try {
+          const currentMode = document.getElementById('currentMode').textContent.toLowerCase();
+          const newMode = currentMode.includes('auto') ? 'manual' : 'auto';
+          const response = await fetch('/setMode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: newMode })
+          });
+          if (response.ok) {
+            await updateMode();
+          } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to switch mode');
+          }
+        } catch (error) {
+          console.error('Error switching mode:', error);
+          alert('Error switching mode');
+        }
+      }
+
+      async function initializeApp() {
+        try {
+          switchTab('dashboard');
+          initializeCharts();
+          updateRelayState();
+          updateSensorData();
+          updateMode();
+          updateSettings();
+          checkConnection();
+
+          const cropData = await loadCropSettings();
+          await updateCropDropdown(cropData);
+
+          document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
+          document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
+          document.getElementById('toggleMode').addEventListener('click', toggleMode);
+          document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
+          document.getElementById('saveCropSettings').addEventListener('click', saveCropSettingsClient);
+          document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
+
+          document.getElementById('cropSelect').addEventListener('change', async function() {
+            const customFields = document.getElementById('customCropFields');
+            if (this.value === 'custom') {
+              customFields.classList.remove('hidden');
+              document.getElementById('newCropKey').value = '';
+              document.getElementById('newCropName').value = '';
+            } else {
+              customFields.classList.add('hidden');
+              await loadCurrentCropSettings(this.value);
+            }
+          });
+
+          document.getElementById('tempChartBtn').addEventListener('click', () => toggleModal('tempModal', true));
+          document.getElementById('humidityChartBtn').addEventListener('click', () => toggleModal('humidityModal', true));
+          document.getElementById('soilMoistureChartBtn').addEventListener('click', () => toggleModal('soilMoistureModal', true));
+          document.getElementById('closeTempModal').addEventListener('click', () => toggleModal('tempModal', false));
+          document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
+          document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
+
+          setInterval(updateSensorData, 5000);
+          setInterval(updateRelayState, 5000);
+          setInterval(updateMode, 5000);
+          setInterval(checkConnection, 10000);
+        } catch (error) {
+          console.error('Error initializing app:', error);
+          alert('Failed to initialize the application. Please refresh the page.');
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM fully loaded');
+        setupLoginListeners();
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        const passwordSection = document.getElementById('passwordSection');
+        const controlSection = document.getElementById('controlSection');
+
+        if (isLoggedIn && passwordSection && controlSection) {
+          console.log('User is logged in, bypassing password section');
+          passwordSection.classList.add('hidden');
+          controlSection.classList.remove('hidden');
+          initializeApp();
+        }
+
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+          logoutButton.addEventListener('click', handleLogout);
+        }
+      });
+    </script>
 </body>
 </html>
 `);
 });
+
 // API Endpoints
 app.get('/getSensorStatus', (req, res) => {
   try {
