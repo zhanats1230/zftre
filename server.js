@@ -1397,10 +1397,10 @@ app.get('/getMode', (req, res) => {
   try {
     console.log('Mode:', mode);
     res.json({ mode: mode });
-  }
-} catch (error) {
+  } catch (error) {
     console.error('Error in /getMode:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.post('/setMode', (req, res) => {
