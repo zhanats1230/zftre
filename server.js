@@ -96,12 +96,17 @@ async function loadCropSettings() {
   try {
     const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
     const settings = JSON.parse(data);
+    
+    // Исправьте здесь:
     cropSettings = settings.crops || cropSettings;
     currentCrop = settings.currentCrop || currentCrop;
+    
     console.log(`Crop settings loaded. Current crop: ${currentCrop}`);
   } catch (error) {
     if (error.code === 'ENOENT') {
       console.log('No crop settings file found, using defaults');
+      // Добавьте сохранение настроек по умолчанию
+      await saveCropSettings();
     } else {
       console.error('Error loading crop settings:', error);
     }
@@ -126,34 +131,7 @@ app.get('/getCropSettings', (req, res) => {
 });
 
 
-// Сохранение настроек культур
-async function saveCropSettings() {
-  try {
-    const dataToSave = {
-      crops: cropSettings,
-      currentCrop: currentCrop
-    };
-    const content = JSON.stringify(dataToSave, null, 2);
-    
-    // Сохраняем локально
-    await fs.writeFile(CROP_SETTINGS_FILE, content);
-    
-    // Сохраняем в GitHub
-    if (process.env.GITHUB_TOKEN) {
-      await octokit.repos.createOrUpdateFileContents({
-        owner: REPO_OWNER,
-        repo: REPO_NAME,
-        path: CROP_SETTINGS_FILE,
-        message: "Update crop settings",
-        content: Buffer.from(content).toString('base64'),
-        sha: await getFileSha(CROP_SETTINGS_FILE)
-      });
-      console.log('Crop settings saved to file and GitHub');
-    }
-  } catch (error) {
-    console.error('Error saving crop settings:', error);
-  }
-}
+
 
 async function getFileSha(filePath) {
   try {
@@ -246,7 +224,7 @@ async function saveCropSettings() {
   try {
     const dataToSave = {
       crops: cropSettings,
-      current: currentCrop
+      currentCrop: currentCrop
     };
     
     const content = JSON.stringify(dataToSave, null, 2);
@@ -953,7 +931,7 @@ document.getElementById('deleteCrop').addEventListener('click', async () => {
     let tempChart, humidityChart, soilMoistureChart;
     const maxDataPoints = 30;
     function initializeCharts() {
-      const ctxTemp = document.getElementById('tempChart').getContext('2d');
+      const ctxTemp = document.getElementById('tempChart')?.getContext('2d');
       const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
       const ctxSoilMoisture = document.getElementById('soilMoistureChart').getContext('2d');
 
@@ -1240,70 +1218,7 @@ document.getElementById('cropSelect').addEventListener('change', async function(
 }
 
 
-async function applyCropSettings() {
-  const cropSelect = document.getElementById('cropSelect');
-  const selectedCrop = cropSelect.value;
-  
-  if (selectedCrop === 'custom') {
-    // Создание новой культуры
-    const cropKey = document.getElementById('newCropKey').value.trim();
-    const cropName = document.getElementById('newCropName').value.trim();
-    
-    if (!cropKey || !cropName) {
-      alert('Please enter both crop key and name');
-      return;
-    }
-    
-    try {
-      const response = await fetch('/addCrop', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cropKey,
-          cropName,
-          fanTemperatureThreshold: document.getElementById('cropFanTemperatureThreshold').value,
-          lightOnDuration: document.getElementById('cropLightOnDuration').value,
-          lightIntervalManual: document.getElementById('cropLightIntervalManual').value,
-          pumpStartHour: document.getElementById('cropPumpStartHour').value,
-          pumpStartMinute: document.getElementById('cropPumpStartMinute').value,
-          pumpDuration: document.getElementById('cropPumpDuration').value,
-          pumpInterval: document.getElementById('cropPumpInterval').value
-        })
-      });
-      
-      if (response.ok) {
-        alert('New crop created successfully!');
-        await updateCropDropdown();
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to create crop');
-      }
-    } catch (error) {
-      console.error('Error creating crop:', error);
-      alert('Error creating crop');
-    }
-  } else {
-    // Применение существующей культуры
-    try {
-      const response = await fetch('/setCurrentCrop', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crop: selectedCrop })
-      });
-      
-      if (response.ok) {
-        await loadCurrentCropSettings();
-        alert('Crop settings applied successfully!');
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to apply crop settings');
-      }
-    } catch (error) {
-      console.error('Error applying crop settings:', error);
-      alert('Error applying crop settings');
-    }
-  }
-}
+
 
 // Добавьте этот обработчик в initializeApp
 document.getElementById('cropSelect').addEventListener('change', function() {
@@ -1369,37 +1284,7 @@ document.getElementById('cropSelect').addEventListener('change', function() {
   }
 }
 
-    async function initializeApp() {
-  try {
-    switchTab('dashboard');
-    initializeCharts();
-    updateRelayState();
-    updateSensorData();
-    updateMode();
-    updateSettings();
-    checkConnection();
     
-    // Инициализация работы с культурами
-    await updateCropDropdown();
-    
-    // Инициализация обработчиков событий
-    document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
-    document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
-    document.getElementById('toggleMode').addEventListener('click', toggleMode);
-    
-    document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
-    document.getElementById('saveCropSettings').addEventListener('click', saveCropSettings);
-    document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
-    
-    setInterval(updateSensorData, 5000);
-    setInterval(updateRelayState, 5000);
-    setInterval(updateMode, 5000);
-    setInterval(checkConnection, 10000);
-  } catch (error) {
-    console.error('Error initializing app:', error);
-    alert('Failed to initialize the application. Please refresh the page.');
-  }
-}
 
     async function updateRelayState() {
       try {
@@ -1788,7 +1673,18 @@ app.post('/updateSensorData', (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
+app.get('/getCropsList', async (req, res) => {
+  try {
+    const cropsList = Object.keys(cropSettings).map(key => ({
+      key,
+      name: cropSettings[key].name || key
+    }));
+    res.json(cropsList);
+  } catch (error) {
+    console.error('Error getting crops list:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 app.get('/getSensorTrends', (req, res) => {
   try {
     const oneDayAgo = Date.now() - 86400000;
@@ -2027,7 +1923,7 @@ app.post('/saveCropSettings', async (req, res) => {
 
 app.post('/deleteCrop', async (req, res) => {
   try {
-    const { crop } = req.body;
+    const { crop } = req.body; // Добавьте извлечение параметра
     
     if (!cropSettings[crop]) {
       return res.status(400).json({ error: 'Crop not found' });
@@ -2035,15 +1931,13 @@ app.post('/deleteCrop', async (req, res) => {
     
     delete cropSettings[crop];
     
-    // Если удаляем текущую культуру, устанавливаем первую доступную или 'potato'
+    // Добавьте проверку текущей культуры
     if (currentCrop === crop) {
-      const availableCrops = Object.keys(cropSettings);
-      currentCrop = availableCrops.length > 0 ? availableCrops[0] : 'potato';
+      currentCrop = Object.keys(cropSettings)[0] || 'potato';
     }
     
     await saveCropSettings();
     res.json({ success: true });
-    
   } catch (error) {
     console.error('Error in /deleteCrop:', error);
     res.status(500).json({ error: 'Server error' });
