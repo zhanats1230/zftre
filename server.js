@@ -78,11 +78,10 @@ async function loadSensorDataHistory() {
 // Сохранение истории данных сенсоров
 async function saveSensorDataHistory() {
   try {
-    // Сохраняем только последние MAX_HISTORY_HOURS часов
     const cutoff = Date.now() - (MAX_HISTORY_HOURS * 3600000);
     const dataToSave = {
       raw: sensorDataHistory.raw.filter(entry => entry.timestamp >= cutoff),
-      hourlyAverages: sensorDataHistory.hourlyAverages,
+      hourlyAverages: sensorDataHistory.hourlyAverages.filter(entry => entry.timestamp >= cutoff), // Добавлено
       healthyRanges: sensorDataHistory.healthyRanges
     };
     
@@ -97,15 +96,27 @@ async function loadCropSettings() {
     const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
     const settings = JSON.parse(data);
     
-    // Исправьте здесь:
-    cropSettings = settings.crops || cropSettings;
-    currentCrop = settings.currentCrop || currentCrop;
+    cropSettings = settings.crops || {};
+    currentCrop = settings.currentCrop || 'potato';
     
     console.log(`Crop settings loaded. Current crop: ${currentCrop}`);
   } catch (error) {
     if (error.code === 'ENOENT') {
       console.log('No crop settings file found, using defaults');
-      // Добавьте сохранение настроек по умолчанию
+      // Инициализация значений по умолчанию
+      cropSettings = {
+        potato: {
+          name: "Potato",
+          fanTemperatureThreshold: 25.0,
+          lightOnDuration: 7200000,   // 2 часа
+          lightIntervalManual: 21600000, // 6 часов
+          pumpStartHour: 8,
+          pumpStartMinute: 0,
+          pumpDuration: 15,
+          pumpInterval: 180
+        }
+      };
+      currentCrop = 'potato';
       await saveCropSettings();
     } else {
       console.error('Error loading crop settings:', error);
@@ -193,9 +204,7 @@ function updateHealthyRanges({ temperature, humidity, soilMoisture }) {
 }
 
 
-// Загрузка данных при запуске
-loadSensorDataHistory();
-loadCropSettings();
+
 
 let mode = 'auto';
 
@@ -246,9 +255,7 @@ async function saveCropSettings() {
   }
 }
 
-// Загрузка данных при запуске
-loadSensorDataHistory();
-loadCropSettings(); // Добавлена загрузка настроек культур
+
 
 app.get('/', (req, res) => {
   res.send(`
@@ -1071,20 +1078,18 @@ async function loadCurrentCropSettings() {
     const response = await fetch('/getCurrentCropSettings');
     const data = await response.json();
     
-    // Устанавливаем выбранную культуру в dropdown
     const cropSelect = document.getElementById('cropSelect');
     if (cropSelect) {
       cropSelect.value = data.currentCrop;
       document.getElementById('currentCropName').textContent = 
-        cropSelect.options[cropSelect.selectedIndex].text;
+        cropSettings[data.currentCrop]?.name || data.currentCrop;
     }
     
-    // Заполняем поля настроек
     if (data.settings) {
       document.getElementById('cropFanTemperatureThreshold').value = 
         data.settings.fanTemperatureThreshold || 25.0;
       document.getElementById('cropLightOnDuration').value = 
-        (data.settings.lightOnDuration || 7200000) / 60000; // конвертируем в минуты
+        (data.settings.lightOnDuration || 7200000) / 60000;
       document.getElementById('cropLightIntervalManual').value = 
         (data.settings.lightIntervalManual || 21600000) / 60000;
       document.getElementById('cropPumpStartHour').value = 
@@ -1099,7 +1104,7 @@ async function loadCurrentCropSettings() {
   } catch (error) {
     console.error('Error loading current crop settings:', error);
   }
-}    
+}
 
 
 async function applyCropSettings() {
@@ -1597,9 +1602,9 @@ app.get('/getSensorStatus', (req, res) => {
 });
 app.get('/getCropsList', async (req, res) => {
   try {
-    await loadCropSettings(); // Загружаем актуальные настройки
+    await loadCropSettings();
     const cropsList = Object.keys(cropSettings).map(key => ({
-      key: key,
+      key,
       name: cropSettings[key].name || key
     }));
     res.json(cropsList);
@@ -1923,23 +1928,21 @@ app.post('/saveCropSettings', async (req, res) => {
 
 app.post('/deleteCrop', async (req, res) => {
   try {
-    const { crop } = req.body; // Добавьте извлечение параметра
-    
-    if (!cropSettings[crop]) {
-      return res.status(400).json({ error: 'Crop not found' });
+    const cropToDelete = currentCrop;
+    if (!cropSettings[cropToDelete]) {
+      return res.status(400).json({ error: 'Current crop not found' });
     }
     
-    delete cropSettings[crop];
+    delete cropSettings[cropToDelete];
     
-    // Добавьте проверку текущей культуры
-    if (currentCrop === crop) {
-      currentCrop = Object.keys(cropSettings)[0] || 'potato';
-    }
+    // Выбрать новую культуру по умолчанию
+    const remainingCrops = Object.keys(cropSettings);
+    currentCrop = remainingCrops.length > 0 ? remainingCrops[0] : 'potato';
     
     await saveCropSettings();
     res.json({ success: true });
   } catch (error) {
-    console.error('Error in /deleteCrop:', error);
+    console.error('Error deleting crop:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
