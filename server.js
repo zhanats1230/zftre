@@ -1633,7 +1633,7 @@ document.getElementById('soilMoistureProgress').style.width = Math.min(data.soil
     
     chart.update();
   } catch (error) {
-    console.error(`Error updating ${sensorType} chart:`, error);
+    console.error('Error updating ' + sensorType + ' chart:', error);
   }
 }
   function setupChartModal(modalId, chartId, sensorType, color) {
