@@ -1217,11 +1217,11 @@ app.get('/getSensorStatus', (req, res) => {
     const now = new Date();
     const isOnline = now - lastSensorUpdate < 30000;
     console.log('isOnline:', isOnline);
-    res.json({ isOnline: true });
-});
-} catch (error) {
-    console.error('Error in /getStatus:', err);
+    res.json({ isOnline: isOnline });
+  } catch (error) {
+    console.error('Error in /getSensorStatus:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.get('/getCropsList', async (req, res) => {
