@@ -1493,10 +1493,10 @@ app.get('/getLightingSettings', async (req, res) => {
     const settings = cropSettings[currentCrop] || {};
     console.log('Lighting Settings:', JSON.stringify(settings));
     res.json(settings);
-  }
-} catch (error) {
+  } catch (error) {
     console.error('Error in /getLightingSettings:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.post('/updateLightingSettings', async (req, res) => {
