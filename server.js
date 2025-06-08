@@ -1257,22 +1257,20 @@ app.get('/getRelayState', (req, res) => {
   try {
     console.log('Relay State:', JSON.stringify(relayState));
     res.json(relayState);
-});
-
-} catch (error) {
+  } catch (error) {
     console.error('Error in /getRelayState:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.get('/getSensorData', (req, res) => {
   try {
     console.log('Sensor Data:', JSON.stringify(sensorData));
     res.json(sensorData);
-});
-
-} catch (error) {
+  } catch (error) {
     console.error('Error in /getSensorData:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.post('/updateSensorData', async (req, res) => {
@@ -1287,50 +1285,61 @@ app.post('/updateSensorData', async (req, res) => {
       !isNaN(humidity) &&
       !isNaN(soilMoisture)
     ) {
-        sensorData = { temperature: temperature, humidity: humidity, soilMoisture: soilMoisture };
-        sensorData.lastSensorUpdate = new Date();
-        sensorDataHistory.raw.push({
-            temperature: temperature,
-            humidity: humidity,
-            soilMoisture: soilMoisture,
-            timestamp: lastSensorUpdate
-        });
+      sensorData = { temperature, humidity, soilMoisture };
+      lastSensorUpdate = Date.now(); // обновляем глобальную переменную
 
-        // Удаляем данные старше 24 часов
-        const oneDay = new Date().getTime() - 86400000;
-        sensorDataHistory.raw = sensorDataHistory.raw.filter((entry => entry.timestamp >= oneDayAgo));
+      sensorDataHistory.raw.push({
+        temperature,
+        humidity,
+        soilMoisture,
+        timestamp: lastSensorUpdate
+      });
 
-        computeHourlyAverage();
-        updateHealthyRange({ temperature: temperature, humidity: humidity, soilMoisture: soilMoisture });
-        await saveSensorDataHistory();
+      // Удаляем старые записи
+      const oneDayAgo = Date.now() - 86400000;
+      sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
 
-        console.log('Sensor Data Updated:', JSON.stringify(sensorData));
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Invalid sensor data:', JSON.stringify(error.body));
-        res.status(400).json({ error: 'Invalid sensor data' });
+      computeHourlyAverages();
+      updateHealthyRanges({ temperature, humidity, soilMoisture });
+      await saveSensorDataHistory();
+
+      console.log('Sensor Data Updated:', JSON.stringify(sensorData));
+      res.json({ success: true });
+    } else {
+      throw new Error('Invalid data format');
     }
+  } catch (error) {
+    console.error('Error updating sensor data:', error);
+    res.status(400).json({ error: 'Invalid sensor data' });
+  }
 });
 
 app.get('/getSensorTrends', (req, res) => {
   try {
-    const oneDayAgo = new Date().getTime() - 86400000;
+    const oneDayAgo = Date.now() - 86400000;
+
     const trendsData = {
       hourlyAverages: sensorDataHistory.hourlyAverages.filter(entry => entry.timestamp >= oneDayAgo),
       healthyRanges: {
-        temperature: sensorDataHistory.healthyRanges.temperature.total > 0 
-          ? (sensorDataHistory.healthyRanges.temperature.inRange / sensorDataHistory.healthyRanges.temperature.total * 100) 
-          : 0,
-        humidity: sensorDataHistory.healthyRanges.humidity.total > 0 
-          ? (sensorDataHistory.healthyRanges.humidity.inRange / sensorDataHistory.healthyRanges.humidity.total * 100) 
-          : 0,
-        soilMoisture: sensorDataHistory.healthyRanges.soilMoisture.total > 0 
-          ? (sensorDataHistory.healthyRanges.soilMoisture.inRange / sensorDataHistory.healthyRanges.soilMoisture.total * 100) 
-          : 0
+        temperature:
+          sensorDataHistory.healthyRanges.temperature.total > 0
+            ? (sensorDataHistory.healthyRanges.temperature.inRange /
+              sensorDataHistory.healthyRanges.temperature.total) * 100
+            : 0,
+        humidity:
+          sensorDataHistory.healthyRanges.humidity.total > 0
+            ? (sensorDataHistory.healthyRanges.humidity.inRange /
+              sensorDataHistory.healthyRanges.humidity.total) * 100
+            : 0,
+        soilMoisture:
+          sensorDataHistory.healthyRanges.soilMoisture.total > 0
+            ? (sensorDataHistory.healthyRanges.soilMoisture.inRange /
+              sensorDataHistory.healthyRanges.soilMoisture.total) * 100
+            : 0
       }
     };
 
-    console.log('Trends Data:', JSON.stringify(trendsData));
+    console.log('Trends Data:', JSON.stringify(trendsData, null, 2));
     res.json(trendsData);
   } catch (error) {
     console.error('Error in /getSensorTrends:', error);
@@ -1340,41 +1349,43 @@ app.get('/getSensorTrends', (req, res) => {
 
 app.get('/getChartData', async (req, res) => {
   try {
-    const oneDayAgo = new Date().getTime() - 86400000;
+    const oneDayAgo = Date.now() - 86400000;
     const rawData = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
 
     const hourlyData = {};
-    rawData.forEach((entry) => {
-      const hour = new Date(entry.timestamp).getHours();
-      if (!hourlyData[hour]) {
-        hourlyData[hour] = {
+
+    rawData.forEach(entry => {
+      const date = new Date(entry.timestamp);
+      const hourKey = date.getHours(); // Час в формате 0–23
+
+      if (!hourlyData[hourKey]) {
+        hourlyData[hourKey] = {
           temperature: [],
           humidity: [],
           soilMoisture: [],
+          timestamp: new Date(date.setMinutes(0, 0, 0)).getTime(),
           count: 0
         };
       }
-      hourlyData[hour].temperature.push(entry.temperature);
-      hourlyData[hour].humidity.push(entry.humidity);
-      hourlyData[hour].soilMoisture.push(entry.soilMoisture);
-      hourlyData[hour].count++;
+
+      hourlyData[hourKey].temperature.push(entry.temperature);
+      hourlyData[hourKey].humidity.push(entry.humidity);
+      hourlyData[hourKey].soilMoisture.push(entry.soilMoisture);
+      hourlyData[hourKey].count++;
     });
 
-    const processedData = [];
-    for (const [hour, data] of Object.entries(hourlyData)) {
-      processedData.push({
-        hour: parseInt(hour),
-        timestamp: new Date().setHours(hour, 0, 0, 0),
-        temperature: data.temperature.reduce((sum, val) => sum + val, 0) / data.count,
-        humidity: data.humidity.reduce((sum, val) => sum + val, 0) / data.count,
-        soilMoisture: data.soilMoisture.reduce((sum, val) => sum + val, 0) / data.count
-      });
-    }
+    const processedData = Object.entries(hourlyData).map(([hour, data]) => ({
+      hour: parseInt(hour),
+      timestamp: data.timestamp,
+      temperature: data.temperature.reduce((a, b) => a + b, 0) / data.count,
+      humidity: data.humidity.reduce((a, b) => a + b, 0) / data.count,
+      soilMoisture: data.soilMoisture.reduce((a, b) => a + b, 0) / data.count
+    }));
 
-    // Сортировка по часам
-    processedData.sort((a, b) => a.hour - b.hour);
+    // Сортировка по времени
+    processedData.sort((a, b) => a.timestamp - b.timestamp);
 
-    console.log('Chart Data:', JSON.stringify(processedData));
+    console.log('Chart Data:', JSON.stringify(processedData, null, 2));
     res.json(processedData);
   } catch (error) {
     console.error('Error in /getChartData:', error);
