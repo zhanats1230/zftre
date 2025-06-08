@@ -1505,19 +1505,20 @@ app.post('/updateLightingSettings', async (req, res) => {
 
         if (
             typeof fanTemperatureThreshold === 'number' &&
-            typeof lightOnDuration === 'number' && lightOnDuration.length > 0 &&
-            typeof lightIntervalManual === 'number' &&
-            lightIntervalManual.length > 0
+            typeof lightOnDuration === 'number' &&
+            typeof lightIntervalManual === 'number'
         ) {
             cropSettings[currentCrop] = {
                 ...cropSettings[currentCrop],
-                ...{ fanTemperatureThreshold, lightOnDuration, lightIntervalManual }
+                fanTemperatureThreshold,
+                lightOnDuration,
+                lightIntervalManual
             };
             
             await saveCropSettings();
             console.log('Lighting settings updated:', JSON.stringify(cropSettings[currentCrop]));
             res.json({ success: true });
-        } catch (error) {
+        } else {
             console.error('Invalid lighting settings:', JSON.stringify(req.body));
             res.status(400).json({ error: 'Invalid lighting settings' });
         }
