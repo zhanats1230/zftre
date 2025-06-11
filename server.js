@@ -1073,91 +1073,93 @@ function initChart(ctx, label, color) {
       }
 
       async function loadCurrentCropSettings(cropKey) {
-        try {
-          const response = await fetch('/getCurrentCropSettings');
-          const data = await response.json();
-          if (data.settings) {
-            document.getElementById('cropFanTemperatureThreshold').value = data.settings.fanTemperatureThreshold || 25.0;
-            document.getElementById('cropLightOnDuration').value = (data.settings.lightOnDuration || 7200000) / 60000;
-            document.getElementById('cropLightIntervalManual').value = (data.settings.lightIntervalManual || 21600000) / 60000;
-            document.getElementById('cropPumpStartHour').value = data.settings.pumpStartHour || 8;
-            document.getElementById('cropPumpStartMinute').value = data.settings.pumpStartMinute || 0;
-            document.getElementById('cropPumpDuration').value = data.settings.pumpDuration || 15;
-            document.getElementById('cropPumpInterval').value = data.settings.pumpInterval || 180;
-          }
-        } catch (error) {
-          console.error('Error loading current crop settings:', error);
-        }
-      }
+  try {
+    const response = await fetch('/getCurrentCropSettings');
+    const data = await response.json();
+    if (data.settings) {
+      document.getElementById('cropFanTemperatureThreshold').value = parseFloat(data.settings.fanTemperatureThreshold || 25.0).toFixed(1);
+      document.getElementById('cropLightOnDuration').value = parseInt(data.settings.lightOnDuration || 7200000) / 60000; // Convert ms to minutes
+      document.getElementById('cropLightIntervalManual').value = parseInt(data.settings.lightIntervalManual || 21600000) / 60000; // Convert ms to minutes
+      document.getElementById('cropPumpStartHour').value = parseInt(data.settings.pumpStartHour || 8);
+      document.getElementById('cropPumpStartMinute').value = parseInt(data.settings.pumpStartMinute || 0);
+      document.getElementById('cropPumpDuration').value = parseInt(data.settings.pumpDuration || 15);
+      document.getElementById('cropPumpInterval').value = parseInt(data.settings.pumpInterval || 180);
+    }
+  } catch (error) {
+    console.error('Error loading current crop settings:', error);
+  }
+}
 
       async function applyCropSettings() {
-        const cropSelect = document.getElementById('cropSelect');
-        const selectedCrop = cropSelect.value;
+  const cropSelect = document.getElementById('cropSelect');
+  const selectedCrop = cropSelect.value;
 
-        if (selectedCrop === 'custom') {
-          const cropKey = document.getElementById('newCropKey').value.trim();
-          const cropName = document.getElementById('newCropName').value.trim();
+  if (selectedCrop === 'custom') {
+    const cropKey = document.getElementById('newCropKey').value.trim();
+    const cropName = document.getElementById('newCropName').value.trim();
 
-          if (!cropKey || !cropName) {
-            alert('Please enter both crop key and name');
-            return;
-          }
+    if (!cropKey || !cropName) {
+      alert('Please enter both crop key and name');
+      return;
+    }
 
-          try {
-            const response = await fetch('/addCrop', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                cropKey,
-                cropName,
-                fanTemperatureThreshold: parseFloat(document.getElementById('cropFanTemperatureThreshold').value),
-                lightOnDuration: parseInt(document.getElementById('cropLightOnDuration').value) * 60000,
-                lightIntervalManual: parseInt(document.getElementById('cropLightIntervalManual').value) * 60000,
-                pumpStartHour: parseInt(document.getElementById('cropPumpStartHour').value),
-                pumpStartMinute: parseInt(document.getElementById('cropPumpStartMinute').value),
-                pumpDuration: parseInt(document.getElementById('cropPumpDuration').value),
-                pumpInterval: parseInt(document.getElementById('cropPumpInterval').value)
-              })
-            });
+    try {
+      const response = await fetch('/addCrop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cropKey,
+          cropName,
+          fanTemperatureThreshold: parseFloat(document.getElementById('cropFanTemperatureThreshold').value) || 25.0,
+          lightOnDuration: parseInt(document.getElementById('cropLightOnDuration').value) * 60000, // Already in minutes, convert to ms
+          lightIntervalManual: parseInt(document.getElementById('cropLightIntervalManual').value) * 60000, // Already in minutes, convert to ms
+          pumpStartHour: parseInt(document.getElementById('cropPumpStartHour').value) || 8,
+          pumpStartMinute: parseInt(document.getElementById('cropPumpStartMinute').value) || 0,
+          pumpDuration: parseInt(document.getElementById('cropPumpDuration').value) || 15,
+          pumpInterval: parseInt(document.getElementById('cropPumpInterval').value) || 180
+        })
+      });
 
-            if (response.ok) {
-              alert('New crop created!');
-              const customFields = document.getElementById('customCropFields');
- customFields.classList.add('hidden');
-              document.getElementById('newCropKey').value = '';
-              document.getElementById('newCropName').value = '';
-              const cropData = await loadCropSettings();
-              await updateCropDropdown(cropData);
-            } else {
-              const error = await response.json();
-              alert(error.error || 'Failed to create crop');
-            }
-          } catch (error) {
-            console.error('Error creating crop:', error);
-            alert('Error creating crop');
-          }
-        } else {
-          try {
-            const response = await fetch('/setCurrentCrop', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ crop: selectedCrop })
-            });
-
-            if (response.ok) {
-              alert('Crop applied!');
-              const cropData = await loadCropSettings();
-              await updateCropDropdown(cropData);
-            } else {
-              const error = await response.json();
-              alert(error.error || 'Failed to apply crop');
-            }
-          } catch (error) {
-            console.error('Error applying crop:', error);
-            alert('Error applying crop');
-          }
-        }
+      if (response.ok) {
+        alert('New crop created!');
+        const customFields = document.getElementById('customCropFields');
+        customFields.classList.add('hidden');
+        document.getElementById('newCropKey').value = '';
+        document.getElementById('newCropName').value = '';
+        const cropData = await loadCropSettings();
+        await updateCropDropdown(cropData);
+        await loadCurrentCropSettings(cropKey); // Ensure settings are loaded for new crop
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to create crop');
       }
+    } catch (error) {
+      console.error('Error creating crop:', error);
+      alert('Error creating crop');
+    }
+  } else {
+    try {
+      const response = await fetch('/setCurrentCrop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ crop: selectedCrop })
+      });
+
+      if (response.ok) {
+        alert('Crop applied!');
+        const cropData = await loadCropSettings();
+        await updateCropDropdown(cropData);
+        await loadCurrentCropSettings(selectedCrop); // Ensure settings for selected crop
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to apply crop');
+      }
+    } catch (error) {
+      console.error('Error applying crop:', error);
+      alert('Error applying crop');
+    }
+  }
+}
 
       async function saveCropSettingsClient() {
         try {
