@@ -1402,8 +1402,6 @@ app.get('/getSensorTrends', (req, res) => {
   }
 });
 
-});
-
     const processedData = Object.entries(hourlyData).map(([hour, data]) => ({
       hour: parseInt(hour),
       timestamp: data.timestamp,
