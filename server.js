@@ -852,7 +852,7 @@ function initChart(ctx, label, color) {
         cornerRadius: 4,
         callbacks: {
           label: function(tooltipItem) {
-            return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(1)}`;
+            return tooltipItem.dataset.label + ": " + tooltipItem.raw.toFixed(1);
           }
         }
       }
