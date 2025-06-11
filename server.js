@@ -228,7 +228,7 @@ app.get('/', (req, res) => {
   <title>Greenhouse Control</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       background: linear-gradient(to bottom, #f9fafb, #e5e7eb);
@@ -287,6 +287,11 @@ app.get('/', (req, res) => {
       transform: translateY(20px);
       opacity: 0;
     }
+    .chart-container {
+  position: relative;
+  height: 70vh;
+  width: 100%;
+}
     .modal.show {
       transform: translateY(0);
       opacity: 1;
@@ -701,7 +706,32 @@ app.get('/', (req, res) => {
           }
         });
       }
-
+function initChart(ctx, label, color) {
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: label,
+        data: [],
+        borderColor: color,
+        backgroundColor: color + '20',
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 500 },
+      scales: {
+        x: { display: true, title: { text: 'Time' }},
+        y: { display: true, title: { text: 'Value' }}
+      }
+    }
+  });
+}
       async function checkConnection() {
         const indicator = document.getElementById('connectionIndicator');
         try {
@@ -871,48 +901,62 @@ app.get('/', (req, res) => {
   });
 }
 
-      async function updateChartData() {
-    try {
-      const response = await fetch('/getChartData');
-      const data = await response.json();
-      
-      // Форматируем время для осей X
-      const formatTime = timestamp => {
-        const date = new Date(timestamp);
-       return date.getHours().toString().padStart(2, '0') + ':00';
-      };
-      
-      const labels = data.map(entry => formatTime(entry.timestamp));
-      const tempData = data.map(entry => entry.temperature);
-      const humidityData = data.map(entry => entry.humidity);
-      const soilMoistureData = data.map(entry => entry.soilMoisture);
+      async function updateChartData(chartType) {
+  try {
+    const response = await fetch('/getChartData');
+    const data = await response.json();
+    
+    const labels = data.map(entry => 
+      new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
+    );
 
-      // Обновляем графики
-      updateChart(tempChart, labels, tempData, 'Temperature (°C)');
-      updateChart(humidityChart, labels, humidityData, 'Humidity (%)');
-      updateChart(soilMoistureChart, labels, soilMoistureData, 'Soil Moisture (%)');
-    } catch (error) {
-      console.error('Error updating chart data:', error);
+    let chart, values;
+    switch(chartType) {
+      case 'temperature':
+        chart = tempChart;
+        values = data.map(entry => entry.temperature);
+        break;
+      case 'humidity':
+        chart = humidityChart;
+        values = data.map(entry => entry.humidity);
+        break;
+      case 'soilMoisture':
+        chart = soilMoistureChart;
+        values = data.map(entry => entry.soilMoisture);
+        break;
     }
-  }
-  function updateChart(chart, labels, data, label) {
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = data;
-    chart.data.datasets[0].label = label;
-    chart.update();
-  }
 
-      function toggleModal(modalId, show) {
-        const modal = document.getElementById(modalId);
-        if (show) {
-          modal.classList.remove('hidden');
-          setTimeout(() => modal.classList.add('show'), 10);
-          updateChartData(); // Обновляем данные при открытии модального окна
-        } else {
-          modal.classList.remove('show');
-          setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-      }
+    if (!chart) {
+      const ctx = document.getElementById(chartType + 'Chart').getContext('2d');
+      chart = initChart(ctx, 
+        chartType.charAt(0).toUpperCase() + chartType.slice(1) + ' History',
+        chartType === 'temperature' ? '#14b8a6' : 
+        chartType === 'humidity' ? '#3b82f6' : '#10b981'
+      );
+    }
+
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = values;
+    chart.update();
+  } catch (error) {
+    console.error('Error updating chart:', error);
+  }
+}
+      function toggleModal(modalId, chartType) {
+  const modal = document.getElementById(modalId);
+  
+  if (!modal.classList.contains('show')) {
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+      modal.classList.add('show');
+      updateChartData(chartType);
+    }, 10);
+  } else {
+    modal.classList.remove('show');
+    setTimeout(() => modal.classList.add('hidden'), 300);
+  }
+}
+
 
       async function loadCropSettings() {
         try {
@@ -1231,9 +1275,10 @@ app.get('/', (req, res) => {
           }
         });
 
-        document.getElementById('tempChartBtn').addEventListener('click', () => toggleModal('tempModal', true));
-        document.getElementById('humidityChartBtn').addEventListener('click', () => toggleModal('humidityModal', true));
-        document.getElementById('soilMoistureChartBtn').addEventListener('click', () => toggleModal('soilMoistureModal', true));
+        // Обновление обработчиков кнопок
+document.getElementById('tempChartBtn').addEventListener('click', () => toggleModal('tempModal', 'temperature'));
+document.getElementById('humidityChartBtn').addEventListener('click', () => toggleModal('humidityModal', 'humidity'));
+document.getElementById('soilMoistureChartBtn').addEventListener('click', () => toggleModal('soilMoistureModal', 'soilMoisture'));
         document.getElementById('closeTempModal').addEventListener('click', () => toggleModal('tempModal', false));
         document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
         document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
