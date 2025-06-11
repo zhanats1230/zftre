@@ -103,8 +103,8 @@
     "test": {
       "name": "test",
       "fanTemperatureThreshold": 11,
-      "lightOnDuration": 39600000000,
-      "lightIntervalManual": 39600000000,
+      "lightOnDuration": 660000,
+      "lightIntervalManual": 660000,
       "pumpStartHour": 1,
       "pumpStartMinute": 1,
       "pumpDuration": 1,
