@@ -109,7 +109,17 @@
       "pumpStartMinute": 1,
       "pumpDuration": 1,
       "pumpInterval": 1
+    },
+    "ммммм": {
+      "name": "ммммм",
+      "fanTemperatureThreshold": 11,
+      "lightOnDuration": 39600000000,
+      "lightIntervalManual": 39600000000,
+      "pumpStartHour": 1,
+      "pumpStartMinute": 1,
+      "pumpDuration": 1,
+      "pumpInterval": 1
     }
   },
-  "currentCrop": "test"
+  "currentCrop": "ммммм"
 }
