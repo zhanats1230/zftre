@@ -752,100 +752,155 @@ app.get('/', (req, res) => {
         const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
         const ctxSoilMoisture = document.getElementById('soilMoistureChart').getContext('2d');
 
-        tempChart = new Chart(ctxTemp, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [{
-              label: 'Temperature (°C)',
-              data: [],
-              borderColor: '#14b8a6',
-              backgroundColor: 'rgba(20, 184, 166, 0.2)',
-              fill: true,
-              tension: 0.4
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              x: { title: { display: true, text: 'Hour of Day' } },
-              y: { beginAtZero: true, max: 40, title: { display: true, text: 'Temperature (°C)' } }
-            }
-          }
-        });
-
-        humidityChart = new Chart(ctxHumidity, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [{
-              label: 'Humidity (%)',
-              data: [],
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.2)',
-              fill: true,
-              tension: 0.4
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              x: { title: { display: true, text: 'Hour of Day' } },
-              y: { beginAtZero: true, max: 100, title: { display: true, text: 'Humidity (%)' } }
-            }
-          }
-        });
-
-        soilMoistureChart = new Chart(ctxSoilMoisture, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [{
-              label: 'Soil Moisture (%)',
-              data: [],
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.2)',
-              fill: true,
-              tension: 0.4
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              x: { title: { display: true, text: 'Hour of Day' } },
-              y: { beginAtZero: true, max: 100, title: { display: true, text: 'Soil Moisture (%)' } }
-            }
-          }
-        });
+          const commonOptions = {
+    responsive: true,
+    animation: {
+      duration: 1000,
+      easing: 'easeOutQuart'
+    },
+    scales: {
+      x: {
+        title: { display: true, text: 'Time' },
+        grid: { display: false }
+      },
+      y: {
+        beginAtZero: false,
+        title: { display: true },
+        grid: { color: 'rgba(0, 0, 0, 0.05)' }
       }
+    },
+    plugins: {
+      legend: { display: true },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: 10,
+        cornerRadius: 4
+      }
+    },
+    interaction: { mode: 'nearest', axis: 'x', intersect: false },
+    elements: {
+      line: { tension: 0.4, borderWidth: 3 },
+      point: { radius: 4, hoverRadius: 6 }
+    }
+  };
 
-      async function updateChartData() {
-        try {
-          const response = await fetch('/getChartData');
-          const data = await response.json();
-          
-          // Подготовка данных для графиков (24 точки, по одной на час)
-          const labels = data.map(entry => entry.hour.toString().padStart(2, '0') + ':00');
-          const tempData = data.map(entry => entry.temperature.toFixed(1));
-          const humidityData = data.map(entry => entry.humidity.toFixed(1));
-          const soilMoistureData = data.map(entry => entry.soilMoisture.toFixed(1));
-
-          // Обновление графиков
-          tempChart.data.labels = labels;
-          tempChart.data.datasets[0].data = tempData;
-          tempChart.update();
-
-          humidityChart.data.labels = labels;
-          humidityChart.data.datasets[0].data = humidityData;
-          humidityChart.update();
-
-          soilMoistureChart.data.labels = labels;
-          soilMoistureChart.data.datasets[0].data = soilMoistureData;
-          soilMoistureChart.update();
-        } catch (error) {
-          console.error('Error updating chart data:', error);
+  tempChart = new Chart(ctxTemp, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Temperature (°C)',
+        data: [],
+        borderColor: '#14b8a6',
+        backgroundColor: 'rgba(20, 184, 166, 0.2)',
+        fill: true,
+        pointBackgroundColor: '#14b8a6',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: '#14b8a6'
+      }]
+    },
+    options: {
+      ...commonOptions,
+      scales: {
+        ...commonOptions.scales,
+        y: {
+          ...commonOptions.scales.y,
+          title: { ...commonOptions.scales.y.title, text: 'Temperature (°C)' }
         }
       }
+    }
+  });
+
+  humidityChart = new Chart(ctxHumidity, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Humidity (%)',
+        data: [],
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        fill: true,
+        pointBackgroundColor: '#3b82f6',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: '#3b82f6'
+      }]
+    },
+    options: {
+      ...commonOptions,
+      scales: {
+        ...commonOptions.scales,
+        y: {
+          ...commonOptions.scales.y,
+          title: { ...commonOptions.scales.y.title, text: 'Humidity (%)' }
+        }
+      }
+    }
+  });
+
+  soilMoistureChart = new Chart(ctxSoilMoisture, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Soil Moisture (%)',
+        data: [],
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+        fill: true,
+        pointBackgroundColor: '#10b981',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: '#10b981'
+      }]
+    },
+    options: {
+      ...commonOptions,
+      scales: {
+        ...commonOptions.scales,
+        y: {
+          ...commonOptions.scales.y,
+          title: { ...commonOptions.scales.y.title, text: 'Soil Moisture (%)' }
+        }
+      }
+    }
+  });
+}
+
+      async function updateChartData() {
+    try {
+      const response = await fetch('/getChartData');
+      const data = await response.json();
+      
+      // Форматируем время для осей X
+      const formatTime = timestamp => {
+        const date = new Date(timestamp);
+       return date.getHours().toString().padStart(2, '0') + ':00';
+      };
+      
+      const labels = data.map(entry => formatTime(entry.timestamp));
+      const tempData = data.map(entry => entry.temperature);
+      const humidityData = data.map(entry => entry.humidity);
+      const soilMoistureData = data.map(entry => entry.soilMoisture);
+
+      // Обновляем графики
+      updateChart(tempChart, labels, tempData, 'Temperature (°C)');
+      updateChart(humidityChart, labels, humidityData, 'Humidity (%)');
+      updateChart(soilMoistureChart, labels, soilMoistureData, 'Soil Moisture (%)');
+    } catch (error) {
+      console.error('Error updating chart data:', error);
+    }
+  }
+  function updateChart(chart, labels, data, label) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = data;
+    chart.data.datasets[0].label = label;
+    chart.update();
+  }
 
       function toggleModal(modalId, show) {
         const modal = document.getElementById(modalId);
@@ -1347,32 +1402,7 @@ app.get('/getSensorTrends', (req, res) => {
   }
 });
 
-app.get('/getChartData', async (req, res) => {
-  try {
-    const oneDayAgo = Date.now() - 86400000;
-    const rawData = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
-
-    const hourlyData = {};
-
-    rawData.forEach(entry => {
-      const date = new Date(entry.timestamp);
-      const hourKey = date.getHours(); // Час в формате 0–23
-
-      if (!hourlyData[hourKey]) {
-        hourlyData[hourKey] = {
-          temperature: [],
-          humidity: [],
-          soilMoisture: [],
-          timestamp: new Date(date.setMinutes(0, 0, 0)).getTime(),
-          count: 0
-        };
-      }
-
-      hourlyData[hourKey].temperature.push(entry.temperature);
-      hourlyData[hourKey].humidity.push(entry.humidity);
-      hourlyData[hourKey].soilMoisture.push(entry.soilMoisture);
-      hourlyData[hourKey].count++;
-    });
+});
 
     const processedData = Object.entries(hourlyData).map(([hour, data]) => ({
       hour: parseInt(hour),
