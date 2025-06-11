@@ -1286,8 +1286,10 @@ function initChart(ctx, label, color) {
         updateSensorData();
         updateMode();
         checkConnection();
-        updateChartData();
-
+        
+await updateChartData('temperature');
+  await updateChartData('humidity');
+  await updateChartData('soilMoisture');
         const cropData = await loadCropSettings();
         await updateCropDropdown(cropData);
 
