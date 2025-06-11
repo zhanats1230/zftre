@@ -59,7 +59,15 @@ async function loadSensorDataHistory() {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     sensorDataHistory = JSON.parse(data);
     const oneDayAgo = Date.now() - 86400000;
-    
+    sensorDataHistory = {
+      raw: loadedData.raw || [],
+      minuteAverages: loadedData.minuteAverages || loadedData.hourlyAverages || [],
+      healthyRanges: loadedData.healthyRanges || {
+        temperature: { inRange: 0, total: 0 },
+        humidity: { inRange: 0, total: 0 },
+        soilMoisture: { inRange: 0, total: 0 }
+      }
+    };
     sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
     sensorDataHistory.minuteAverages = sensorDataHistory.minuteAverages.filter(entry => entry.timestamp >= oneDayAgo);
     
@@ -90,9 +98,8 @@ async function saveSensorDataHistory() {
     };
     
     await fs.writeFile(DATA_FILE, JSON.stringify(dataToSave, null, 2));
-    console.log('Sensor data history saved to file');
   } catch (error) {
-    console.error('Error saving sensor data history:', error);
+    console.error('Error saving history:', error);
   }
 }
 
@@ -945,7 +952,6 @@ function initChart(ctx, label, color) {
     const labels = data.map(entry => 
       new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
     );
-
     let chart, values;
     switch(chartType) {
       case 'temperature':
