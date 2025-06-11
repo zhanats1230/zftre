@@ -902,7 +902,7 @@ app.get('/', (req, res) => {
             const option = document.createElement('option');
             option.value = key;
             option.textContent = crops[key].name || key;
-            if (key === cropData.currentCropKey) {
+            if (key === cropData.currentCrop) {
               option.selected = true;
             }
             cropSelect.appendChild(option);
@@ -914,7 +914,7 @@ app.get('/', (req, res) => {
         customOption.textContent = 'Custom Crop...';
         cropSelect.appendChild(customOption);
 
-        currentCropName.textContent = crops[cropData.currentCropKey]?.name || 'Unknown';
+         currentCropName.textContent = crops[cropData.currentCrop]?.name || 'Unknown';
         await loadCurrentCropSettings(cropData.currentCropKey);
       }
 
@@ -1532,7 +1532,7 @@ app.get('/getCropSettings', async (req, res) => {
     try {
         await loadCropSettings();
         const cropData = {
-            currentCropKey: currentCropKey,
+            currentCrop: currentCrop,
             availableCrops: cropSettings
         };
         console.log('Crop settings:', JSON.stringify(cropData));
