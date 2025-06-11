@@ -821,11 +821,11 @@ function initChart(ctx, label, color) {
       let tempChart, humidityChart, soilMoistureChart;
 
       function initializeCharts() {
-        const ctxTemp = document.getElementById('tempChart').getContext('2d');
-        const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
-        const ctxSoilMoisture = document.getElementById('soilMoistureChart').getContext('2d');
+  const ctxTemp = document.getElementById('tempChart').getContext('2d');
+  const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
+  const ctxSoilMoisture = document.getElementById('soilMoistureChart').getContext('2d');
 
-          const commonOptions = {
+  const commonOptions = {
     responsive: true,
     animation: {
       duration: 1000,
@@ -849,7 +849,12 @@ function initChart(ctx, label, color) {
         intersect: false,
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         padding: 10,
-        cornerRadius: 4
+        cornerRadius: 4,
+        callbacks: {
+          label: function(tooltipItem) {
+            return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(1)}`;
+          }
+        }
       }
     },
     interaction: { mode: 'nearest', axis: 'x', intersect: false },
@@ -881,7 +886,12 @@ function initChart(ctx, label, color) {
         ...commonOptions.scales,
         y: {
           ...commonOptions.scales.y,
-          title: { ...commonOptions.scales.y.title, text: 'Temperature (°C)' }
+          title: { ...commonOptions.scales.y.title, text: 'Temperature (°C)' },
+          ticks: {
+            callback: function(value) {
+              return value.toFixed(1);
+            }
+          }
         }
       }
     }
@@ -909,7 +919,12 @@ function initChart(ctx, label, color) {
         ...commonOptions.scales,
         y: {
           ...commonOptions.scales.y,
-          title: { ...commonOptions.scales.y.title, text: 'Humidity (%)' }
+          title: { ...commonOptions.scales.y.title, text: 'Humidity (%)' },
+          ticks: {
+            callback: function(value) {
+              return value.toFixed(1);
+            }
+          }
         }
       }
     }
@@ -937,7 +952,12 @@ function initChart(ctx, label, color) {
         ...commonOptions.scales,
         y: {
           ...commonOptions.scales.y,
-          title: { ...commonOptions.scales.y.title, text: 'Soil Moisture (%)' }
+          title: { ...commonOptions.scales.y.title, text: 'Soil Moisture (%)' },
+          ticks: {
+            callback: function(value) {
+              return value.toFixed(1);
+            }
+          }
         }
       }
     }
