@@ -949,9 +949,7 @@ function initChart(ctx, label, color) {
     const response = await fetch('/getChartData');
     const data = await response.json();
     
-    const labels = data.map(entry => 
-      new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
-    );
+    const labels = data.map(entry => entry.timeLabel);
     let chart, values;
     switch(chartType) {
       case 'temperature':
@@ -968,18 +966,13 @@ function initChart(ctx, label, color) {
         break;
     }
 
-    if (!chart) {
-      const ctx = document.getElementById(chartType + 'Chart').getContext('2d');
-      chart = initChart(ctx, 
-        chartType.charAt(0).toUpperCase() + chartType.slice(1) + ' History',
-        chartType === 'temperature' ? '#14b8a6' : 
-        chartType === 'humidity' ? '#3b82f6' : '#10b981'
-      );
+    if (chart) {
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = values;
+      chart.update();
+    } else {
+      console.error('Chart not initialized for:', chartType);
     }
-
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = values;
-    chart.update();
   } catch (error) {
     console.error('Error updating chart:', error);
   }
@@ -1490,51 +1483,26 @@ app.get('/getSensorTrends', (req, res) => {
   }
 });
 
-    app.get('/getChartData', async (req, res) => {
+   app.get('/getChartData', async (req, res) => {
   try {
     const oneDayAgo = Date.now() - 86400000;
 
     // Получаем минутные данные
     const minuteData = sensorDataHistory.minuteAverages.filter(entry => entry.timestamp >= oneDayAgo);
-    const formattedData = minuteData.map(entry => ({
-      timeLabel: new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    // Форматируем данные для графика
+    const chartData = minuteData.map(entry => ({
+      timestamp: entry.timestamp,
+      timeLabel: new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      temperature: entry.temperature,
+      humidity: entry.humidity,
+      soilMoisture: entry.soilMoisture
     }));
 
-    // Группировка по часу
-    const rawData = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
-    const hourlyData = {};
+    chartData.sort((a, b) => a.timestamp - b.timestamp);
 
-    rawData.forEach(entry => {
-      const date = new Date(entry.timestamp);
-      const hourTimestamp = new Date(date.setMinutes(0, 0, 0)).getTime();
-
-      if (!hourlyData[hourTimestamp]) {
-        hourlyData[hourTimestamp] = {
-          temperature: [],
-          humidity: [],
-          soilMoisture: [],
-          timestamp: hourTimestamp,
-          count: 0
-        };
-      }
-
-      hourlyData[hourTimestamp].temperature.push(entry.temperature);
-      hourlyData[hourTimestamp].humidity.push(entry.humidity);
-      hourlyData[hourTimestamp].soilMoisture.push(entry.soilMoisture);
-      hourlyData[hourTimestamp].count++;
-    });
-
-    const processedData = Object.entries(hourlyData).map(([timestamp, data]) => ({
-      timestamp: data.timestamp,
-      temperature: data.temperature.reduce((a, b) => a + b, 0) / data.count,
-      humidity: data.humidity.reduce((a, b) => a + b, 0) / data.count,
-      soilMoisture: data.soilMoisture.reduce((a, b) => a + b, 0) / data.count
-    }));
-
-    processedData.sort((a, b) => a.timestamp - b.timestamp);
-
-    console.log('Chart Data:', JSON.stringify(processedData, null, 2));
-    res.json({ processedData, formattedData });
+    console.log('Chart Data:', JSON.stringify(chartData, null, 2));
+    res.json(chartData);
   } catch (error) {
     console.error('Error in /getChartData:', error);
     res.status(500).json({ error: 'Internal Server Error' });
