@@ -92,13 +92,13 @@
     },
     "ываываыва": {
       "name": "wer",
-      "fanTemperatureThreshold": 22,
-      "lightOnDuration": 7200000,
-      "lightIntervalManual": 21600000,
-      "pumpStartHour": 8,
-      "pumpStartMinute": 0,
-      "pumpDuration": 15,
-      "pumpInterval": 180
+      "fanTemperatureThreshold": 11,
+      "lightOnDuration": 660000,
+      "lightIntervalManual": 660000,
+      "pumpStartHour": 1,
+      "pumpStartMinute": 1,
+      "pumpDuration": 1,
+      "pumpInterval": 1
     }
   },
   "currentCrop": "ываываыва"
