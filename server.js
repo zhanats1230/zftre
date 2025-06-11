@@ -1402,6 +1402,33 @@ app.get('/getSensorTrends', (req, res) => {
   }
 });
 
+    app.get('/getChartData', async (req, res) => {
+  try {
+    const oneDayAgo = Date.now() - 86400000;
+    const rawData = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
+
+    const hourlyData = {};
+
+    rawData.forEach(entry => {
+      const date = new Date(entry.timestamp);
+      const hourKey = date.getHours(); // Час в формате 0–23
+
+      if (!hourlyData[hourKey]) {
+        hourlyData[hourKey] = {
+          temperature: [],
+          humidity: [],
+          soilMoisture: [],
+          timestamp: new Date(date.setMinutes(0, 0, 0)).getTime(),
+          count: 0
+        };
+      }
+
+      hourlyData[hourKey].temperature.push(entry.temperature);
+      hourlyData[hourKey].humidity.push(entry.humidity);
+      hourlyData[hourKey].soilMoisture.push(entry.soilMoisture);
+      hourlyData[hourKey].count++;
+    });
+
     const processedData = Object.entries(hourlyData).map(([hour, data]) => ({
       hour: parseInt(hour),
       timestamp: data.timestamp,
@@ -1420,7 +1447,6 @@ app.get('/getSensorTrends', (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
 app.get('/getMode', (req, res) => {
   try {
     console.log('Mode:', mode);
