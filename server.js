@@ -12,7 +12,7 @@ const octokit = new Octokit({
 });
 const REPO_OWNER = "zhanats1230";
 const REPO_NAME = "zftre";
-
+const MAX_MINUTE_HISTORY_MINUTES = 24 * 60; // 24 часа в минутах
 // Paths to store data
 const DATA_FILE = 'sensorDataHistory.json';
 const CROP_SETTINGS_FILE = 'cropSettings.json';
@@ -35,7 +35,7 @@ let lastSensorUpdate = 0;
 
 let sensorDataHistory = {
   raw: [],
-  hourlyAverages: [],
+  minuteAverages: [], // вместо hourlyAverages
   healthyRanges: {
     temperature: { inRange: 0, total: 0 },
     humidity: { inRange: 0, total: 0 },
@@ -59,17 +59,16 @@ async function loadSensorDataHistory() {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     sensorDataHistory = JSON.parse(data);
     const oneDayAgo = Date.now() - 86400000;
+    
     sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
-    sensorDataHistory.hourlyAverages = sensorDataHistory.hourlyAverages.filter(entry => entry.timestamp >= oneDayAgo);
-    console.log(`Loaded ${sensorDataHistory.raw.length} raw entries and ${sensorDataHistory.hourlyAverages.length} hourly averages`);
+    sensorDataHistory.minuteAverages = sensorDataHistory.minuteAverages.filter(entry => entry.timestamp >= oneDayAgo);
+    
+    console.log(`Loaded ${sensorDataHistory.raw.length} raw entries and ${sensorDataHistory.minuteAverages.length} minute averages`);
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      console.log('No existing sensor data file found, starting with empty history');
-    } else {
-      console.error('Error loading sensor data history:', error);
-    }
+    // ... остальной код без изменений
     sensorDataHistory = { 
       raw: [], 
+      minuteAverages: [], // изменили здесь
       hourlyAverages: [], 
       healthyRanges: { 
         temperature: { inRange: 0, total: 0 }, 
@@ -83,10 +82,10 @@ async function loadSensorDataHistory() {
 // Сохранение истории данных сенсоров
 async function saveSensorDataHistory() {
   try {
-    const cutoff = Date.now() - (MAX_HISTORY_HOURS * 3600000);
+    const cutoff = Date.now() - (MAX_MINUTE_HISTORY_MINUTES * 60000);
     const dataToSave = {
       raw: sensorDataHistory.raw.filter(entry => entry.timestamp >= cutoff),
-      hourlyAverages: sensorDataHistory.hourlyAverages.filter(entry => entry.timestamp >= cutoff),
+      minuteAverages: sensorDataHistory.minuteAverages.filter(entry => entry.timestamp >= cutoff),
       healthyRanges: sensorDataHistory.healthyRanges
     };
     
@@ -96,6 +95,7 @@ async function saveSensorDataHistory() {
     console.error('Error saving sensor data history:', error);
   }
 }
+
 
 // Загрузка настроек культур
 async function loadCropSettings() {
@@ -170,7 +170,43 @@ async function getFileSha(filePath) {
     return null; // Файл не существует
   }
 }
+function computeMinuteAverages() {
+  const cutoff = Date.now() - (MAX_MINUTE_HISTORY_MINUTES * 60000);
+  const minuteBuckets = {};
+  
+  sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= cutoff);
 
+  sensorDataHistory.raw.forEach(entry => {
+    const date = new Date(entry.timestamp);
+    const minuteKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}`;
+    
+    if (!minuteBuckets[minuteKey]) {
+      minuteBuckets[minuteKey] = {
+        temperature: [],
+        humidity: [],
+        soilMoisture: [],
+        timestamp: date.setSeconds(0, 0) // Округляем до минуты
+      };
+    }
+    
+    minuteBuckets[minuteKey].temperature.push(entry.temperature);
+    minuteBuckets[minuteKey].humidity.push(entry.humidity);
+    minuteBuckets[minuteKey].soilMoisture.push(entry.soilMoisture);
+  });
+
+  sensorDataHistory.minuteAverages = Object.keys(minuteBuckets).map(key => {
+    const bucket = minuteBuckets[key];
+    return {
+      timestamp: bucket.timestamp,
+      temperature: bucket.temperature.length ? bucket.temperature.reduce((sum, val) => sum + val, 0) / bucket.temperature.length : 0,
+      humidity: bucket.humidity.length ? bucket.humidity.reduce((sum, val) => sum + val, 0) / bucket.humidity.length : 0,
+      soilMoisture: bucket.soilMoisture.length ? bucket.soilMoisture.reduce((sum, val) => sum + val, 0) / bucket.soilMoisture.length : 0
+    };
+  });
+
+  // Сортируем по времени
+  sensorDataHistory.minuteAverages.sort((a, b) => a.timestamp - b.timestamp);
+}
 // Вычисление средних значений
 function computeHourlyAverages() {
   const cutoff = Date.now() - (MAX_HISTORY_HOURS * 3600000);
@@ -1287,7 +1323,7 @@ document.getElementById('soilMoistureChartBtn').addEventListener('click', () => 
         setInterval(updateRelayState, 5000);
         setInterval(updateMode, 5000);
         setInterval(checkConnection, 10000);
-        setInterval(updateChartData, 60000); // Обновляем графики каждые 60 секунд
+        setInterval(updateChartData, 1000); // Обновляем графики каждые 60 секунд
       }
 
       document.addEventListener('DOMContentLoaded', () => {
@@ -1388,18 +1424,19 @@ app.post('/updateSensorData', async (req, res) => {
       sensorData = { temperature, humidity, soilMoisture };
       lastSensorUpdate = Date.now(); // обновляем глобальную переменную
 
-      sensorDataHistory.raw.push({
-        temperature,
-        humidity,
-        soilMoisture,
-        timestamp: lastSensorUpdate
-      });
+     sensorDataHistory.raw.push({
+      temperature,
+      humidity,
+      soilMoisture,
+      timestamp: lastSensorUpdate
+    });
+
 
       // Удаляем старые записи
       const oneDayAgo = Date.now() - 86400000;
       sensorDataHistory.raw = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
 
-      computeHourlyAverages();
+       computeMinuteAverages();
       updateHealthyRanges({ temperature, humidity, soilMoisture });
       await saveSensorDataHistory();
 
@@ -1450,48 +1487,54 @@ app.get('/getSensorTrends', (req, res) => {
     app.get('/getChartData', async (req, res) => {
   try {
     const oneDayAgo = Date.now() - 86400000;
-    const rawData = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
 
+    // Получаем минутные данные
+    const minuteData = sensorDataHistory.minuteAverages.filter(entry => entry.timestamp >= oneDayAgo);
+    const formattedData = minuteData.map(entry => ({
+      timeLabel: new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }));
+
+    // Группировка по часу
+    const rawData = sensorDataHistory.raw.filter(entry => entry.timestamp >= oneDayAgo);
     const hourlyData = {};
 
     rawData.forEach(entry => {
       const date = new Date(entry.timestamp);
-      const hourKey = date.getHours(); // Час в формате 0–23
+      const hourTimestamp = new Date(date.setMinutes(0, 0, 0)).getTime();
 
-      if (!hourlyData[hourKey]) {
-        hourlyData[hourKey] = {
+      if (!hourlyData[hourTimestamp]) {
+        hourlyData[hourTimestamp] = {
           temperature: [],
           humidity: [],
           soilMoisture: [],
-          timestamp: new Date(date.setMinutes(0, 0, 0)).getTime(),
+          timestamp: hourTimestamp,
           count: 0
         };
       }
 
-      hourlyData[hourKey].temperature.push(entry.temperature);
-      hourlyData[hourKey].humidity.push(entry.humidity);
-      hourlyData[hourKey].soilMoisture.push(entry.soilMoisture);
-      hourlyData[hourKey].count++;
+      hourlyData[hourTimestamp].temperature.push(entry.temperature);
+      hourlyData[hourTimestamp].humidity.push(entry.humidity);
+      hourlyData[hourTimestamp].soilMoisture.push(entry.soilMoisture);
+      hourlyData[hourTimestamp].count++;
     });
 
-    const processedData = Object.entries(hourlyData).map(([hour, data]) => ({
-      hour: parseInt(hour),
+    const processedData = Object.entries(hourlyData).map(([timestamp, data]) => ({
       timestamp: data.timestamp,
       temperature: data.temperature.reduce((a, b) => a + b, 0) / data.count,
       humidity: data.humidity.reduce((a, b) => a + b, 0) / data.count,
       soilMoisture: data.soilMoisture.reduce((a, b) => a + b, 0) / data.count
     }));
 
-    // Сортировка по времени
     processedData.sort((a, b) => a.timestamp - b.timestamp);
 
     console.log('Chart Data:', JSON.stringify(processedData, null, 2));
-    res.json(processedData);
+    res.json({ processedData, formattedData });
   } catch (error) {
     console.error('Error in /getChartData:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 app.get('/getMode', (req, res) => {
   try {
     console.log('Mode:', mode);
