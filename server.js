@@ -1773,26 +1773,41 @@ app.post('/deleteCrop', async (req, res) => {
 app.post('/addCrop', async (req, res) => {
   try {
     const { cropKey, cropName, fanTemperatureThreshold, lightOnDuration, lightIntervalManual, pumpStartHour, pumpStartMinute, pumpDuration, pumpInterval } = req.body;
-    
+
     if (!cropKey || !cropName) {
       return res.status(400).json({ error: 'Crop key and name are required' });
     }
-    
+
     if (cropSettings[cropKey]) {
       return res.status(400).json({ error: 'Crop with this key already exists' });
     }
-    
+
+    // Validate inputs
+    const isValidNumber = (val) => typeof val === 'number' && !isNaN(val) && val >= 0;
+
+    if (
+      !isValidNumber(fanTemperatureThreshold) ||
+      !isValidNumber(lightOnDuration) || lightOnDuration < 60000 || // Minimum 1 minute
+      !isValidNumber(lightIntervalManual) || lightIntervalManual < 60000 || // Minimum 1 minute
+      !isValidNumber(pumpStartHour) || pumpStartHour < 0 || pumpStartHour >= 24 ||
+      !isValidNumber(pumpStartMinute) || pumpStartMinute < 0 || pumpStartMinute >= 60 ||
+      !isValidNumber(pumpDuration) || pumpDuration <= 0 ||
+      !isValidNumber(pumpInterval) || pumpInterval <= 0
+    ) {
+      return res.status(400).json({ error: 'Invalid crop settings' });
+    }
+
     cropSettings[cropKey] = {
       name: cropName,
       fanTemperatureThreshold: parseFloat(fanTemperatureThreshold) || 25.0,
-      lightOnDuration: parseInt(lightOnDuration) * 60000 || 7200000,
-      lightIntervalManual: parseInt(lightIntervalManual) * 60000 || 21600000,
+      lightOnDuration: parseInt(lightOnDuration) || 7200000, // Already in milliseconds
+      lightIntervalManual: parseInt(lightIntervalManual) || 21600000, // Already in milliseconds
       pumpStartHour: parseInt(pumpStartHour) || 8,
       pumpStartMinute: parseInt(pumpStartMinute) || 0,
       pumpDuration: parseInt(pumpDuration) || 15,
       pumpInterval: parseInt(pumpInterval) || 180
     };
-    
+
     currentCrop = cropKey;
     await saveCropSettings();
     console.log('New crop added:', cropKey, cropSettings[cropKey]);
