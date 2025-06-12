@@ -433,11 +433,11 @@ app.get('/', (req, res) => {
       font-weight: 600;
       border-radius: 8px;
       color: white;
+      margin-right: 10px;
     }
     .ripple-btn:hover {
       transform: scale(1.05);
       box-shadow: 0 6px 12px rgba(20, 184, 166, 0.3);
-      margin-right: 10px;
     }
     .logout-btn {
       background: linear-gradient(to right, #ef4444, #f87171);
