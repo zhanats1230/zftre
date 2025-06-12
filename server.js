@@ -509,7 +509,7 @@ app.get('/', (req, res) => {
     <div class="flex items-center justify-between mb-8">
       <h1 class="text-4xl font-bold text-gray-900"><i class="fa-solid fa-leaf mr-2 text-teal-500"></i> Greenhouse Control</h1>
       <div class="flex space-x-4">
-        <button id="toggleMode" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-sync mr-2"></i> Switch Mode</button>
+        <button id="toggleMode" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-sync mr-2"></i> Переключить режим</button>
         <div id="connectionIndicator" class="connection-indicator offline"><i class="fa-solid fa-wifi-slash"></i> Offline</div>
         <button id="logoutButton" class="logout-btn text-white px-4 py-2 rounded-lg"><i class="fa-solid fa-sign-out-alt mr-2"></i> Logout</button>
       </div>
@@ -517,9 +517,9 @@ app.get('/', (req, res) => {
 
     <!-- Tabs Navigation -->
     <div class="flex border-b border-gray-200 mb-8">
-      <button id="tabDashboard" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100 active">Dashboard</button>
-      <button id="tabRelays" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Relays</button>
-      <button id="tabSettings" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Settings</button>
+      <button id="tabDashboard" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100 active">Панель инструментов</button>
+      <button id="tabRelays" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Реле</button>
+      <button id="tabSettings" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Настройки</button>
     </div>
 
     <!-- Tab Content -->
@@ -528,12 +528,12 @@ app.get('/', (req, res) => {
       <div class="mb-8">
         <div class="bg-white p-6 rounded-2xl shadow-lg card">
           <div class="section-header">
-            <h3 class="text-xl font-semibold"><i class="fa-solid fa-gauge mr-2"></i> System Status</h3>
+            <h3 class="text-xl font-semibold"><i class="fa-solid fa-gauge mr-2"></i> Состояние системы</h3>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <p class="mb-3">Mode: <span id="currentMode" class="status-badge bg-gray-100 text-gray-800">—</span></p>
-            <p class="mb-3">Lighting: <span id="relayState1" class="status-badge bg-gray-100 text-gray-800">—</span></p>
-            <p class="mb-3">Ventilation: <span id="relayState2" class="status-badge bg-gray-100 text-gray-800">—</span></p>
+            <p class="mb-3">Режим: <span id="currentMode" class="status-badge bg-gray-100 text-gray-800">—</span></p>
+            <p class="mb-3">Освещение: <span id="relayState1" class="status-badge bg-gray-100 text-gray-800">—</span></p>
+            <p class="mb-3">Вентиляция: <span id="relayState2" class="status-badge bg-gray-100 text-gray-800">—</span></p>
           </div>
         </div>
       </div>
@@ -541,26 +541,26 @@ app.get('/', (req, res) => {
       <!-- Sensors -->
       <div class="mb-8">
         <div class="section-header" style="margin: 0 0 1.5rem;">
-          <h3 class="text-xl font-semibold"><i class="fa-solid fa-thermometer mr-2"></i> Environmental Sensors</h3>
+          <h3 class="text-xl font-semibold"><i class="fa-solid fa-thermometer mr-2"></i> Датчики окружающей среды</h3>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-2xl shadow-lg card">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Temperature</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Температура</h3>
             <p class="text-2xl font-bold" id="temperature">— °C</p>
             <div class="progress-bar mt-2"><div id="temperatureProgress" class="progress-bar-fill" style="width: 0%;"></div></div>
-            <button id="tempChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
+            <button id="tempChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> Просмотр графика</button>
           </div>
           <div class="bg-white p-6 rounded-2xl shadow-lg card">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Humidity</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Влажность</h3>
             <p class="text-2xl font-bold" id="humidity">— %</p>
             <div class="progress-bar mt-2"><div id="humidityProgress" class="progress-bar-fill" style="width: 0%;"></div></div>
-            <button id="humidityChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
+            <button id="humidityChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> Просмотр графика</button>
           </div>
           <div class="bg-white p-6 rounded-2xl shadow-lg card">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Soil Moisture</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Влажность почвы</h3>
             <p class="text-2xl font-bold" id="soilMoisture">— %</p>
             <div class="progress-bar mt-2"><div id="soilMoistureProgress" class="progress-bar-fill" style="width: 0%;"></div></div>
-            <button id="soilMoistureChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> View Trends</button>
+            <button id="soilMoistureChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> Просмотр графика</button>
           </div>
         </div>
       </div>
@@ -605,15 +605,15 @@ app.get('/', (req, res) => {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Lighting -->
         <div class="bg-white p-6 rounded-2xl shadow-lg card">
-          <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-lightbulb mr-2 text-teal-500"></i> Lighting</h3>
-          <p id="relayState1Control" class="text-lg mb-4">Lighting: —</p>
-          <button id="toggleRelay1" class="w-full bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-power-off mr-2"></i> Toggle Lighting</button>
+          <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-lightbulb mr-2 text-teal-500"></i> Освещение</h3>
+          <p id="relayState1Control" class="text-lg mb-4">Освещение: —</p>
+          <button id="toggleRelay1" class="w-full bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-power-off mr-2"></i> Переключить</button>
         </div>
         <!-- Ventilation -->
         <div class="bg-white p-6 rounded-2xl shadow-lg card">
-          <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-fan mr-2 text-teal-500"></i> Ventilation</h3>
-          <p id="relayState2Control" class="text-lg mb-4">Ventilation: —</p>
-          <button id="toggleRelay2" class="w-full bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-power-off mr-2"></i> Toggle Ventilation</button>
+          <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-fan mr-2 text-teal-500"></i> Вентиляция</h3>
+          <p id="relayState2Control" class="text-lg mb-4">Вентиляция: —</p>
+          <button id="toggleRelay2" class="w-full bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-power-off mr-2"></i> Переключить</button>
         </div>
       </div>
     </div>
@@ -623,30 +623,30 @@ app.get('/', (req, res) => {
       <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
         <div class="section-header">
           <i class="fa-solid fa-seedling"></i>
-          <h3>Crop Selection</h3>
+          <h3>Выбор культуры</h3>
         </div>
         <div class="grid grid-cols-1 gap-6">
           <div>
-            <label class="block text-gray-700 font-bold mb-2" for="cropSelect">Select Crop</label>
+            <label class="block text-gray-700 font-bold mb-2" for="cropSelect">Выбрать культуру</label>
             <select id="cropSelect" class="crop-select"></select>
           </div>
           <div id="customCropFields" class="hidden">
             <div class="grid grid-cols-1 gap-4">
               <div>
-                <label class="block text-gray-700 font-bold mb-2" for="newCropName">Crop Name</label>
+                <label class="block text-gray-700 font-bold mb-2" for="newCropName">Название культуры</label>
                 <input id="newCropName" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Enter crop name">
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-gray-700 font-bold mb-2" for="newCropKey">Crop Key</label>
+                  <label class="block text-gray-700 font-bold mb-2" for="newCropKey">Ключ культуры</label>
                   <input id="newCropKey" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Unique key (e.g. custom_crop)">
                 </div>
               </div>
             </div>
           </div>
           <div class="flex justify-end">
-            <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Apply Crop Settings</button>
-            <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Delete Crop</button>
+            <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Применить настройки </button>
+            <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Удалить культуру</button>
           </div>
         </div>
       </div>
@@ -655,19 +655,19 @@ app.get('/', (req, res) => {
       <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
         <div class="section-header">
           <i class="fa-solid fa-sliders-h"></i>
-          <h3>Crop Settings Editor</h3>
+          <h3>Редактор настроек культур</h3>
         </div>
         <div class="mb-4">
-          <p class="text-gray-700">Current Crop: <span id="currentCropName" class="crop-badge">Potato</span></p>
+          <p class="text-gray-700">Текущая культура: <span id="currentCropName" class="crop-badge">Potato</span></p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
           <div class="input-card">
-            <label class="input-label">Temp Threshold (°C)</label>
+            <label class="input-label">Порог температуры (°C)</label>
             <div class="icon-circle"><i class="fa-solid fa-temperature-half"></i></div>
             <input id="cropFanTemperatureThreshold" type="number" step="0.1" value="25.0" placeholder="Enter °C">
           </div>
           <div class="input-card">
-            <label class="input-label">Light Duration (min)</label>
+            <label class="input-label">Продолжительность освещения (мин)</label>
             <div class="icon-circle"><i class="fa-solid fa-sun"></i></div>
             <input id="cropLightOnDuration" type="number" value="120" placeholder="Enter minutes">
           </div>
