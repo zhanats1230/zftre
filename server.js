@@ -437,6 +437,7 @@ app.get('/', (req, res) => {
     .ripple-btn:hover {
       transform: scale(1.05);
       box-shadow: 0 6px 12px rgba(20, 184, 166, 0.3);
+      margin-right: 10px;
     }
     .logout-btn {
       background: linear-gradient(to right, #ef4444, #f87171);
@@ -672,37 +673,37 @@ app.get('/', (req, res) => {
             <input id="cropLightOnDuration" type="number" value="120" placeholder="Enter minutes">
           </div>
           <div class="input-card">
-            <label class="input-label">Light Interval (min)</label>
+            <label class="input-label">Интервал освещения (мин)</label>
             <div class="icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
             <input id="cropLightIntervalManual" type="number" value="360" placeholder="Enter minutes">
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-8 mt-4">
           <div class="input-card">
-            <label class="input-label">Pump Start Hour</label>
+            <label class="input-label">Часы запуска насоса</label>
             <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
             <input id="cropPumpStartHour" type="number" min="0" max="23" value="8" placeholder="0-23">
           </div>
           <div class="input-card">
-            <label class="input-label">Pump Start Minute</label>
+            <label class="input-label">Минута запуска насоса</label>
             <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
             <input id="cropPumpStartMinute" type="number" min="0" max="59" value="0" placeholder="0-59">
           </div>
           <div class="input-card">
-            <label class="input-label">Pump Duration (sec)</label>
+            <label class="input-label">Продолжительность работы насоса (sec)</label>
             <div class="icon-circle"><i class="fa-solid fa-stopwatch-20"></i></div>
             <input id="cropPumpDuration" type="number" min="1" value="15" placeholder="Seconds">
           </div>
           <div class="input-card">
-            <label class="input-label">Pump Interval (min)</label>
+            <label class="input-label">Интервал работы насоса (мин)</label>
             <div class="icon-circle"><i class="fa-solid fa-hourglass-half"></i></div>
             <input id="cropPumpInterval" type="number" min="1" value="180" placeholder="Minutes">
           </div>
         </div>
         <div class="wave-divider"></div>
         <div class="flex justify-between mt-4">
-          <button id="saveCropSettings" class="ripple-btn"><i class="fa-solid fa-save mr-2"></i> Save Crop Settings</button>
-          <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Delete Crop</button>
+          <button id="saveCropSettings" class="ripple-btn"><i class="fa-solid fa-save mr-2"></i> Сохранить настройки</button>
+          
         </div>
       </div>
     </div>
