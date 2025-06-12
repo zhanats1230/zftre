@@ -690,7 +690,7 @@ app.get('/', (req, res) => {
             <input id="cropPumpStartMinute" type="number" min="0" max="59" value="0" placeholder="0-59">
           </div>
           <div class="input-card">
-            <label class="input-label">Продолжительность работы насоса (sec)</label>
+            <label class="input-label">Время работы насоса (сек)</label>
             <div class="icon-circle"><i class="fa-solid fa-stopwatch-20"></i></div>
             <input id="cropPumpDuration" type="number" min="1" value="15" placeholder="Seconds">
           </div>
