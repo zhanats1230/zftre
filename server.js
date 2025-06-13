@@ -20,25 +20,7 @@ const CROP_SETTINGS_FILE = 'cropSettings.json';
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-const proxy = require('http-proxy').createProxyServer({
-  ignorePath: true,
-  proxyTimeout: 5000
-});
-proxy.on('error', (err) => {
-  console.error('Proxy error:', err);
-});
 
-// Добавляем обработку CORS
-app.use('/cam-proxy', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
-  
-  proxy.web(req, res, {
-    target: ESP32_CAM_IP,
-    changeOrigin: true,
-    prependPath: false
-  });
-});
 let relayState = {
   relayState1: false,
   relayState2: false
@@ -51,14 +33,7 @@ let sensorData = {
 };
 
 let lastSensorUpdate = 0;
-// Добавляем в зависимости
-const httpProxy = require('http-proxy');
 
-// Создаем прокси для камеры
-const proxy = httpProxy.createProxyServer({});
-app.use('/cam-proxy', (req, res) => {
-  proxy.web(req, res, { target: ESP32_CAM_IP, changeOrigin: true });
-});
 let sensorDataHistory = {
   raw: [],
   minuteAverages: [], // вместо hourlyAverages
@@ -742,7 +717,10 @@ app.get('/', (req, res) => {
       <h3>Live Greenhouse View</h3>
     </div>
     <div class="flex justify-center">
-      <img id="camStream" class="w-full max-w-4xl rounded-lg" src="/cam-proxy/stream" />
+      <video id="camStream" class="w-full max-w-4xl rounded-lg" autoplay muted playsinline>
+        <source src="${ESP32_CAM_IP}/stream" type="multipart/x-mixed-replace;boundary=123456789000000000000987654321">
+        Ваш браузер не поддерживает видео.
+      </video>
     </div>
     <div class="flex justify-center mt-4">
       <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
@@ -751,13 +729,6 @@ app.get('/', (req, res) => {
 </div>
 
     <script>
-    function refreshCameraImage() {
-  const img = document.getElementById('camStream');
-  if (img) {
-    const timestamp = new Date().getTime();
-    img.src = '/cam-proxy/stream?t=' + timestamp;
-  }
-}
       const correctPassword = 'admin';
 
       function handleLogin() {
@@ -1360,7 +1331,7 @@ function initChart(ctx, label, color) {
         updateSensorData();
         updateMode();
         checkConnection();
-        setInterval(refreshCameraImage, 30000); // Обновление каждые 30 сек
+        
 await updateChartData('temperature');
   await updateChartData('humidity');
   await updateChartData('soilMoisture');
