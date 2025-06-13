@@ -716,7 +716,7 @@ app.get('/', (req, res) => {
       <i class="fa-solid fa-video"></i>
       <h3>Live Greenhouse View</h3>
     </div>
-    <<div class="flex justify-center">
+    <div class="flex justify-center">
 <source src="http://192.168.10.4/stream" type="multipart/x-mixed-replace;boundary=frame">
 </div>
     <div class="flex justify-center mt-4">
