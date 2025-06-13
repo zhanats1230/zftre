@@ -10,6 +10,7 @@ const { Octokit } = require("@octokit/rest");
 const octokit = new Octokit({ 
   auth: process.env.GITHUB_TOKEN 
 });
+const ESP32_CAM_IP = process.env.ESP32_CAM_IP || 'http://192.168.10.4/';
 const REPO_OWNER = "zhanats1230";
 const REPO_NAME = "zftre";
 const MAX_MINUTE_HISTORY_MINUTES = 24 * 60; // 24 часа в минутах
@@ -521,6 +522,7 @@ app.get('/', (req, res) => {
       <button id="tabDashboard" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100 active">Панель инструментов</button>
       <button id="tabRelays" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Реле</button>
       <button id="tabSettings" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Настройки</button>
+      <button id="tabLive" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Live</button>
     </div>
 
     <!-- Tab Content -->
@@ -707,6 +709,20 @@ app.get('/', (req, res) => {
         </div>
       </div>
     </div>
+    <div id="liveContent" class="tab-content hidden">
+  <div class="bg-white p-6 rounded-2xl shadow-lg card">
+    <div class="section-header">
+      <i class="fa-solid fa-video"></i>
+      <h3>Live Greenhouse View</h3>
+    </div>
+    <div class="flex justify-center">
+      <img src="${ESP32_CAM_IP}/stream" alt="Live Stream" class="w-full max-w-4xl rounded-lg" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"red\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z\"/></svg>';this.style='width:100px;height:100px';" />
+    </div>
+    <div class="flex justify-center mt-4">
+      <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Back</button>
+    </div>
+  </div>
+</div>
 
     <script>
       const correctPassword = 'admin';
@@ -801,11 +817,13 @@ function initChart(ctx, label, color) {
         dashboard: document.getElementById('dashboardContent'),
         relays: document.getElementById('relaysContent'),
         settings: document.getElementById('settingsContent')
+        live: document.getElementById('liveContent')
       };
       const tabButtons = {
         dashboard: document.getElementById('tabDashboard'),
         relays: document.getElementById('tabRelays'),
         settings: document.getElementById('tabSettings')
+        live: document.getElementById('tabLive')
       };
 
       function switchTab(tabName) {
@@ -1322,7 +1340,7 @@ await updateChartData('temperature');
         document.getElementById('applyCrop').addEventListener('click', applyCropSettings);
         document.getElementById('saveCropSettings').addEventListener('click', saveCropSettingsClient);
         document.getElementById('deleteCrop').addEventListener('click', deleteCurrentCrop);
-
+document.getElementById('backButton').addEventListener('click', () => switchTab('dashboard'));
         document.getElementById('cropSelect').addEventListener('change', function() {
           const customFields = document.getElementById('customCropFields');
           if (this.value === 'custom') {
