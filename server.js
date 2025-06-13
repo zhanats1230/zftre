@@ -717,7 +717,7 @@ app.get('/', (req, res) => {
       <h3>Live Greenhouse View</h3>
     </div>
     <<div class="flex justify-center">
-  <img src="http://192.168.10.4/stream" class="w-full max-w-4xl rounded-lg" alt="Live View" />
+<source src="http://192.168.10.4/stream" type="multipart/x-mixed-replace;boundary=frame">
 </div>
     <div class="flex justify-center mt-4">
       <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
