@@ -10,8 +10,6 @@ const { Octokit } = require("@octokit/rest");
 const octokit = new Octokit({ 
   auth: process.env.GITHUB_TOKEN 
 });
-const mjpegProxy = require('mjpeg-proxy').MjpegProxy;
-const proxyErrorImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>';
 const ESP32_CAM_IP = 'http://192.168.10.4';
 const REPO_OWNER = "zhanats1230";
 const REPO_NAME = "zftre";
@@ -719,7 +717,10 @@ app.get('/', (req, res) => {
       <h3>Live Greenhouse View</h3>
     </div>
     <div class="flex justify-center">
-      <img id="camStream" src="/cam-proxy" class="w-full max-w-4xl rounded-lg" onerror="this.onerror=null; this.src='<%= proxyErrorImage %>';">
+      <video id="camStream" class="w-full max-w-4xl rounded-lg" autoplay muted playsinline>
+        <source src="${ESP32_CAM_IP}/stream" type="multipart/x-mixed-replace;boundary=123456789000000000000987654321">
+        Ваш браузер не поддерживает видео.
+      </video>
     </div>
     <div class="flex justify-center mt-4">
       <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
@@ -828,37 +829,14 @@ function initChart(ctx, label, color) {
         settings: document.getElementById('tabSettings'),
         live: document.getElementById('tabLive')
       };
-async function setupCameraStream() {
-  const camImg = document.getElementById('camStream');
-  if (!camImg) return;
-  
-  let retryCount = 0;
-  const maxRetries = 5;
-  
-  camImg.onerror = () => {
-    if (retryCount < maxRetries) {
-      retryCount++;
-      setTimeout(() => {
-        camImg.src = '/cam-proxy?t=' + Date.now();
-      }, 2000 * retryCount);
-    } else {
-      camImg.src = '<%= proxyErrorImage %>';
-      camImg.onerror = null;
-    }
-  };
-  
-  // Первоначальная загрузка
-  camImg.src = '/cam-proxy?t=' + Date.now();
-}
+
       function switchTab(tabName) {
         Object.values(tabs).forEach(tab => tab.classList.add('hidden'));
         Object.values(tabButtons).forEach(btn => btn.classList.remove('active'));
         tabs[tabName].classList.remove('hidden');
         tabButtons[tabName].classList.add('active');
       }
-if (tabName === 'live') {
-    setupCameraStream();
-  }
+
       Object.keys(tabButtons).forEach(tabName => {
         tabButtons[tabName].addEventListener('click', () => switchTab(tabName));
       });
@@ -1399,15 +1377,7 @@ document.getElementById('soilMoistureChartBtn').addEventListener('click', () => 
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         const passwordSection = document.getElementById('passwordSection');
         const controlSection = document.getElementById('controlSection');
-const video = document.getElementById('camStream');
-  if (video) {
-    video.onerror = () => {
-      video.poster = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>';
-      video.style.width = '100px';
-      video.style.height = '100px';
-      console.error('Ошибка загрузки видеопотока');
-    };
-  }
+
         if (isLoggedIn) {
           passwordSection.classList.add('hidden');
           controlSection.classList.remove('hidden');
@@ -1417,12 +1387,6 @@ const video = document.getElementById('camStream');
         const logoutButton = document.getElementById('logoutButton');
         logoutButton.addEventListener('click', handleLogout);
       });
-
-
-
-
-
-      
     </script>
 </body>
 </html>
@@ -1455,24 +1419,7 @@ app.get('/getCropsList', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-const httpProxy = require('http-proxy');
-const proxy = httpProxy.createProxyServer({});
 
-app.get('/cam-proxy', (req, res) => {
-  try {
-    const proxy = new mjpegProxy(`${ESP32_CAM_IP}/stream`);
-    proxy.proxyRequest(req, res);
-  } catch (err) {
-    console.error('Camera proxy error:', err);
-    res.status(500).send('Camera error');
-  }
-});
-
-// Обработка ошибок прокси
-proxy.on('error', (err, req, res) => {
-  console.error('Proxy error:', err);
-  res.status(500).send('Proxy error');
-});
 app.get('/getCurrentCropSettings', async (req, res) => {
   try {
         await loadCropSettings();
