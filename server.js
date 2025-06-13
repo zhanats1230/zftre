@@ -718,8 +718,7 @@ app.get('/', (req, res) => {
     </div>
     <div class="flex justify-center">
       <video id="camStream" class="w-full max-w-4xl rounded-lg" autoplay muted playsinline>
-        <source src="${ESP32_CAM_IP}/stream" type="multipart/x-mixed-replace;boundary=123456789000000000000987654321">
-        Ваш браузер не поддерживает видео.
+<img id="camStream" src="/cam-proxy" class="w-full max-w-4xl rounded-lg">        Ваш браузер не поддерживает видео.
       </video>
     </div>
     <div class="flex justify-center mt-4">
@@ -1427,7 +1426,19 @@ app.get('/getCropsList', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+const httpProxy = require('http-proxy');
+const proxy = httpProxy.createProxyServer({});
 
+// Добавьте после объявления app
+app.get('/cam-proxy', (req, res) => {
+  proxy.web(req, res, { target: ESP32_CAM_IP + '/stream' });
+});
+
+// Обработка ошибок прокси
+proxy.on('error', (err, req, res) => {
+  console.error('Proxy error:', err);
+  res.status(500).send('Proxy error');
+});
 app.get('/getCurrentCropSettings', async (req, res) => {
   try {
         await loadCropSettings();
