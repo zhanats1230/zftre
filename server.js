@@ -770,7 +770,7 @@ app.get('/', (req, res) => {
     <script>
     let streamInterval;
     let streamActive = false;
-    const streamUrl = '${ESP32_CAM_IP}/stream';
+    const streamUrl = ESP32_CAM_IP + '/stream';
     
     function startVideoStream() {
       const streamStatus = document.getElementById('streamStatus');
@@ -790,7 +790,7 @@ app.get('/', (req, res) => {
         
         // Добавляем временную метку для обхода кеширования
         const timestamp = new Date().getTime();
-        camStream.src = `${streamUrl}?t=${timestamp}`;
+        camStream.src = streamUrl + '?t=' + timestamp;
         
         // Проверяем подключение
         camStream.onload = function() {
