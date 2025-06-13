@@ -31,7 +31,38 @@ let sensorData = {
   humidity: 0,
   soilMoisture: 0
 };
+const WebSocket = require('ws');
+const wss = new WebSocket.Server({ noServer: true });
 
+// Обработка видео-соединений
+wss.on('connection', (ws) => {
+  console.log('Video client connected');
+  
+  ws.on('message', (message) => {
+    // Трансляция видео-фреймов (реализуйте по необходимости)
+  });
+  
+  ws.on('close', () => {
+    console.log('Video client disconnected');
+  });
+});
+
+// Интеграция с Express
+const server = app.listen(port, async () => {
+  await loadSensorDataHistory();
+  await loadCropSettings();
+  console.log(`Server running on port ${port}`);
+});
+
+server.on('upgrade', (request, socket, head) => {
+  if (request.url === '/video-ws') {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
+});
 let lastSensorUpdate = 0;
 
 let sensorDataHistory = {
@@ -331,6 +362,25 @@ app.get('/', (req, res) => {
       transform: translateY(20px);
       opacity: 0;
     }
+    .aspect-w-16 {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+}
+
+.aspect-h-9 {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+#videoFeed {
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  border-radius: 8px;
+}
     .chart-container {
   position: relative;
   height: 70vh;
@@ -710,20 +760,22 @@ app.get('/', (req, res) => {
       </div>
     </div>
     
-    <div id="liveContent" class="tab-content hidden">
+   <!-- Live Video Feed -->
+<div class="mb-8">
   <div class="bg-white p-6 rounded-2xl shadow-lg card">
     <div class="section-header">
-      <i class="fa-solid fa-video"></i>
-      <h3>Live Greenhouse View</h3>
+      <h3 class="text-xl font-semibold"><i class="fa-solid fa-video mr-2"></i> Live Feed</h3>
     </div>
-    <div class="flex justify-center">
-      <video id="camStream" class="w-full max-w-4xl rounded-lg" autoplay muted playsinline>
-        <source src="${ESP32_CAM_IP}/stream" type="multipart/x-mixed-replace;boundary=123456789000000000000987654321">
-        Ваш браузер не поддерживает видео.
-      </video>
+    <div class="aspect-w-16 aspect-h-9">
+      <video id="videoFeed" autoplay playsinline muted class="w-full h-full object-cover rounded-lg"></video>
     </div>
-    <div class="flex justify-center mt-4">
-      <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
+    <div class="mt-4 flex justify-center space-x-4">
+      <button id="startVideo" class="ripple-btn">
+        <i class="fa-solid fa-play mr-2"></i> Start Video
+      </button>
+      <button id="stopVideo" class="logout-btn ripple-btn">
+        <i class="fa-solid fa-stop mr-2"></i> Stop Video
+      </button>
     </div>
   </div>
 </div>
@@ -1323,6 +1375,32 @@ function initChart(ctx, label, color) {
           alert('Error switching mode');
         }
       }
+async function startVideoStream() {
+  try {
+    const video = document.getElementById('videoFeed');
+    
+    // Используем WebRTC для прямого потока
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'environment' } 
+    });
+    
+    video.srcObject = stream;
+    video.play();
+    
+    console.log('Video stream started');
+  } catch (error) {
+    console.error('Error accessing camera:', error);
+    alert('Could not access camera. Please check permissions.');
+  }
+}
+
+function stopVideoStream() {
+  const video = document.getElementById('videoFeed');
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
+  }
+}
 
       async function initializeApp() {
         switchTab('dashboard');
@@ -1331,7 +1409,8 @@ function initChart(ctx, label, color) {
         updateSensorData();
         updateMode();
         checkConnection();
-        
+        document.getElementById('startVideo').addEventListener('click', startVideoStream);
+document.getElementById('stopVideo').addEventListener('click', stopVideoStream);
 await updateChartData('temperature');
   await updateChartData('humidity');
   await updateChartData('soilMoisture');
