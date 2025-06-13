@@ -49,8 +49,9 @@ const proxy = httpProxy.createProxyServer();
 // После app.use(express.static(...)) добавим прокси
 app.use('/video_stream', (req, res) => {
   proxy.web(req, res, {
-    target: ESP32_CAM_IP + '/stream',
+    target: ESP32_CAM_IP + 'stream',
     ignorePath: true
+    
   }, (err) => {
     console.error('Proxy error:', err);
     res.status(502).send('Camera connection error');
@@ -1340,7 +1341,15 @@ function initChart(ctx, label, color) {
         updateSensorData();
         updateMode();
         checkConnection();
-        
+        const updateVideoStream = () => {
+  const container = document.getElementById('videoContainer');
+  container.innerHTML =
+    '<img src="/video_stream?t=' + Date.now() + '" ' +
+    'class="w-full max-w-4xl rounded-lg" ' +
+    'onerror="this.onerror=null; setTimeout(() => this.src=\'/video_stream?t=\' + Date.now(), 1000)">';
+};
+
+setInterval(updateVideoStream, 2000); // Обновлять каждые 2 сек
 await updateChartData('temperature');
   await updateChartData('humidity');
   await updateChartData('soilMoisture');
