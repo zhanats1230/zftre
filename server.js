@@ -43,7 +43,51 @@ let sensorDataHistory = {
     soilMoisture: { inRange: 0, total: 0 }
   }
 };
+const axios = require('axios');
+const stream = require('stream');
+const { promisify } = require('util');
+const pipeline = promisify(stream.pipeline);
 
+// Глобальная переменная для хранения последнего кадра
+let lastFrame = null;
+let lastFrameTimestamp = 0;
+
+// Маршрут для получения текущего кадра
+app.get('/current-frame', (req, res) => {
+  if (lastFrame) {
+    res.type('image/jpeg');
+    res.send(lastFrame);
+  } else {
+    res.status(404).send('No frame available');
+  }
+});
+
+// Маршрут для обновления кадра с ESP32-CAM
+app.post('/update-frame', bodyParser.raw({
+  type: 'image/jpeg',
+  limit: '10mb'
+}), (req, res) => {
+  lastFrame = req.body;
+  lastFrameTimestamp = Date.now();
+  res.status(200).send('Frame updated');
+});
+
+// Прокси для видеопотока (если нужно)
+app.get('/stream-proxy', async (req, res) => {
+  try {
+    const response = await axios({
+      method: 'get',
+      url: `${ESP32_CAM_IP}/stream`,
+      responseType: 'stream'
+    });
+    
+    res.type('multipart/x-mixed-replace;boundary=frame');
+    await pipeline(response.data, res);
+  } catch (error) {
+    console.error('Stream proxy error:', error);
+    res.status(500).send('Stream error');
+  }
+});
 const HEALTHY_RANGES = {
   temperature: { min: 20, max: 30 },
   humidity: { min: 50, max: 80 },
@@ -710,20 +754,26 @@ app.get('/', (req, res) => {
       </div>
     </div>
     
-    <div id="liveContent" class="tab-content hidden">
+   <div id="liveContent" class="tab-content hidden">
   <div class="bg-white p-6 rounded-2xl shadow-lg card">
     <div class="section-header">
       <i class="fa-solid fa-video"></i>
       <h3>Live Greenhouse View</h3>
     </div>
     <div class="flex justify-center">
-  <video autoplay muted playsinline class="w-full max-w-4xl rounded-lg">
-    <source src="http://192.168.10.4/stream" type="multipart/x-mixed-replace;boundary=frame">
-    Ваш браузер не поддерживает видео.
-  </video>
-</div>
-    <div class="flex justify-center mt-4">
-      <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
+      <img id="camImage" class="w-full max-w-4xl rounded-lg" />
+    </div>
+    <div class="flex flex-wrap justify-center gap-4 mt-4">
+      <button id="refreshFrame" class="ripple-btn">
+        <i class="fa-solid fa-rotate mr-2"></i> Обновить
+      </button>
+      <button id="backButton" class="ripple-btn">
+        <i class="fa-solid fa-arrow-left mr-2"></i> Назад
+      </button>
+    </div>
+    <div class="mt-4 text-center text-sm text-gray-500">
+      <p>Статус: <span id="frameStatus">Загрузка...</span></p>
+      <p>Последнее обновление: <span id="frameTimestamp">—</span></p>
     </div>
   </div>
 </div>
@@ -1387,6 +1437,56 @@ document.getElementById('soilMoistureChartBtn').addEventListener('click', () => 
         const logoutButton = document.getElementById('logoutButton');
         logoutButton.addEventListener('click', handleLogout);
       });
+      async function updateCameraImage() {
+  const img = document.getElementById('camImage');
+  const status = document.getElementById('frameStatus');
+  const timestamp = document.getElementById('frameTimestamp');
+  
+  if (!img) return;
+  
+  try {
+    status.textContent = 'Обновление...';
+    // Добавляем параметр времени для предотвращения кеширования
+    img.src = '/current-frame?t=' + Date.now();
+    
+    // Скрываем изображение пока не загрузится
+    img.style.opacity = '0';
+    
+    img.onload = () => {
+      status.textContent = 'Онлайн';
+      status.className = 'text-green-500';
+      img.style.opacity = '1';
+      
+      // Обновляем время последнего кадра
+      fetch('/frame-timestamp')
+        .then(res => res.json())
+        .then(data => {
+          if (data.timestamp) {
+            const date = new Date(data.timestamp);
+            timestamp.textContent = date.toLocaleTimeString();
+          }
+        });
+    };
+    
+    img.onerror = () => {
+      status.textContent = 'Ошибка загрузки';
+      status.className = 'text-red-500';
+    };
+  } catch (error) {
+    console.error('Camera update error:', error);
+    status.textContent = 'Ошибка соединения';
+    status.className = 'text-red-500';
+  }
+}
+
+// Обновление по клику
+document.getElementById('refreshFrame').addEventListener('click', updateCameraImage);
+
+// Автообновление
+setInterval(updateCameraImage, 3000); // Каждые 3 секунды
+
+// Инициализация
+updateCameraImage();
     </script>
 </body>
 </html>
