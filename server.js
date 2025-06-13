@@ -1,8 +1,4 @@
-const WebSocket = require('ws');
-const http = require('http');
 
-// Создаём WebSocket-сервер
-const wss = new WebSocket.Server({ port: 8081 });
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
@@ -219,43 +215,6 @@ function computeMinuteAverages() {
   // Сортируем по времени
   sensorDataHistory.minuteAverages.sort((a, b) => a.timestamp - b.timestamp);
 }
-
-
-function streamCameraToClients() {
-  const req = http.get('http://192.168.10.4/stream', (res) => {
-    let buffer = Buffer.alloc(0);
-    res.on('data', (chunk) => {
-      buffer = Buffer.concat([buffer, chunk]);
-      const boundary = '--123456789000000000000987654321';
-      const parts = buffer.toString().split(boundary);
-      for (let i = 1; i < parts.length - 1; i++) {
-        const part = parts[i];
-        const jpegStart = part.indexOf('\r\n\r\n') + 4;
-        if (jpegStart > 3) {
-          const jpeg = Buffer.from(part.substring(jpegStart), 'binary');
-          // Отправляем кадр всем клиентам
-          wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-              client.send(jpeg);
-            }
-          });
-        }
-      }
-      buffer = Buffer.from(parts[parts.length - 1], 'binary');
-    });
-    res.on('end', () => {
-      console.log('Поток камеры завершён');
-      setTimeout(streamCameraToClients, 1000); // Переподключение
-    });
-  });
-  req.on('error', (err) => {
-    console.error('Ошибка подключения к камере:', err.message);
-    setTimeout(streamCameraToClients, 1000);
-  });
-}
-
-// Запускаем поток
-streamCameraToClients();
 // Вычисление средних значений
 function computeHourlyAverages() {
   const cutoff = Date.now() - (MAX_HISTORY_HOURS * 3600000);
@@ -758,7 +717,10 @@ app.get('/', (req, res) => {
       <h3>Live Greenhouse View</h3>
     </div>
     <div class="flex justify-center">
-      <img id="camStream" class="w-full max-w-4xl rounded-lg" alt="Live Stream" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"red\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z\"/></svg>';this.style='width:100px;height:100px';" />
+      <video id="camStream" class="w-full max-w-4xl rounded-lg" autoplay muted playsinline>
+        <source src="${ESP32_CAM_IP}/stream" type="multipart/x-mixed-replace;boundary=123456789000000000000987654321">
+        Ваш браузер не поддерживает видео.
+      </video>
     </div>
     <div class="flex justify-center mt-4">
       <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
@@ -1369,7 +1331,7 @@ function initChart(ctx, label, color) {
         updateSensorData();
         updateMode();
         checkConnection();
-        initWebSocketStream();
+        
 await updateChartData('temperature');
   await updateChartData('humidity');
   await updateChartData('soilMoisture');
@@ -1425,25 +1387,6 @@ document.getElementById('soilMoistureChartBtn').addEventListener('click', () => 
         const logoutButton = document.getElementById('logoutButton');
         logoutButton.addEventListener('click', handleLogout);
       });
-
-
-      function initWebSocketStream() {
-  const camStream = document.getElementById('camStream');
-  const ws = new WebSocket('ws://localhost:8081');
-  ws.binaryType = 'arraybuffer';
-  ws.onmessage = (event) => {
-    const arrayBuffer = event.data;
-    const blob = new Blob([arrayBuffer], { type: 'image/jpeg' });
-    const url = URL.createObjectURL(blob);
-    camStream.src = url;
-    setTimeout(() => URL.revokeObjectURL(url), 100);
-  };
-  ws.onclose = () => {
-    console.log('WebSocket закрыт, переподключение...');
-    setTimeout(initWebSocketStream, 1000);
-  };
-  ws.onerror = (err) => console.error('Ошибка WebSocket:', err);
-}
     </script>
 </body>
 </html>
