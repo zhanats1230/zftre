@@ -291,45 +291,6 @@ app.get('/', (req, res) => {
       transform: translateY(-4px);
       box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
     }
-    /* Добавим стили для видео-контейнера */
-    .video-container {
-      position: relative;
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    #camStream {
-      width: 100%;
-      border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    }
-    
-    .stream-status {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      z-index: 10;
-    }
-    
-    .stream-status.connecting {
-      background-color: #f59e0b;
-      color: white;
-    }
-    
-    .stream-status.connected {
-      background-color: #10b981;
-      color: white;
-    }
-    
-    .stream-status.error {
-      background-color: #ef4444;
-      color: white;
-    }
     .btn {
       transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
       background: linear-gradient(to right, #14b8a6, #2dd4bf);
@@ -749,94 +710,25 @@ app.get('/', (req, res) => {
       </div>
     </div>
     
-   <div id="liveContent" class="tab-content hidden">
-    <div class="bg-white p-6 rounded-2xl shadow-lg card">
-      <div class="section-header">
-        <i class="fa-solid fa-video"></i>
-        <h3>Live Greenhouse View</h3>
-      </div>
-      
-      <div class="video-container">
-        <div id="streamStatus" class="stream-status connecting">Connecting...</div>
-        <img id="camStream" />
-      </div>
-      
-      <div class="flex justify-center mt-4">
-        <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
-        <button id="refreshStream" class="ripple-btn ml-4"><i class="fa-solid fa-sync mr-2"></i> Обновить</button>
-      </div>
+    <div id="liveContent" class="tab-content hidden">
+  <div class="bg-white p-6 rounded-2xl shadow-lg card">
+    <div class="section-header">
+      <i class="fa-solid fa-video"></i>
+      <h3>Live Greenhouse View</h3>
+    </div>
+    <div class="flex justify-center">
+      <video id="camStream" class="w-full max-w-4xl rounded-lg" autoplay muted playsinline>
+        <source src="${ESP32_CAM_IP}/stream" type="multipart/x-mixed-replace;boundary=123456789000000000000987654321">
+        Ваш браузер не поддерживает видео.
+      </video>
+    </div>
+    <div class="flex justify-center mt-4">
+      <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
     </div>
   </div>
+</div>
+
     <script>
-    let streamInterval;
-    let streamActive = false;
-    const streamUrl = ESP32_CAM_IP + '/stream';
-    
-    function startVideoStream() {
-      const streamStatus = document.getElementById('streamStatus');
-      const camStream = document.getElementById('camStream');
-      
-      // Показываем статус подключения
-      streamStatus.classList.remove('connected', 'error');
-      streamStatus.classList.add('connecting');
-      streamStatus.textContent = 'Connecting...';
-      
-      // Запускаем поток
-      streamActive = true;
-      let lastUpdate = Date.now();
-      
-      function updateStream() {
-        if (!streamActive) return;
-        
-        // Добавляем временную метку для обхода кеширования
-        const timestamp = new Date().getTime();
-        camStream.src = streamUrl + '?t=' + timestamp;
-        
-        // Проверяем подключение
-        camStream.onload = function() {
-          streamStatus.classList.remove('connecting', 'error');
-          streamStatus.classList.add('connected');
-          streamStatus.textContent = 'Live';
-          lastUpdate = Date.now();
-        };
-        
-        camStream.onerror = function() {
-          if (Date.now() - lastUpdate > 5000) {
-            streamStatus.classList.remove('connecting', 'connected');
-            streamStatus.classList.add('error');
-            streamStatus.textContent = 'Connection Error';
-          }
-        };
-      }
-      
-      // Первый запуск
-      updateStream();
-      
-      // Обновляем изображение каждые 100 мс
-      clearInterval(streamInterval);
-      streamInterval = setInterval(updateStream, 100);
-    }
-    
-    function stopVideoStream() {
-      streamActive = false;
-      clearInterval(streamInterval);
-      const camStream = document.getElementById('camStream');
-      camStream.src = '';
-    }
-    
-    function switchTab(tabName) {
-      Object.values(tabs).forEach(tab => tab.classList.add('hidden'));
-      Object.values(tabButtons).forEach(btn => btn.classList.remove('active'));
-      tabs[tabName].classList.remove('hidden');
-      tabButtons[tabName].classList.add('active');
-      
-      // Управление видеопотоком
-      if (tabName === 'live') {
-        startVideoStream();
-      } else {
-        stopVideoStream();
-      }
-    }
       const correctPassword = 'admin';
 
       function handleLogin() {
@@ -1439,15 +1331,7 @@ function initChart(ctx, label, color) {
         updateSensorData();
         updateMode();
         checkConnection();
-        // Обработчики для кнопок видео
-      document.getElementById('refreshStream').addEventListener('click', startVideoStream);
-      
-      // Остановка потока при выходе
-      const originalHandleLogout = window.handleLogout;
-      window.handleLogout = function() {
-        stopVideoStream();
-        originalHandleLogout();
-      };
+        
 await updateChartData('temperature');
   await updateChartData('humidity');
   await updateChartData('soilMoisture');
