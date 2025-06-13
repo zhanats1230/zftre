@@ -717,13 +717,20 @@ app.get('/', (req, res) => {
       <h3>Live Greenhouse View</h3>
     </div>
     <div class="flex justify-center">
-      <video id="camStream" class="w-full max-w-4xl rounded-lg" autoplay muted playsinline>
-        <source src="${ESP32_CAM_IP}/stream" type="multipart/x-mixed-replace;boundary=123456789000000000000987654321">
-        Ваш браузер не поддерживает видео.
-      </video>
+      <!-- Изменено: используем img вместо video -->
+      <img id="camStream" class="w-full max-w-4xl rounded-lg" 
+           src="${ESP32_CAM_IP}/stream" 
+           alt="Live Stream"
+           crossorigin="anonymous">
     </div>
-    <div class="flex justify-center mt-4">
-      <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
+    <div class="flex justify-center mt-4 space-x-4">
+      <!-- Добавлена кнопка обновления -->
+      <button id="refreshStream" class="ripple-btn">
+        <i class="fa-solid fa-rotate-right mr-2"></i> Обновить поток
+      </button>
+      <button id="backButton" class="ripple-btn">
+        <i class="fa-solid fa-arrow-left mr-2"></i> Назад
+      </button>
     </div>
   </div>
 </div>
@@ -750,7 +757,23 @@ app.get('/', (req, res) => {
           alert('Incorrect password, please try again.');
         }
       }
-
+// Функция для обновления видеопотока
+function refreshVideoStream() {
+  const camStream = document.getElementById('camStream');
+  if (camStream) {
+    // Добавляем параметр времени для предотвращения кеширования
+    camStream.src = ESP32_CAM_IP + "/stream?t=" + Date.now();
+    
+    // Обработка ошибок загрузки
+    camStream.onerror = () => {
+      console.error('Ошибка загрузки видеопотока');
+      camStream.src = ''; // Сбрасываем источник
+      setTimeout(() => {
+        camStream.src = ESP32_CAM_IP + "/stream?t=" + Date.now();
+      }, 3000); // Повторная попытка через 3 секунды
+    };
+  }
+}
       function handleLogout() {
         localStorage.removeItem('isLoggedIn');
         const passwordSection = document.getElementById('passwordSection');
@@ -1331,7 +1354,14 @@ function initChart(ctx, label, color) {
         updateSensorData();
         updateMode();
         checkConnection();
-        
+         // Обработчик кнопки обновления потока
+  document.getElementById('refreshStream').addEventListener('click', refreshVideoStream);
+  
+  // Автоматическое обновление при открытии вкладки
+  document.getElementById('tabLive').addEventListener('click', refreshVideoStream);
+  
+  // Первоначальная загрузка потока
+  refreshVideoStream();
 await updateChartData('temperature');
   await updateChartData('humidity');
   await updateChartData('soilMoisture');
