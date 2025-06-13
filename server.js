@@ -43,20 +43,7 @@ let sensorDataHistory = {
     soilMoisture: { inRange: 0, total: 0 }
   }
 };
-const httpProxy = require('http-proxy');
-const proxy = httpProxy.createProxyServer();
 
-// После app.use(express.static(...)) добавим прокси
-app.use('/video_stream', (req, res) => {
-  proxy.web(req, res, {
-    target: ESP32_CAM_IP + 'stream',
-    ignorePath: true
-    
-  }, (err) => {
-    console.error('Proxy error:', err);
-    res.status(502).send('Camera connection error');
-  });
-});
 const HEALTHY_RANGES = {
   temperature: { min: 20, max: 30 },
   humidity: { min: 50, max: 80 },
@@ -723,20 +710,23 @@ app.get('/', (req, res) => {
       </div>
     </div>
     
-<div id="liveContent" class="tab-content hidden">
-      <div class="bg-white p-6 rounded-2xl shadow-lg card">
-        <div class="section-header">
-          <i class="fa-solid fa-video"></i>
-          <h3>Live Greenhouse View</h3>
-        </div>
-        <div class="flex justify-center">
-          <img id="camStream" class="w-full max-w-4xl rounded-lg" src="/video_stream">
-        </div>
-        <div class="flex justify-center mt-4">
-          <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
-        </div>
-      </div>
+    <div id="liveContent" class="tab-content hidden">
+  <div class="bg-white p-6 rounded-2xl shadow-lg card">
+    <div class="section-header">
+      <i class="fa-solid fa-video"></i>
+      <h3>Live Greenhouse View</h3>
     </div>
+    <div class="flex justify-center">
+      <video id="camStream" class="w-full max-w-4xl rounded-lg" autoplay muted playsinline>
+        <source src="${ESP32_CAM_IP}/stream" type="multipart/x-mixed-replace;boundary=123456789000000000000987654321">
+        Ваш браузер не поддерживает видео.
+      </video>
+    </div>
+    <div class="flex justify-center mt-4">
+      <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
+    </div>
+  </div>
+</div>
 
     <script>
       const correctPassword = 'admin';
@@ -1341,15 +1331,7 @@ function initChart(ctx, label, color) {
         updateSensorData();
         updateMode();
         checkConnection();
-        const updateVideoStream = () => {
-  const container = document.getElementById('videoContainer');
-  container.innerHTML =
-    '<img src="/video_stream?t=' + Date.now() + '" ' +
-    'class="w-full max-w-4xl rounded-lg" ' +
-    'onerror="this.onerror=null; setTimeout(() => this.src=\'/video_stream?t=\' + Date.now(), 1000)">';
-};
-
-setInterval(updateVideoStream, 2000); // Обновлять каждые 2 сек
+        
 await updateChartData('temperature');
   await updateChartData('humidity');
   await updateChartData('soilMoisture');
