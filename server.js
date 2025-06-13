@@ -1920,10 +1920,8 @@ app.post('/addCrop', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 app.listen(port, async () => {
   await loadSensorDataHistory();
   await loadCropSettings(); // Гарантируем загрузку настроек
-  
   console.log(`Server running on port ${port}`);
 });
