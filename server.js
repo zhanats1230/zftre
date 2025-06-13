@@ -717,9 +717,7 @@ app.get('/', (req, res) => {
       <h3>Live Greenhouse View</h3>
     </div>
     <div class="flex justify-center">
-      <video id="camStream" class="w-full max-w-4xl rounded-lg" autoplay muted playsinline>
-<img id="camStream" src="/cam-proxy" class="w-full max-w-4xl rounded-lg">        Ваш браузер не поддерживает видео.
-      </video>
+      <img id="camStream" src="/cam-proxy" class="w-full max-w-4xl rounded-lg">
     </div>
     <div class="flex justify-center mt-4">
       <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
