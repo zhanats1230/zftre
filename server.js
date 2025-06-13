@@ -294,26 +294,6 @@ app.get('/', (req, res) => {
       transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
       background: linear-gradient(to right, #14b8a6, #2dd4bf);
     }
-    /* Добавьте в секцию стилей */
-.aspect-w-16 {
-  position: relative;
-  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-}
-
-.aspect-h-9 {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-#cameraStream {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  background-color: #000;
-}
     .btn:hover {
       transform: scale(1.05);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -541,7 +521,6 @@ app.get('/', (req, res) => {
       <button id="tabDashboard" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100 active">Панель инструментов</button>
       <button id="tabRelays" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Реле</button>
       <button id="tabSettings" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Настройки</button>
-      <button id="tabCamera" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Камера</button>
     </div>
 
     <!-- Tab Content -->
@@ -728,27 +707,6 @@ app.get('/', (req, res) => {
         </div>
       </div>
     </div>
-    <div id="cameraContent" class="tab-content hidden">
-  <div class="bg-white p-6 rounded-2xl shadow-lg card">
-    <div class="section-header">
-      <i class="fa-solid fa-video"></i>
-      <h3>Просмотр теплицы</h3>
-    </div>
-    
-    <div class="aspect-w-16 aspect-h-9 mb-4">
-      <img id="cameraStream" src="" class="w-full h-auto rounded-lg" alt="Live feed">
-    </div>
-    
-    <div class="flex justify-between">
-      <button id="backFromCamera" class="ripple-btn">
-        <i class="fa-solid fa-arrow-left mr-2"></i> Назад
-      </button>
-      <button id="refreshCamera" class="ripple-btn">
-        <i class="fa-solid fa-rotate mr-2"></i> Обновить
-      </button>
-    </div>
-  </div>
-</div>
 
     <script>
       const correctPassword = 'admin';
@@ -843,36 +801,18 @@ function initChart(ctx, label, color) {
         dashboard: document.getElementById('dashboardContent'),
         relays: document.getElementById('relaysContent'),
         settings: document.getElementById('settingsContent')
-        camera: document.getElementById('cameraContent')
       };
       const tabButtons = {
         dashboard: document.getElementById('tabDashboard'),
         relays: document.getElementById('tabRelays'),
         settings: document.getElementById('tabSettings')
-        camera: document.getElementById('tabCamera')
       };
-const CAMERA_URL = "http://192.168.10.4"; 
-function startCameraStream() {
-  const stream = document.getElementById('cameraStream');
-  stream.src = CAMERA_URL + '?t=' + Date.now();
-}
-document.getElementById('refreshCamera').addEventListener('click', startCameraStream);
-document.getElementById('backFromCamera').addEventListener('click', () => switchTab('dashboard'));
-// Функция остановки потока
-function stopCameraStream() {
-  const stream = document.getElementById('cameraStream');
-  stream.src = "";
-}
+
       function switchTab(tabName) {
         Object.values(tabs).forEach(tab => tab.classList.add('hidden'));
         Object.values(tabButtons).forEach(btn => btn.classList.remove('active'));
         tabs[tabName].classList.remove('hidden');
         tabButtons[tabName].classList.add('active');
-        if (tabName === 'camera') {
-    startCameraStream();
-  } else {
-    stopCameraStream();
-  }
       }
 
       Object.keys(tabButtons).forEach(tabName => {
