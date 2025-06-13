@@ -716,9 +716,7 @@ app.get('/', (req, res) => {
       <h3>Live Greenhouse View</h3>
     </div>
     <div class="flex justify-center">
-      <img src="${ESP32_CAM_IP}/stream" alt="Live Stream" class="w-full max-w-4xl rounded-lg" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"red\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z\"/></svg>';this.style='width:100px;height:100px';" />
-    <p>Live stream placeholder</p>
-    </div>
+<img src="${ESP32_CAM_IP}/stream" alt="Live Stream" class="w-full max-w-4xl rounded-lg" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"red\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z\"/></svg>';this.style='width:100px;height:100px';" />    </div>
     <div class="flex justify-center mt-4">
       <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Back</button>
     </div>
