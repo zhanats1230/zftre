@@ -716,12 +716,9 @@ app.get('/', (req, res) => {
       <i class="fa-solid fa-video"></i>
       <h3>Live Greenhouse View</h3>
     </div>
-    <div class="flex justify-center">
-      <video id="camStream" class="w-full max-w-4xl rounded-lg" autoplay muted playsinline>
-        <source src="${ESP32_CAM_IP}/stream" type="multipart/x-mixed-replace;boundary=123456789000000000000987654321">
-        Ваш браузер не поддерживает видео.
-      </video>
-    </div>
+    <<div class="flex justify-center">
+  <img src="http://192.168.10.4/stream" class="w-full max-w-4xl rounded-lg" alt="Live View" />
+</div>
     <div class="flex justify-center mt-4">
       <button id="backButton" class="ripple-btn"><i class="fa-solid fa-arrow-left mr-2"></i> Назад</button>
     </div>
