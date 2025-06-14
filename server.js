@@ -51,17 +51,7 @@ const pipeline = promisify(stream.pipeline);
 // Глобальная переменная для хранения последнего кадра
 let lastFrame = null;
 let lastFrameTimestamp = 0;
-async function syncModeWithESP32() {
-  try {
-    const response = await axios.get(`${ESP32_CAM_IP}/getMode`);
-    if (response.status === 200 && response.data.mode) {
-      mode = response.data.mode;
-      console.log(`Mode synced with ESP32: ${mode}`);
-    }
-  } catch (error) {
-    console.error('Error syncing mode with ESP32:', error.message);
-  }
-}
+
 // Маршрут для получения текущего кадра
 app.get('/current-frame', (req, res) => {
   if (lastFrame) {
@@ -540,55 +530,6 @@ app.get('/', (req, res) => {
       font-size: 0.85rem;
       margin-right: 0.5rem;
     }
-    .planting-time-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 2rem;
-    background: linear-gradient(145deg, #ffffff, #f7f7f9);
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-  }
-  .planting-time-container:hover {
-    transform: translateY(-4px);
-  }
-  .planting-time-info {
-    flex: 1;
-  }
-  .planting-time-value {
-    font-size: 2.5rem;
-    font-weight: 700;
-    background: linear-gradient(to right, #14b8a6, #2dd4bf);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 1rem;
-    animation: fadeIn 1s ease-in-out;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .planting-time-label {
-    font-size: 1.25rem;
-    color: #4b5563;
-    font-weight: 500;
-  }
-  .water-reservoir-placeholder {
-    width: 150px;
-    height: 200px;
-    background: #f3f4f6;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9ca3af;
-    font-size: 0.9rem;
-    font-weight: 500;
-    border: 1px dashed #d1d5db;
-    margin-left: 2rem;
-  }
     .crop-select {
       width: 100%;
       padding: 0.75rem;
@@ -680,19 +621,14 @@ app.get('/', (req, res) => {
       </div>
       <!-- Planting Time -->
 <div class="mb-8">
-  <div class="planting-time-container card">
-    <div class="planting-time-info">
-      <div class="section-header" style="margin: -2rem -2rem 1.5rem;">
-        <i class="fa-solid fa-clock"></i>
-        <h3>Время с посадки культуры</h3>
-      </div>
-      <p class="planting-time-label">Прошедшее время:</p>
-      <p class="planting-time-value" id="plantingTime">—</p>
-      <button id="resetPlantingTime" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-redo mr-2"></i> Сбросить время</button>
+    <div class="bg-white p-6 rounded-2xl shadow-lg card">
+        <div class="section-header">
+            <i class="fa-solid fa-clock"></i>
+            <h3>Время с посадки культуры</h3>
+        </div>
+        <p class="text-lg mb-4">Время с момента посадки: <span id="plantingTime" class="text-teal-600 font-semibold">—</span></p>
+        <button id="resetPlantingTime" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-redo mr-2"></i> Сбросить время</button>
     </div>
-
-    
-  </div>
 </div>
     </div>
 
@@ -1477,26 +1413,26 @@ function initChart(ctx, label, color) {
       }
 
       async function toggleMode() {
-  try {
-    const newMode = mode === 'auto' ? 'manual' : 'auto';
-    
-    const response = await fetch('/setMode', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: newMode })
-    });
-    
-    if (response.ok) {
-      await updateMode(); // Обновляем отображение
-    } else {
-      const error = await response.json();
-      alert("Ошибка: " + (error.error || "Неизвестная ошибка"));
-    }
-  } catch (error) {
-    console.error('Error switching mode:', error);
-    alert("Ошибка сети");
-  }
-}
+        try {
+          const currentMode = document.getElementById('currentMode').textContent.toLowerCase();
+          const newMode = currentMode.includes('auto') ? 'manual' : 'auto';
+          const response = await fetch('/setMode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: newMode })
+          });
+          if (response.ok) {
+            await updateMode();
+          } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to switch mode');
+          }
+        } catch (error) {
+          console.error('Error switching mode:', error);
+          alert('Error switching mode');
+        }
+      }
+
       async function initializeApp() {
         switchTab('dashboard');
         initializeCharts();
@@ -1793,28 +1729,16 @@ app.get('/getMode', (req, res) => {
   }
 });
 
-app.post('/setMode', async (req, res) => {
+app.post('/setMode', (req, res) => {
   try {
     const { mode: newMode } = req.body;
-    const isFromESP32 = req.headers['x-esp32'] === 'true';
-
-    // Если запрос от ESP32 - просто обновляем режим
-    if (isFromESP32) {
+    if (newMode === 'auto' || newMode === 'manual') {
       mode = newMode;
-      return res.json({ success: true });
-    }
-
-    // Если от веб-клиента - отправляем на ESP32
-    const espResponse = await axios.post(`${ESP32_CAM_IP}/setMode`, 
-      { mode: newMode },
-      { timeout: 5000 }
-    );
-    
-    if (espResponse.status === 200) {
-      mode = newMode;
+      console.log('Mode set to:', newMode);
       res.json({ success: true });
     } else {
-      res.status(500).json({ error: 'ESP32 update failed' });
+      console.error('Invalid mode:', newMode);
+      res.status(400).json({ error: 'Invalid mode' });
     }
   } catch (error) {
     console.error('Error in /setMode:', error);
@@ -2099,6 +2023,6 @@ app.post('/addCrop', async (req, res) => {
 app.listen(port, async () => {
   await loadSensorDataHistory();
   await loadCropSettings(); // Гарантируем загрузку настроек
-  await syncModeWithESP32(); // Синхронизация режима с ESP32
+  
   console.log(`Server running on port ${port}`);
 });
