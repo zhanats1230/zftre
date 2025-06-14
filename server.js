@@ -530,6 +530,55 @@ app.get('/', (req, res) => {
       font-size: 0.85rem;
       margin-right: 0.5rem;
     }
+    .planting-time-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    background: linear-gradient(145deg, #ffffff, #f7f7f9);
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+  .planting-time-container:hover {
+    transform: translateY(-4px);
+  }
+  .planting-time-info {
+    flex: 1;
+  }
+  .planting-time-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #14b8a6, #2dd4bf);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1rem;
+    animation: fadeIn 1s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .planting-time-label {
+    font-size: 1.25rem;
+    color: #4b5563;
+    font-weight: 500;
+  }
+  .water-reservoir-placeholder {
+    width: 150px;
+    height: 200px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px dashed #d1d5db;
+    margin-left: 2rem;
+  }
     .crop-select {
       width: 100%;
       padding: 0.75rem;
@@ -621,14 +670,20 @@ app.get('/', (req, res) => {
       </div>
       <!-- Planting Time -->
 <div class="mb-8">
-    <div class="bg-white p-6 rounded-2xl shadow-lg card">
-        <div class="section-header">
-            <i class="fa-solid fa-clock"></i>
-            <h3>Время с посадки культуры</h3>
-        </div>
-        <p class="text-lg mb-4">Время с момента посадки: <span id="plantingTime" class="text-teal-600 font-semibold">—</span></p>
-        <button id="resetPlantingTime" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-redo mr-2"></i> Сбросить время</button>
+  <div class="planting-time-container card">
+    <div class="planting-time-info">
+      <div class="section-header" style="margin: -2rem -2rem 1.5rem;">
+        <i class="fa-solid fa-clock"></i>
+        <h3>Время с посадки культуры</h3>
+      </div>
+      <p class="planting-time-label">Прошедшее время:</p>
+      <p class="planting-time-value" id="plantingTime">—</p>
+      <button id="resetPlantingTime" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-redo mr-2"></i> Сбросить время</button>
     </div>
+    <div class="water-reservoir-placeholder">
+      Water Level<br>(Coming Soon)
+    </div>
+  </div>
 </div>
     </div>
 
