@@ -1477,25 +1477,30 @@ function initChart(ctx, label, color) {
       }
 
       async function toggleMode() {
-        try {
-          const currentMode = document.getElementById('currentMode').textContent.toLowerCase();
-          const newMode = currentMode.includes('auto') ? 'manual' : 'auto';
-          const response = await fetch('/setMode', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mode: newMode })
-          });
-          if (response.ok) {
-            await updateMode();
-          } else {
-            const error = await response.json();
-            alert(error.error || 'Failed to switch mode');
-          }
-        } catch (error) {
-          console.error('Error switching mode:', error);
-          alert('Error switching mode');
-        }
-      }
+  try {
+    const response = await fetch('/getMode');
+    if (!response.ok) throw new Error("Failed to fetch current mode: " + response.status);
+    const data = await response.json();
+    const currentMode = data.mode;
+    const newMode = currentMode === 'auto' ? 'manual' : 'auto';
+    const setResponse = await fetch('/setMode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: newMode })
+    });
+    if (setResponse.ok) {
+      await updateMode();
+      console.log("Mode switched to " + newMode);
+    } else {
+      const error = await setResponse.json();
+      console.error('Set mode error:', error);
+      alert("Failed to switch mode: " + (error.error || "Unknown error"));
+    }
+  } catch (error) {
+    console.error('Error switching mode:', error.message);
+    alert("Error switching mode: " + error.message);
+  }
+}
 
       async function initializeApp() {
         switchTab('dashboard');
