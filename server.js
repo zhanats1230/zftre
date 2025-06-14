@@ -1801,23 +1801,31 @@ app.get('/getMode', (req, res) => {
 app.post('/setMode', async (req, res) => {
   try {
     const { mode: newMode } = req.body;
-    if (newMode === 'auto' || newMode === 'manual') {
-      // Отправка режима на ESP32
-      const espResponse = await axios.post(`${ESP32_CAM_IP}/setMode`, { mode: newMode });
-      if (espResponse.status === 200) {
-        mode = newMode;
-        console.log('Mode set to:', newMode);
-        res.json({ success: true });
-      } else {
-        throw new Error('Failed to set mode on ESP32');
-      }
-    } else {
+    if (newMode !== 'auto' && newMode !== 'manual') {
       console.error('Invalid mode:', newMode);
-      res.status(400).json({ error: 'Invalid mode' });
+      return res.status(400).json({ error: 'Invalid mode' });
     }
+
+    // Проверяем, исходит ли запрос от ESP32 (например, по заголовку или IP)
+    const isFromESP32 = req.headers['user-agent']?.includes('ESP32') || req.ip === '<ESP32_IP>'; // Замените <ESP32_IP> на IP ESP32 или другой идентификатор
+
+    if (!isFromESP32) {
+      // Запрос от клиента (веб-интерфейса), отправляем на ESP32
+      console.log(`Sending POST to ${ESP32_CAM_IP}/setMode with mode: ${newMode}`);
+      const espResponse = await axios.post(`${ESP32_CAM_IP}/setMode`, { mode: newMode }, { timeout: 5000 });
+      if (espResponse.status !== 200 || !espResponse.data.success) {
+        console.error('ESP32 response:', espResponse.status, espResponse.data);
+        return res.status(500).json({ error: `ESP32 returned status: ${espResponse.status}` });
+      }
+    }
+
+    // Обновляем глобальный режим
+    mode = newMode;
+    console.log('Mode updated to:', newMode);
+    res.json({ success: true });
   } catch (error) {
     console.error('Error in /setMode:', error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: `Failed to set mode: ${error.message}` });
   }
 });
 
