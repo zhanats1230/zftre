@@ -680,9 +680,8 @@ app.get('/', (req, res) => {
       <p class="planting-time-value" id="plantingTime">—</p>
       <button id="resetPlantingTime" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-redo mr-2"></i> Сбросить время</button>
     </div>
-    <div class="water-reservoir-placeholder">
-      
-  </div>
+
+    
   </div>
 </div>
     </div>
