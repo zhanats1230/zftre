@@ -8,7 +8,8 @@
       "pumpStartHour": 8,
       "pumpStartMinute": 0,
       "pumpDuration": 15,
-      "pumpInterval": 180
+      "pumpInterval": 180,
+      "plantingTimestamp": 1749922519487
     },
     "carrot": {
       "name": "Carrot",
@@ -18,7 +19,8 @@
       "pumpStartHour": 7,
       "pumpStartMinute": 30,
       "pumpDuration": 10,
-      "pumpInterval": 240
+      "pumpInterval": 240,
+      "plantingTimestamp": 1749922519487
     },
     "tomato": {
       "name": "Tomato",
@@ -28,7 +30,8 @@
       "pumpStartHour": 6,
       "pumpStartMinute": 0,
       "pumpDuration": 20,
-      "pumpInterval": 120
+      "pumpInterval": 120,
+      "plantingTimestamp": 1749922519487
     },
     "цук": {
       "name": "wer",
@@ -38,7 +41,8 @@
       "pumpStartHour": 8,
       "pumpStartMinute": 0,
       "pumpDuration": 15,
-      "pumpInterval": 180
+      "pumpInterval": 180,
+      "plantingTimestamp": 1749922519487
     },
     "eert": {
       "name": "wer",
@@ -48,7 +52,8 @@
       "pumpStartHour": 8,
       "pumpStartMinute": 0,
       "pumpDuration": 15,
-      "pumpInterval": 180
+      "pumpInterval": 180,
+      "plantingTimestamp": 1749922519487
     },
     "ыва": {
       "name": "ыва",
@@ -58,7 +63,8 @@
       "pumpStartHour": 8,
       "pumpStartMinute": 0,
       "pumpDuration": 15,
-      "pumpInterval": 180
+      "pumpInterval": 180,
+      "plantingTimestamp": 1749922519487
     },
     "вввв": {
       "name": "ыввв",
@@ -68,7 +74,8 @@
       "pumpStartHour": 8,
       "pumpStartMinute": 0,
       "pumpDuration": 15,
-      "pumpInterval": 180
+      "pumpInterval": 180,
+      "plantingTimestamp": 1749922519487
     },
     "ываыва": {
       "name": "ываыва",
@@ -78,7 +85,8 @@
       "pumpStartHour": 8,
       "pumpStartMinute": 0,
       "pumpDuration": 15,
-      "pumpInterval": 180
+      "pumpInterval": 180,
+      "plantingTimestamp": 1749922519487
     },
     "йцуйцу": {
       "name": "йцуйцу",
@@ -88,7 +96,8 @@
       "pumpStartHour": 8,
       "pumpStartMinute": 0,
       "pumpDuration": 15,
-      "pumpInterval": 180
+      "pumpInterval": 180,
+      "plantingTimestamp": 1749922519487
     },
     "ываываыва": {
       "name": "wer",
@@ -98,7 +107,8 @@
       "pumpStartHour": 1,
       "pumpStartMinute": 1,
       "pumpDuration": 1,
-      "pumpInterval": 1
+      "pumpInterval": 1,
+      "plantingTimestamp": 1749922519487
     },
     "test": {
       "name": "test",
@@ -108,7 +118,8 @@
       "pumpStartHour": 1,
       "pumpStartMinute": 1,
       "pumpDuration": 1,
-      "pumpInterval": 1
+      "pumpInterval": 1,
+      "plantingTimestamp": 1749922519487
     },
     "ммммм": {
       "name": "ммммм",
@@ -118,7 +129,8 @@
       "pumpStartHour": 1,
       "pumpStartMinute": 1,
       "pumpDuration": 1,
-      "pumpInterval": 1
+      "pumpInterval": 1,
+      "plantingTimestamp": 1749922519487
     },
     "яяяяяя": {
       "name": "яяяяяя",
@@ -128,7 +140,8 @@
       "pumpStartHour": 1,
       "pumpStartMinute": 1,
       "pumpDuration": 1,
-      "pumpInterval": 1
+      "pumpInterval": 1,
+      "plantingTimestamp": 1749922520646
     }
   },
   "currentCrop": "яяяяяя"
