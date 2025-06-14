@@ -51,7 +51,17 @@ const pipeline = promisify(stream.pipeline);
 // Глобальная переменная для хранения последнего кадра
 let lastFrame = null;
 let lastFrameTimestamp = 0;
-
+async function syncModeWithESP32() {
+  try {
+    const response = await axios.get(`${ESP32_CAM_IP}/getMode`);
+    if (response.status === 200 && response.data.mode) {
+      mode = response.data.mode;
+      console.log(`Mode synced with ESP32: ${mode}`);
+    }
+  } catch (error) {
+    console.error('Error syncing mode with ESP32:', error.message);
+  }
+}
 // Маршрут для получения текущего кадра
 app.get('/current-frame', (req, res) => {
   if (lastFrame) {
@@ -1783,19 +1793,25 @@ app.get('/getMode', (req, res) => {
   }
 });
 
-app.post('/setMode', (req, res) => {
+app.post('/setMode', async (req, res) => {
   try {
     const { mode: newMode } = req.body;
     if (newMode === 'auto' || newMode === 'manual') {
-      mode = newMode;
-      console.log('Mode set to:', newMode);
-      res.json({ success: true });
+      // Отправка режима на ESP32
+      const espResponse = await axios.post(`${ESP32_CAM_IP}/setMode`, { mode: newMode });
+      if (espResponse.status === 200) {
+        mode = newMode;
+        console.log('Mode set to:', newMode);
+        res.json({ success: true });
+      } else {
+        throw new Error('Failed to set mode on ESP32');
+      }
     } else {
       console.error('Invalid mode:', newMode);
       res.status(400).json({ error: 'Invalid mode' });
     }
   } catch (error) {
-    console.error('Error in /setMode:', error);
+    console.error('Error in /setMode:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -2077,6 +2093,6 @@ app.post('/addCrop', async (req, res) => {
 app.listen(port, async () => {
   await loadSensorDataHistory();
   await loadCropSettings(); // Гарантируем загрузку настроек
-  
+  await syncModeWithESP32(); // Синхронизация режима с ESP32
   console.log(`Server running on port ${port}`);
 });
