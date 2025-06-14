@@ -1807,7 +1807,7 @@ app.post('/setMode', async (req, res) => {
     }
 
     // Проверяем, исходит ли запрос от ESP32 (например, по заголовку или IP)
-    const isFromESP32 = req.headers['user-agent']?.includes('ESP32') || req.ip === '<ESP32_IP>'; // Замените <ESP32_IP> на IP ESP32 или другой идентификатор
+    const isFromESP32 = req.headers['x-esp32'] === 'true';
 
     if (!isFromESP32) {
       // Запрос от клиента (веб-интерфейса), отправляем на ESP32
