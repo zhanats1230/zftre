@@ -1478,30 +1478,25 @@ function initChart(ctx, label, color) {
 
       async function toggleMode() {
   try {
-    const response = await fetch('/getMode');
-    if (!response.ok) throw new Error("Failed to fetch current mode: " + response.status);
-    const data = await response.json();
-    const currentMode = data.mode;
-    const newMode = currentMode === 'auto' ? 'manual' : 'auto';
-    const setResponse = await fetch('/setMode', {
+    const newMode = mode === 'auto' ? 'manual' : 'auto';
+    
+    const response = await fetch('/setMode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode: newMode })
     });
-    if (setResponse.ok) {
-      await updateMode();
-      console.log("Mode switched to " + newMode);
+    
+    if (response.ok) {
+      await updateMode(); // Обновляем отображение
     } else {
-      const error = await setResponse.json();
-      console.error('Set mode error:', error);
-      alert("Failed to switch mode: " + (error.error || "Unknown error"));
+      const error = await response.json();
+      alert("Ошибка: " + (error.error || "Неизвестная ошибка"));
     }
   } catch (error) {
-    console.error('Error switching mode:', error.message);
-    alert("Error switching mode: " + error.message);
+    console.error('Error switching mode:', error);
+    alert("Ошибка сети");
   }
 }
-
       async function initializeApp() {
         switchTab('dashboard');
         initializeCharts();
@@ -1801,31 +1796,29 @@ app.get('/getMode', (req, res) => {
 app.post('/setMode', async (req, res) => {
   try {
     const { mode: newMode } = req.body;
-    if (newMode !== 'auto' && newMode !== 'manual') {
-      console.error('Invalid mode:', newMode);
-      return res.status(400).json({ error: 'Invalid mode' });
-    }
-
-    // Проверяем, исходит ли запрос от ESP32 (например, по заголовку или IP)
     const isFromESP32 = req.headers['x-esp32'] === 'true';
 
-    if (!isFromESP32) {
-      // Запрос от клиента (веб-интерфейса), отправляем на ESP32
-      console.log(`Sending POST to ${ESP32_CAM_IP}/setMode with mode: ${newMode}`);
-      const espResponse = await axios.post(`${ESP32_CAM_IP}/setMode`, { mode: newMode }, { timeout: 5000 });
-      if (espResponse.status !== 200 || !espResponse.data.success) {
-        console.error('ESP32 response:', espResponse.status, espResponse.data);
-        return res.status(500).json({ error: `ESP32 returned status: ${espResponse.status}` });
-      }
+    // Если запрос от ESP32 - просто обновляем режим
+    if (isFromESP32) {
+      mode = newMode;
+      return res.json({ success: true });
     }
 
-    // Обновляем глобальный режим
-    mode = newMode;
-    console.log('Mode updated to:', newMode);
-    res.json({ success: true });
+    // Если от веб-клиента - отправляем на ESP32
+    const espResponse = await axios.post(`${ESP32_CAM_IP}/setMode`, 
+      { mode: newMode },
+      { timeout: 5000 }
+    );
+    
+    if (espResponse.status === 200) {
+      mode = newMode;
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: 'ESP32 update failed' });
+    }
   } catch (error) {
-    console.error('Error in /setMode:', error.message);
-    res.status(500).json({ error: `Failed to set mode: ${error.message}` });
+    console.error('Error in /setMode:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
