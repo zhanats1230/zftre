@@ -151,35 +151,43 @@ async function saveSensorDataHistory() {
 
 // Загрузка настроек культур
 async function loadCropSettings() {
-  try {
-    const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
-    const settings = JSON.parse(data);
-    
-    cropSettings = settings.crops || {};
-    currentCrop = settings.currentCrop || 'potato';
-    
-    console.log(`Crop settings loaded. Current crop: ${currentCrop}`);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      console.log('No crop settings file found, using defaults');
-      cropSettings = {
-        potato: {
-          name: "Potato",
-          fanTemperatureThreshold: 25.0,
-          lightOnDuration: 7200000,   // 2 часа
-          lightIntervalManual: 21600000, // 6 часов
-          pumpStartHour: 8,
-          pumpStartMinute: 0,
-          pumpDuration: 15,
-          pumpInterval: 180
+    try {
+        const data = await fs.readFile(CROP_SETTINGS_FILE, 'utf8');
+        const settings = JSON.parse(data);
+        
+        cropSettings = settings.crops || {};
+        currentCrop = settings.currentCrop || 'potato';
+        
+        // Initialize plantingTimestamp for each crop if not present
+        Object.keys(cropSettings).forEach(key => {
+            if (!cropSettings[key].plantingTimestamp) {
+                cropSettings[key].plantingTimestamp = Date.now();
+            }
+        });
+        
+        console.log(`Crop settings loaded. Current crop: ${currentCrop}`);
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            console.log('No crop settings file found, using defaults');
+            cropSettings = {
+                potato: {
+                    name: "Potato",
+                    fanTemperatureThreshold: 25.0,
+                    lightOnDuration: 7200000,
+                    lightIntervalManual: 21600000,
+                    pumpStartHour: 8,
+                    pumpStartMinute: 0,
+                    pumpDuration: 15,
+                    pumpInterval: 180,
+                    plantingTimestamp: Date.now() // Initialize for default crop
+                }
+            };
+            currentCrop = 'potato';
+            await saveCropSettings();
+        } else {
+            console.error('Error loading crop settings:', error);
         }
-      };
-      currentCrop = 'potato';
-      await saveCropSettings();
-    } else {
-      console.error('Error loading crop settings:', error);
     }
-  }
 }
 
 // Сохранение настроек культур
@@ -611,6 +619,17 @@ app.get('/', (req, res) => {
           </div>
         </div>
       </div>
+      <!-- Planting Time -->
+<div class="mb-8">
+    <div class="bg-white p-6 rounded-2xl shadow-lg card">
+        <div class="section-header">
+            <i class="fa-solid fa-clock"></i>
+            <h3>Время с посадки культуры</h3>
+        </div>
+        <p class="text-lg mb-4">Время с момента посадки: <span id="plantingTime" class="text-teal-600 font-semibold">—</span></p>
+        <button id="resetPlantingTime" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-redo mr-2"></i> Сбросить время</button>
+    </div>
+</div>
     </div>
 
     <!-- Chart Modals -->
@@ -800,7 +819,47 @@ app.get('/', (req, res) => {
           alert('Incorrect password, please try again.');
         }
       }
+async function updatePlantingTime() {
+    try {
+        const response = await fetch('/getCurrentCropSettings');
+        const data = await response.json();
+        const plantingTimestamp = data.settings.plantingTimestamp || 0;
+        const plantingTimeElement = document.getElementById('plantingTime');
+        
+        if (plantingTimestamp) {
+            const now = Date.now();
+            const elapsed = now - plantingTimestamp;
+            const days = Math.floor(elapsed / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((elapsed % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+            plantingTimeElement.textContent = `${days} дней, ${hours} часов, ${minutes} минут`;
+        } else {
+            plantingTimeElement.textContent = 'Не установлено';
+        }
+    } catch (error) {
+        console.error('Error fetching planting time:', error);
+        document.getElementById('plantingTime').textContent = 'Ошибка';
+    }
+}
 
+async function resetPlantingTime() {
+    try {
+        const response = await fetch('/resetPlantingTime', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (response.ok) {
+            alert('Время посадки сброшено!');
+            await updatePlantingTime();
+        } else {
+            const error = await response.json();
+            alert(error.error || 'Не удалось сбросить время');
+        }
+    } catch (error) {
+        console.error('Error resetting planting time:', error);
+        alert('Ошибка при сбросе времени');
+    }
+}
       function handleLogout() {
         localStorage.removeItem('isLoggedIn');
         const passwordSection = document.getElementById('passwordSection');
@@ -1387,7 +1446,7 @@ await updateChartData('temperature');
   await updateChartData('soilMoisture');
         const cropData = await loadCropSettings();
         await updateCropDropdown(cropData);
-
+await updatePlantingTime();
         document.getElementById('toggleRelay1').addEventListener('click', () => toggleRelay(1));
         document.getElementById('toggleRelay2').addEventListener('click', () => toggleRelay(2));
         document.getElementById('toggleMode').addEventListener('click', toggleMode);
@@ -1404,6 +1463,7 @@ document.getElementById('backButton').addEventListener('click', () => switchTab(
           } else {
             customFields.classList.add('hidden');
             loadCurrentCropSettings(this.value);
+            updatePlantingTime();
           }
         });
 
@@ -1414,12 +1474,14 @@ document.getElementById('soilMoistureChartBtn').addEventListener('click', () => 
         document.getElementById('closeTempModal').addEventListener('click', () => toggleModal('tempModal', false));
         document.getElementById('closeHumidityModal').addEventListener('click', () => toggleModal('humidityModal', false));
         document.getElementById('closeSoilMoistureModal').addEventListener('click', () => toggleModal('soilMoistureModal', false));
+        document.getElementById('resetPlantingTime').addEventListener('click', resetPlantingTime); // Add reset button listener
 
         setInterval(updateSensorData, 5000);
         setInterval(updateRelayState, 5000);
         setInterval(updateMode, 5000);
         setInterval(checkConnection, 10000);
         setInterval(updateChartData, 1000); // Обновляем графики каждые 60 секунд
+        setInterval(updatePlantingTime, 60000); // Update planting time every minute
       }
 
       document.addEventListener('DOMContentLoaded', () => {
@@ -1816,8 +1878,9 @@ app.post('/setCurrentCrop', async (req, res) => {
         const { crop } = req.body;
         if (cropSettings[crop]) {
             currentCrop = crop;
-            console.log('Current crop set to:', crop);
-            await saveCropSettings();
+          cropSettings[crop].plantingTimestamp = Date.now();
+console.log('Current crop set to:', crop, 'Planting timestamp:', cropSettings[crop].plantingTimestamp);
+          await saveCropSettings();
             res.json({ success: true });
         } else {
             console.error('Invalid crop selection:', crop);
@@ -1828,7 +1891,21 @@ app.post('/setCurrentCrop', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
+app.post('/resetPlantingTime', async (req, res) => {
+    try {
+        if (cropSettings[currentCrop]) {
+            cropSettings[currentCrop].plantingTimestamp = Date.now();
+            await saveCropSettings();
+            console.log('Planting time reset for:', currentCrop);
+            res.json({ success: true });
+        } else {
+            res.status(400).json({ error: 'No current crop selected' });
+        }
+    } catch (error) {
+        console.error('Error in /resetPlantingTime:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 app.post('/saveCropSettings', async (req, res) => {
     try {
         const settings = req.body;
@@ -1929,7 +2006,8 @@ app.post('/addCrop', async (req, res) => {
       pumpStartHour: parseInt(pumpStartHour) || 8,
       pumpStartMinute: parseInt(pumpStartMinute) || 0,
       pumpDuration: parseInt(pumpDuration) || 15,
-      pumpInterval: parseInt(pumpInterval) || 180
+      pumpInterval: parseInt(pumpInterval) || 180,
+      plantingTimestamp: Date.now()
     };
 
     currentCrop = cropKey;
