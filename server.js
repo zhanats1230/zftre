@@ -1448,7 +1448,13 @@ function initChart(ctx, label, color) {
           console.error('Error fetching mode:', error);
         }
       }
-
+async function setMode(newMode) {
+  await fetch('/setMode', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ mode: newMode })
+  });
+}
       async function toggleRelay(relayNumber) {
         try {
           const response = await fetch('/toggleRelay/' + relayNumber, {
@@ -2073,7 +2079,10 @@ app.post('/addCrop', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+});
 app.listen(port, async () => {
   await loadSensorDataHistory();
   await loadCropSettings(); // Гарантируем загрузку настроек
