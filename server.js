@@ -1483,7 +1483,7 @@ function initChart(ctx, label, color) {
 
     if (response.ok) {
       await updateMode();
-      alert(`Mode switched to ${newMode} successfully!`);
+      alert('Mode switched to ' + newMode + ' successfully!');
     } else {
       const error = await response.json();
       alert(error.error || 'Failed to switch mode.');
