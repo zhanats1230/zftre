@@ -1826,6 +1826,15 @@ app.post('/setMode', async (req, res) => {
     const { mode: newMode } = req.body;
     if (newMode === 'auto' || newMode === 'manual') {
       mode = newMode;
+      if (newMode === 'manual') {
+        relayState.relayState1 = true; // Включаем реле 1 (освещение)
+        relayState.relayState2 = true; // Включаем реле 2 (вентиляция)
+        console.log('Реле 1 и 2 включены в ручном режиме');
+      } else if (newMode === 'auto') {
+        relayState.relayState1 = false; // Выключаем реле 1 (освещение)
+        relayState.relayState2 = false; // Выключаем реле 2 (вентиляция)
+        console.log('Реле 1 и 2 выключены в автоматическом режиме');
+      }
       await saveMode();
       console.log('Режим установлен:', newMode);
       res.json({ success: true });
