@@ -660,7 +660,7 @@ app.get('/', (req, res) => {
       <button id="tabDashboard" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100 active">Панель инструментов</button>
       <button id="tabRelays" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Реле</button>
       <button id="tabSettings" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Настройки</button>
-      <button id="tabLive" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Live</button>
+      <button id="tabLive" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Трансляция</button>
     </div>
 
     <!-- Tab Content -->
@@ -791,12 +791,12 @@ app.get('/', (req, res) => {
             <div class="grid grid-cols-1 gap-4">
               <div>
                 <label class="block text-gray-700 font-bold mb-2" for="newCropName">Название культуры</label>
-                <input id="newCropName" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Enter crop name">
+                <input id="newCropName" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Введите название культуры">
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-gray-700 font-bold mb-2" for="newCropKey">Ключ культуры</label>
-                  <input id="newCropKey" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Unique key (e.g. custom_crop)">
+                  <input id="newCropKey" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Уникальный ключ (например, custom_crop)">
                 </div>
               </div>
             </div>
@@ -868,7 +868,7 @@ app.get('/', (req, res) => {
   <div class="bg-white p-6 rounded-2xl shadow-lg card">
     <div class="section-header">
       <i class="fa-solid fa-video"></i>
-      <h3>Live Greenhouse View</h3>
+      <h3>Прямая трансляция из теплицы</h3>
     </div>
     <div class="flex justify-center">
       <img id="camImage" class="w-full max-w-4xl rounded-lg" />
@@ -1451,8 +1451,8 @@ function initChart(ctx, label, color) {
           relay1Badge.className = 'status-badge ' + (data.relayState1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800');
           relay2Badge.textContent = data.relayState2 ? 'ON' : 'OFF';
           relay2Badge.className = 'status-badge ' + (data.relayState2 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800');
-          relay1Control.textContent = 'Lighting: ' + (data.relayState1 ? 'ON' : 'OFF');
-          relay2Control.textContent = 'Ventilation: ' + (data.relayState2 ? 'ON' : 'OFF');
+          relay1Control.textContent = 'Освещение: ' + (data.relayState1 ? 'ON' : 'OFF');
+          relay2Control.textContent = 'Вентиляция: ' + (data.relayState2 ? 'ON' : 'OFF');
         } catch (error) {
           console.error('Error fetching relay state:', error);
         }
