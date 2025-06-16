@@ -47,7 +47,7 @@ const axios = require('axios');
 const stream = require('stream');
 const { promisify } = require('util');
 const pipeline = promisify(stream.pipeline);
-
+const MODE_FILE = 'mode.json';
 // Глобальная переменная для хранения последнего кадра
 let lastFrame = null;
 let lastFrameTimestamp = 0;
@@ -189,7 +189,44 @@ async function loadCropSettings() {
         }
     }
 }
-
+async function loadMode() {
+  try {
+    const { data } = await octokit.repos.getContent({
+      owner: REPO_OWNER,
+      repo: REPO_NAME,
+      path: MODE_FILE
+    });
+    const content = Buffer.from(data.content, 'base64').toString('utf8');
+    const modeData = JSON.parse(content);
+    mode = modeData.mode || 'auto';
+    console.log(`Режим загружен: ${mode}`);
+  } catch (error) {
+    if (error.status === 404) {
+      console.log('Файл режима не найден, используется значение по умолчанию: auto');
+      mode = 'auto';
+      await saveMode();
+    } else {
+      console.error('Ошибка при загрузке режима:', error);
+    }
+  }
+}
+// Функция сохранения режима в файл на GitHub
+async function saveMode() {
+  try {
+    const content = JSON.stringify({ mode }, null, 2);
+    await octokit.repos.createOrUpdateFileContents({
+      owner: REPO_OWNER,
+      repo: REPO_NAME,
+      path: MODE_FILE,
+      message: "Обновление режима теплицы",
+      content: Buffer.from(content).toString('base64'),
+      sha: await getFileSha(MODE_FILE)
+    });
+    console.log('Режим сохранен на GitHub:', mode);
+  } catch (error) {
+    console.error('Ошибка при сохранении режима:', error);
+  }
+}
 // Сохранение настроек культур
 async function saveCropSettings() {
   try {
@@ -1783,22 +1820,25 @@ app.get('/getMode', (req, res) => {
   }
 });
 
-app.post('/setMode', (req, res) => {
+// Обновление эндпоинта /setMode для сохранения режима на GitHub
+app.post('/setMode', async (req, res) => {
   try {
     const { mode: newMode } = req.body;
     if (newMode === 'auto' || newMode === 'manual') {
       mode = newMode;
-      console.log('Mode set to:', newMode);
+      await saveMode();
+      console.log('Режим установлен:', newMode);
       res.json({ success: true });
     } else {
-      console.error('Invalid mode:', newMode);
-      res.status(400).json({ error: 'Invalid mode' });
+      console.error('Недопустимый режим:', newMode);
+      res.status(400).json({ error: 'Недопустимый режим' });
     }
   } catch (error) {
-    console.error('Error in /setMode:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Ошибка в /setMode:', error);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
+
 
 app.post('/toggleRelay/:relayNumber', async (req, res) => {
   try {
@@ -2077,6 +2117,6 @@ app.post('/addCrop', async (req, res) => {
 app.listen(port, async () => {
   await loadSensorDataHistory();
   await loadCropSettings(); // Гарантируем загрузку настроек
-  
+  await loadMode();
   console.log(`Server running on port ${port}`);
 });
