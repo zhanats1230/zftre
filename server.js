@@ -10,7 +10,7 @@ const { Octokit } = require("@octokit/rest");
 const octokit = new Octokit({ 
   auth: process.env.GITHUB_TOKEN 
 });
-let lastModeUpdate = 0; // Время последнего обновления режима от ESP32
+
 const ESP32_CAM_IP = 'http://192.168.10.4';
 const REPO_OWNER = "zhanats1230";
 const REPO_NAME = "zftre";
@@ -48,7 +48,7 @@ const axios = require('axios');
 const stream = require('stream');
 const { promisify } = require('util');
 const pipeline = promisify(stream.pipeline);
-let mode = 'auto';
+
 // Глобальная переменная для хранения последнего кадра
 let lastFrame = null;
 let lastFrameTimestamp = 0;
@@ -1439,16 +1439,19 @@ function initChart(ctx, label, color) {
       }
 
       async function updateMode() {
-        try {
-          const response = await fetch('/getMode');
-          const data = await response.json();
-          const modeBadge = document.getElementById('currentMode');
-          modeBadge.textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
-          modeBadge.className = 'status-badge ' + (data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800');
-        } catch (error) {
-          console.error('Error fetching mode:', error);
-        }
-      }
+  try {
+    const response = await fetch('/getMode');
+    if (response.ok) {
+      const data = await response.json();
+      document.getElementById('currentMode').textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
+    } else {
+      document.getElementById('currentMode').textContent = '—';
+    }
+  } catch (error) {
+    console.error('Error updating mode:', error);
+    document.getElementById('currentMode').textContent = '—';
+  }
+}
 
       async function toggleRelay(relayNumber) {
         try {
@@ -1468,25 +1471,28 @@ function initChart(ctx, label, color) {
       }
 
       async function toggleMode() {
-        try {
-          const currentMode = document.getElementById('currentMode').textContent.toLowerCase();
-          const newMode = currentMode.includes('auto') ? 'manual' : 'auto';
-          const response = await fetch('/setMode', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mode: newMode })
-          });
-          if (response.ok) {
-            await updateMode();
-          } else {
-            const error = await response.json();
-            alert(error.error || 'Failed to switch mode');
-          }
-        } catch (error) {
-          console.error('Error switching mode:', error);
-          alert('Error switching mode');
-        }
-      }
+  try {
+    const currentMode = document.getElementById('currentMode').textContent.toLowerCase();
+    const newMode = currentMode.includes('auto') ? 'manual' : 'auto';
+    const response = await fetch('/setMode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: newMode }),
+      timeout: 10000
+    });
+
+    if (response.ok) {
+      await updateMode();
+      alert(`Mode switched to ${newMode} successfully!`);
+    } else {
+      const error = await response.json();
+      alert(error.error || 'Failed to switch mode.');
+    }
+  } catch (error) {
+    console.error('Error switching mode:', error.message);
+    alert('Error switching mode: Greenhouse offline.');
+  }
+}
 
       async function initializeApp() {
         switchTab('dashboard');
@@ -1776,18 +1782,15 @@ app.get('/getSensorTrends', (req, res) => {
 
 app.get('/getMode', async (req, res) => {
   try {
-    const now = Date.now();
-    const isOnline = now - lastSensorUpdate < 3000; // Теплица онлайн, если сенсоры обновлялись < 3 сек назад
-    if (isOnline) {
-      console.log('Returning mode from ESP32:', mode);
-      res.json({ mode });
+    const response = await axios.get('https://zftre.onrender.com/getMode', { timeout: 10000 });
+    if (response.data.mode) {
+      res.json({ mode: response.data.mode });
     } else {
-      console.log('Greenhouse offline, returning dash');
-      res.json({ mode: '—' });
+      res.status(400).json({ error: 'Invalid response from ESP32' });
     }
   } catch (error) {
-    console.error('Error in /getMode:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Error fetching mode from ESP32:', error.message);
+    res.status(503).json({ error: 'Greenhouse offline' });
   }
 });
 
@@ -1795,39 +1798,22 @@ app.post('/setMode', async (req, res) => {
   try {
     const { mode: newMode } = req.body;
     if (newMode !== 'auto' && newMode !== 'manual') {
-      console.error('Invalid mode:', newMode);
       return res.status(400).json({ error: 'Invalid mode' });
     }
 
-    const now = Date.now();
-    const isOnline = now - lastSensorUpdate < 30000;
-    if (!isOnline) {
-      console.error('Greenhouse offline, cannot set mode');
-      return res.status(400).json({ error: 'Greenhouse offline' });
-    }
+    const response = await axios.post('https://zftre.onrender.com/setMode', 
+      { mode: newMode }, 
+      { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
+    );
 
-    // Отправляем новый режим на ESP32 через axios
-    try {
-      const response = await axios.post('https://zftre.onrender.com/setMode', { mode: newMode }, {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 5000
-      });
-      if (response.data.success) {
-        mode = newMode;
-        lastModeUpdate = now;
-        console.log('Mode updated on ESP32 and server:', newMode);
-        res.json({ success: true });
-      } else {
-        console.error('ESP32 rejected mode update:', response.data);
-        res.status(400).json({ error: 'Failed to update mode on ESP32' });
-      }
-    } catch (error) {
-      console.error('Error sending mode to ESP32:', error.message);
-      res.status(500).json({ error: 'Failed to communicate with ESP32' });
+    if (response.data.success) {
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: 'Failed to set mode on ESP32' });
     }
   } catch (error) {
-    console.error('Error in /setMode:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Error setting mode on ESP32:', error.message);
+    res.status(503).json({ error: 'Greenhouse offline' });
   }
 });
 app.post('/updateMode', async (req, res) => {
