@@ -31,7 +31,7 @@
       "pumpStartMinute": 0,
       "pumpDuration": 20,
       "pumpInterval": 120,
-      "plantingTimestamp": 1749922519487
+      "plantingTimestamp": 1750061702054
     },
     "цук": {
       "name": "wer",
@@ -144,5 +144,5 @@
       "plantingTimestamp": 1749924897280
     }
   },
-  "currentCrop": "potato"
+  "currentCrop": "tomato"
 }
