@@ -10,7 +10,6 @@ const { Octokit } = require("@octokit/rest");
 const octokit = new Octokit({ 
   auth: process.env.GITHUB_TOKEN 
 });
-
 const ESP32_CAM_IP = 'http://192.168.10.4';
 const REPO_OWNER = "zhanats1230";
 const REPO_NAME = "zftre";
@@ -48,9 +47,7 @@ const axios = require('axios');
 const stream = require('stream');
 const { promisify } = require('util');
 const pipeline = promisify(stream.pipeline);
-let cachedMode = 'auto';
-let lastModeUpdate = 0;
-const MODE_CACHE_TIMEOUT = 30000; // 30 секунд
+
 // Глобальная переменная для хранения последнего кадра
 let lastFrame = null;
 let lastFrameTimestamp = 0;
@@ -97,7 +94,7 @@ const HEALTHY_RANGES = {
   soilMoisture: { min: 30, max: 70 }
 };
 
-
+let mode = 'auto';
 let cropSettings = {};
 let currentCrop = 'potato';
 
@@ -1441,19 +1438,16 @@ function initChart(ctx, label, color) {
       }
 
       async function updateMode() {
-  try {
-    const response = await fetch('/getMode');
-    if (response.ok) {
-      const data = await response.json();
-      document.getElementById('currentMode').textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
-    } else {
-      document.getElementById('currentMode').textContent = '—';
-    }
-  } catch (error) {
-    console.error('Error updating mode:', error);
-    document.getElementById('currentMode').textContent = '—';
-  }
-}
+        try {
+          const response = await fetch('/getMode');
+          const data = await response.json();
+          const modeBadge = document.getElementById('currentMode');
+          modeBadge.textContent = data.mode.charAt(0).toUpperCase() + data.mode.slice(1);
+          modeBadge.className = 'status-badge ' + (data.mode === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800');
+        } catch (error) {
+          console.error('Error fetching mode:', error);
+        }
+      }
 
       async function toggleRelay(relayNumber) {
         try {
@@ -1473,28 +1467,25 @@ function initChart(ctx, label, color) {
       }
 
       async function toggleMode() {
-  try {
-    const currentMode = document.getElementById('currentMode').textContent.toLowerCase();
-    const newMode = currentMode.includes('auto') ? 'manual' : 'auto';
-    const response = await fetch('/setMode', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: newMode }),
-      timeout: 10000
-    });
-
-    if (response.ok) {
-      await updateMode();
-      alert('Mode switched to ' + newMode + ' successfully!');
-    } else {
-      const error = await response.json();
-      alert(error.error || 'Failed to switch mode.');
-    }
-  } catch (error) {
-    console.error('Error switching mode:', error.message);
-    alert('Error switching mode: Greenhouse offline.');
-  }
-}
+        try {
+          const currentMode = document.getElementById('currentMode').textContent.toLowerCase();
+          const newMode = currentMode.includes('auto') ? 'manual' : 'auto';
+          const response = await fetch('/setMode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: newMode })
+          });
+          if (response.ok) {
+            await updateMode();
+          } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to switch mode');
+          }
+        } catch (error) {
+          console.error('Error switching mode:', error);
+          alert('Error switching mode');
+        }
+      }
 
       async function initializeApp() {
         switchTab('dashboard');
@@ -1782,81 +1773,33 @@ app.get('/getSensorTrends', (req, res) => {
   }
 });
 
-app.get('/getMode', async (req, res) => {
+app.get('/getMode', (req, res) => {
   try {
-    const response = await axios.get('https://zftre.onrender.com/getMode', { timeout: 5000 });
-    if (response.data.mode) {
-      cachedMode = response.data.mode;
-      lastModeUpdate = Date.now();
-      res.json({ mode: cachedMode });
-    } else {
-      res.status(400).json({ error: 'Invalid response from ESP32' });
-    }
+    console.log('Mode:', mode);
+    res.json({ mode: mode });
   } catch (error) {
-    console.error('Error fetching mode from ESP32:', error.message);
-    if (Date.now() - lastModeUpdate < MODE_CACHE_TIMEOUT) {
-      res.json({ mode: cachedMode });
-    } else {
-      res.status(503).json({ error: 'Greenhouse offline' });
-    }
-  }
-});
-app.post('/updateMode', async (req, res) => {
-  try {
-    const { mode: receivedMode } = req.body;
-    if (receivedMode === 'auto' || receivedMode === 'manual') {
-      cachedMode = receivedMode;
-      lastModeUpdate = Date.now();
-      console.log('Mode updated from ESP32:', receivedMode);
-      res.json({ success: true });
-    } else {
-      console.error('Invalid mode received from ESP32:', receivedMode);
-      res.status(400).json({ error: 'Invalid mode' });
-    }
-  } catch (error) {
-    console.error('Error in /updateMode:', error);
+    console.error('Error in /getMode:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-app.post('/setMode', async (req, res) => {
+
+app.post('/setMode', (req, res) => {
   try {
     const { mode: newMode } = req.body;
-    if (newMode !== 'auto' && newMode !== 'manual') {
-      return res.status(400).json({ error: 'Invalid mode' });
-    }
-
-    const response = await axios.post('https://zftre.onrender.com/setMode', 
-      { mode: newMode }, 
-      { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
-    );
-
-    if (response.data.success) {
+    if (newMode === 'auto' || newMode === 'manual') {
+      mode = newMode;
+      console.log('Mode set to:', newMode);
       res.json({ success: true });
     } else {
-      res.status(400).json({ error: 'Failed to set mode on ESP32' });
-    }
-  } catch (error) {
-    console.error('Error setting mode on ESP32:', error.message);
-    res.status(503).json({ error: 'Greenhouse offline' });
-  }
-});
-app.post('/updateMode', async (req, res) => {
-  try {
-    const { mode: receivedMode } = req.body;
-    if (receivedMode === 'auto' || receivedMode === 'manual') {
-      mode = receivedMode;
-      lastModeUpdate = Date.now();
-      console.log('Mode updated from ESP32:', receivedMode);
-      res.json({ success: true });
-    } else {
-      console.error('Invalid mode received from ESP32:', receivedMode);
+      console.error('Invalid mode:', newMode);
       res.status(400).json({ error: 'Invalid mode' });
     }
   } catch (error) {
-    console.error('Error in /updateMode:', error);
+    console.error('Error in /setMode:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 app.post('/toggleRelay/:relayNumber', async (req, res) => {
   try {
     const relayNumber = parseInt(req.params.relayNumber);
