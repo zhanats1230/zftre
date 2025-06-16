@@ -48,7 +48,9 @@ const axios = require('axios');
 const stream = require('stream');
 const { promisify } = require('util');
 const pipeline = promisify(stream.pipeline);
-
+let cachedMode = 'auto';
+let lastModeUpdate = 0;
+const MODE_CACHE_TIMEOUT = 30000; // 30 секунд
 // Глобальная переменная для хранения последнего кадра
 let lastFrame = null;
 let lastFrameTimestamp = 0;
@@ -1782,18 +1784,40 @@ app.get('/getSensorTrends', (req, res) => {
 
 app.get('/getMode', async (req, res) => {
   try {
-    const response = await axios.get('https://zftre.onrender.com/getMode', { timeout: 10000 });
+    const response = await axios.get('https://zftre.onrender.com/getMode', { timeout: 5000 });
     if (response.data.mode) {
-      res.json({ mode: response.data.mode });
+      cachedMode = response.data.mode;
+      lastModeUpdate = Date.now();
+      res.json({ mode: cachedMode });
     } else {
       res.status(400).json({ error: 'Invalid response from ESP32' });
     }
   } catch (error) {
     console.error('Error fetching mode from ESP32:', error.message);
-    res.status(503).json({ error: 'Greenhouse offline' });
+    if (Date.now() - lastModeUpdate < MODE_CACHE_TIMEOUT) {
+      res.json({ mode: cachedMode });
+    } else {
+      res.status(503).json({ error: 'Greenhouse offline' });
+    }
   }
 });
-
+app.post('/updateMode', async (req, res) => {
+  try {
+    const { mode: receivedMode } = req.body;
+    if (receivedMode === 'auto' || receivedMode === 'manual') {
+      cachedMode = receivedMode;
+      lastModeUpdate = Date.now();
+      console.log('Mode updated from ESP32:', receivedMode);
+      res.json({ success: true });
+    } else {
+      console.error('Invalid mode received from ESP32:', receivedMode);
+      res.status(400).json({ error: 'Invalid mode' });
+    }
+  } catch (error) {
+    console.error('Error in /updateMode:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 app.post('/setMode', async (req, res) => {
   try {
     const { mode: newMode } = req.body;
