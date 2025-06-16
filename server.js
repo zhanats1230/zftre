@@ -47,7 +47,7 @@ const axios = require('axios');
 const stream = require('stream');
 const { promisify } = require('util');
 const pipeline = promisify(stream.pipeline);
-
+let mode = 'auto';
 // Глобальная переменная для хранения последнего кадра
 let lastFrame = null;
 let lastFrameTimestamp = 0;
@@ -94,7 +94,7 @@ const HEALTHY_RANGES = {
   soilMoisture: { min: 30, max: 70 }
 };
 
-let mode = 'auto';
+
 let cropSettings = {};
 let currentCrop = 'potato';
 
@@ -1774,13 +1774,8 @@ app.get('/getSensorTrends', (req, res) => {
 });
 
 app.get('/getMode', (req, res) => {
-  try {
-    console.log('Mode:', mode);
-    res.json({ mode: mode });
-  } catch (error) {
-    console.error('Error in /getMode:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  console.log('Returning mode:', mode);
+  res.json({ mode });
 });
 
 app.post('/setMode', (req, res) => {
@@ -1788,14 +1783,14 @@ app.post('/setMode', (req, res) => {
     const { mode: newMode } = req.body;
     if (newMode === 'auto' || newMode === 'manual') {
       mode = newMode;
-      console.log('Mode set to:', newMode);
+      console.log('Mode updated to:', newMode);
       res.json({ success: true });
     } else {
       console.error('Invalid mode:', newMode);
       res.status(400).json({ error: 'Invalid mode' });
     }
   } catch (error) {
-    console.error('Error in /setMode:', error);
+    console.error('Error setting mode:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
