@@ -777,6 +777,11 @@ app.get('/', (req, res) => {
         border-radius: 12px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
+      .planting-time-container .section-header {
+        font-size: 1rem;
+        padding: 0.75rem;
+        margin: -0.75rem -0.75rem 0.75rem;
+      }
       .planting-time-info {
         text-align: center;
         width: 100%;
@@ -822,14 +827,6 @@ app.get('/', (req, res) => {
       }
       .water-reservoir-placeholder:hover {
         transform: scale(1.02);
-      }
-      .section-header[style*="margin: -2rem -2rem 1.5rem"] {
-        margin: -0.75rem -0.75rem 0.75rem;
-        font-size: 0.9rem;
-        padding: 0.5rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
       /* Modals */
       .modal {
@@ -1050,9 +1047,9 @@ app.get('/', (req, res) => {
       <div class="mb-8">
         <div class="planting-time-container card">
           <div class="planting-time-info">
-            <div class="section-header" style="margin: -2rem -2rem 1.5rem;">
+            <div class="section-header">
               <i class="fa-solid fa-clock"></i>
-              <h3>Время посадки</h3>
+              <h3 class="text-xl font-semibold">Время посадки</h3>
             </div>
             <p class="planting-time-label">Прошедшее время:</p>
             <p class="planting-time-value" id="plantingTime">—</p>
@@ -1227,6 +1224,7 @@ app.get('/', (req, res) => {
       </div>
     </div>
   </div>
+
 
 
 
