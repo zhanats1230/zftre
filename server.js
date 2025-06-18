@@ -657,6 +657,7 @@ app.get('/', (req, res) => {
       .flex.space-x-4 {
         flex-direction: column;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
         width: 100%;
       }
@@ -824,6 +825,11 @@ app.get('/', (req, res) => {
       }
       .section-header[style*="margin: -2rem -2rem 1.5rem"] {
         margin: -0.75rem -0.75rem 0.75rem;
+        font-size: 0.9rem;
+        padding: 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       /* Modals */
       .modal {
@@ -1046,7 +1052,7 @@ app.get('/', (req, res) => {
           <div class="planting-time-info">
             <div class="section-header" style="margin: -2rem -2rem 1.5rem;">
               <i class="fa-solid fa-clock"></i>
-              <h3>Время с посадки культуры</h3>
+              <h3>Время посадки</h3>
             </div>
             <p class="planting-time-label">Прошедшее время:</p>
             <p class="planting-time-value" id="plantingTime">—</p>
@@ -1221,6 +1227,7 @@ app.get('/', (req, res) => {
       </div>
     </div>
   </div>
+
 
 
 
