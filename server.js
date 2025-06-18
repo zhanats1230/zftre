@@ -367,9 +367,6 @@ app.get('/', (req, res) => {
       background: linear-gradient(to bottom, #f9fafb, #e5e7eb);
       min-height: 100vh;
       font-family: 'Inter', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overflow-x: hidden;
     }
     .card {
       transition: transform 0.3s, box-shadow 0.3s;
@@ -386,8 +383,6 @@ app.get('/', (req, res) => {
     .btn {
       transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
       background: linear-gradient(to right, #14b8a6, #2dd4bf);
-      padding: 0.75rem 1.5rem;
-      min-height: 44px; /* Accessible touch target */
     }
     .btn:hover {
       transform: scale(1.05);
@@ -395,20 +390,11 @@ app.get('/', (req, res) => {
     }
     .tab {
       transition: background-color 0.3s, color 0.3s;
-      white-space: nowrap;
     }
     .tab.active {
       background-color: #14b8a6;
       color: white;
       border-radius: 8px;
-    }
-    .tabs-container {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none; /* Firefox */
-    }
-    .tabs-container::-webkit-scrollbar {
-      display: none; /* Chrome, Safari */
     }
     .progress-bar {
       height: 8px;
@@ -436,7 +422,7 @@ app.get('/', (req, res) => {
     }
     .chart-container {
       position: relative;
-      height: 60vh; /* Reduced for mobile */
+      height: 70vh;
       width: 100%;
     }
     .modal.show {
@@ -449,22 +435,22 @@ app.get('/', (req, res) => {
     .section-header {
       background: linear-gradient(to right, #14b8a6, #2dd4bf);
       color: white;
-      padding: 1rem;
+      padding: 1.25rem;
       border-radius: 12px 12px 0 0;
-      margin: -1.25rem -1.25rem 1.25rem;
+      margin: -1.5rem -1.5rem 1.5rem;
       box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
       display: flex;
       align-items: center;
-      font-size: 1.25rem;
+      font-size: 1.5rem;
       font-weight: 700;
     }
     .section-header i {
-      margin-right: 0.5rem;
-      font-size: 1.5rem;
+      margin-right: 0.75rem;
+      font-size: 1.75rem;
     }
     .input-card {
       position: relative;
-      padding: 0.75rem;
+      padding: 1rem;
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(8px);
@@ -477,11 +463,11 @@ app.get('/', (req, res) => {
     }
     .input-card input {
       width: 100%;
-      padding: 0.5rem 0.5rem 0.5rem 2.5rem;
+      padding: 0.75rem 0.75rem 0.75rem 3rem;
       border: none;
       border-bottom: 2px solid transparent;
       background: transparent;
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: #1f2937;
       outline: none;
       transition: border-bottom 0.3s ease;
@@ -491,18 +477,18 @@ app.get('/', (req, res) => {
     }
     .icon-circle {
       position: absolute;
-      left: 0.5rem;
+      left: 0.75rem;
       top: 50%;
       transform: translateY(-50%);
-      width: 1.75rem;
-      height: 1.75rem;
+      width: 2rem;
+      height: 2rem;
       background: linear-gradient(to bottom, #14b8a6, #2dd4bf);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 0.9rem;
+      font-size: 1.1rem;
       transition: transform 0.3s ease;
     }
     .input-card:hover .icon-circle {
@@ -511,7 +497,7 @@ app.get('/', (req, res) => {
     .input-label {
       display: block;
       font-weight: 600;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       text-transform: uppercase;
       background: linear-gradient(to right, #14b8a6, #2dd4bf);
       -webkit-background-clip: text;
@@ -525,20 +511,19 @@ app.get('/', (req, res) => {
     .wave-divider {
       height: 2px;
       background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 20"><path fill="none" stroke="%2314b8a6" stroke-width="2" d="M0,10 C360,20 1080,0 1440,10" /></svg>') repeat-x;
-      margin: 1.5rem 0;
+      margin: 2rem 0;
     }
     .ripple-btn {
       position: relative;
       overflow: hidden;
       transition: all 0.3s ease;
       background: linear-gradient(to right, #14b8a6, #2dd4bf);
-      padding: 0.75rem 1.25rem;
-      font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1.1rem;
       font-weight: 600;
       border-radius: 8px;
       color: white;
-      margin-right: 0.5rem;
-      min-height: 44px;
+      margin-right: 10px;
     }
     .ripple-btn:hover {
       transform: scale(1.05);
@@ -555,16 +540,16 @@ app.get('/', (req, res) => {
     .connection-indicator {
       display: flex;
       align-items: center;
-      padding: 0.5rem 0.75rem;
+      padding: 0.5rem 1rem;
       border-radius: 8px;
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 500;
       color: white;
       transition: all 0.3s ease;
     }
     .connection-indicator i {
       margin-right: 0.5rem;
-      font-size: 1rem;
+      font-size: 1.2rem;
     }
     .connection-indicator.online {
       background: linear-gradient(to right, #14b8a6, #2dd4bf);
@@ -579,13 +564,14 @@ app.get('/', (req, res) => {
       background: linear-gradient(to right, #8b5cf6, #a78bfa);
       color: white;
       font-weight: 600;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       margin-right: 0.5rem;
     }
     .planting-time-container {
       display: flex;
-      flex-direction: column;
-      padding: 1.5rem;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem;
       background: linear-gradient(145deg, #ffffff, #f7f7f9);
       border-radius: 16px;
       border: 1px solid #e5e7eb;
@@ -599,12 +585,12 @@ app.get('/', (req, res) => {
       flex: 1;
     }
     .planting-time-value {
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-weight: 700;
       background: linear-gradient(to right, #14b8a6, #2dd4bf);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
       animation: fadeIn 1s ease-in-out;
     }
     @keyframes fadeIn {
@@ -612,13 +598,13 @@ app.get('/', (req, res) => {
       to { opacity: 1; transform: translateY(0); }
     }
     .planting-time-label {
-      font-size: 1rem;
+      font-size: 1.25rem;
       color: #4b5563;
       font-weight: 500;
     }
     .water-reservoir-placeholder {
-      width: 100%;
-      height: 150px;
+      width: 150px;
+      height: 200px;
       background: #f3f4f6;
       border-radius: 12px;
       display: flex;
@@ -628,15 +614,15 @@ app.get('/', (req, res) => {
       font-size: 0.9rem;
       font-weight: 500;
       border: 1px dashed #d1d5db;
-      margin-top: 1rem;
+      margin-left: 2rem;
     }
     .crop-select {
       width: 100%;
-      padding: 0.5rem;
+      padding: 0.75rem;
       border-radius: 8px;
       border: 1px solid #d1d5db;
       background: white;
-      font-size: 0.9rem;
+      font-size: 1rem;
       color: #1f2937;
       outline: none;
       transition: border-color 0.3s, box-shadow 0.3s;
@@ -653,12 +639,41 @@ app.get('/', (req, res) => {
         overflow-x: hidden;
       }
       .container {
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
+        padding: 0.5rem;
       }
+      /* Header adjustments */
       h1 {
         font-size: 1.75rem;
       }
+      .flex.items-center.justify-between.mb-8 {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .flex.space-x-4 {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      /* Tabs navigation */
+      .flex.border-b.border-gray-200.mb-8 {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin-bottom: 1.5rem;
+      }
+      .flex.border-b.border-gray-200.mb-8::-webkit-scrollbar {
+        display: none;
+      }
+      .tab {
+        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+        min-width: 100px;
+        flex: none;
+      }
+      /* Section headers */
       .section-header {
         font-size: 1rem;
         padding: 0.75rem;
@@ -666,28 +681,66 @@ app.get('/', (req, res) => {
       }
       .section-header i {
         font-size: 1.25rem;
+        margin-right: 0.5rem;
       }
-      .tab {
-        font-size: 0.85rem;
-        padding: 0.5rem;
+      /* Cards and spacing */
+      .mb-8 {
+        margin-bottom: 1.5rem;
       }
-      .input-card input {
+      .bg-white.p-6.rounded-2xl.shadow-lg.card {
+        padding: 1rem;
+      }
+      /* System status grid */
+      .grid.grid-cols-1.sm\:grid-cols-3.gap-4 {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      .mb-3 {
+        margin-bottom: 0.75rem;
+      }
+      /* Sensors grid */
+      .grid.grid-cols-1.md\:grid-cols-3.gap-6 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .text-2xl.font-bold {
+        font-size: 1.25rem;
+      }
+      .text-lg.font-semibold.text-gray-900.mb-2 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
+      .mt-4.bg-teal-500.text-white.px-4.py-2.rounded-lg.btn {
+        margin-top: 0.75rem;
+        padding: 0.5rem 1rem;
         font-size: 0.9rem;
-        padding-left: 2.25rem;
+        min-height: 44px;
       }
-      .input-card .icon-circle {
-        width: 1.5rem;
-        height: 1.5rem;
-        font-size: 0.8rem;
+      /* Planting time */
+      .planting-time-container {
+        flex-direction: column;
+        padding: 1rem;
+        align-items: stretch;
       }
-      .input-label {
-        font-size: 0.7rem;
+      .planting-time-value {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
       }
-      .chart-container {
-        height: 50vh;
+      .planting-time-label {
+        font-size: 0.9rem;
       }
+      .water-reservoir-placeholder {
+        width: 100%;
+        height: 150px;
+        margin-left: 0;
+        margin-top: 1rem;
+      }
+      .section-header[style*="margin: -2rem -2rem 1.5rem"] {
+        margin: -0.75rem -0.75rem 1rem;
+      }
+      /* Modals */
       .modal {
-        padding: 0.5rem;
+        padding: 0;
       }
       .modal > div {
         width: 100%;
@@ -695,17 +748,112 @@ app.get('/', (req, res) => {
         max-width: none;
         max-height: none;
         border-radius: 0;
+        padding: 0.5rem;
       }
-      .planting-time-value {
-        font-size: 1.5rem;
+      .modal .text-xl.font-semibold.text-gray-900 {
+        font-size: 1rem;
       }
-      .planting-time-label {
+      .modal .text-2xl {
+        font-size: 1.25rem;
+      }
+      .modal .chart-container {
+        height: 50vh;
+      }
+      .modal .flex.justify-between.items-center.mb-4 {
+        margin-bottom: 0.5rem;
+      }
+      .modal button.text-gray-600 {
+        font-size: 1rem;
+      }
+      /* Relays grid */
+      .grid.grid-cols-1.md\:grid-cols-2.gap-6 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .text-xl.font-semibold.text-gray-900.mb-4 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+      }
+      .text-lg.mb-4 {
         font-size: 0.9rem;
+        margin-bottom: 0.75rem;
       }
-      .btn, .ripple-btn {
+      .w-full.bg-teal-500.text-white.p-3.rounded-lg.btn {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        min-height: 44px;
+      }
+      /* Settings */
+      .grid.grid-cols-1.gap-6 {
+        gap: 1rem;
+      }
+      .grid.grid-cols-1.sm\:grid-cols-3.gap-8 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .grid.grid-cols-1.sm\:grid-cols-4.gap-8.mt-4 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-top: 0.75rem;
+      }
+      .input-card {
+        padding: 0.5rem;
+      }
+      .input-card input {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.5rem 0.5rem 2.25rem;
+      }
+      .input-card .icon-circle {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.8rem;
+        left: 0.5rem;
+      }
+      .input-label {
+        font-size: 0.7rem;
+      }
+      .wave-divider {
+        margin: 1rem 0;
+      }
+      .flex.justify-end {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+      }
+      .ripple-btn {
         font-size: 0.9rem;
         padding: 0.5rem 1rem;
+        margin-right: 0;
+        min-height: 44px;
       }
+      .block.text-gray-700.font-bold.mb-2 {
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+      }
+      .crop-select {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+      }
+      .text-gray-700 {
+        font-size: 0.85rem;
+      }
+      .crop-badge {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.6rem;
+      }
+      /* Live tab */
+      .flex.justify-center .max-w-4xl {
+        max-width: 100%;
+      }
+      .flex.flex-wrap.justify-center.gap-4.mt-4 {
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
+      .mt-4.text-center.text-sm.text-gray-500 {
+        font-size: 0.75rem;
+        margin-top: 0.75rem;
+      }
+      /* Buttons and indicators */
       .connection-indicator {
         font-size: 0.8rem;
         padding: 0.4rem 0.6rem;
@@ -719,8 +867,8 @@ app.get('/', (req, res) => {
 <body class="font-sans text-gray-900">
   <!-- Password Section -->
   <div id="passwordSection" class="flex items-center justify-center min-h-screen">
-    <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl card max-w-sm w-full">
-      <h2 class="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-6"><i class="fa-solid fa-lock mr-2 text-teal-500"></i> Greenhouse Login</h2>
+    <div class="bg-white p-8 rounded-2xl shadow-xl card max-w-sm w-full">
+      <h2 class="text-3xl font-bold text-center text-gray-900 mb-6"><i class="fa-solid fa-lock mr-2 text-teal-500"></i> Greenhouse Login</h2>
       <input id="passwordInput" type="password" class="w-full p-3 border border-gray-200 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Enter Password">
       <button id="submitPassword" class="w-full bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-sign-in-alt mr-2"></i> Login</button>
       <p id="passwordError" class="text-red-500 mt-4 text-center hidden">Incorrect Password</p>
@@ -728,10 +876,10 @@ app.get('/', (req, res) => {
   </div>
 
   <!-- Main Control Section (Hidden Initially) -->
-  <div id="controlSection" class="container mx-auto p-4 sm:p-6 hidden">
-    <div class="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8">
-      <h1 class="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-0"><i class="fa-solid fa-leaf mr-2 text-teal-500"></i> Greenhouse Control</h1>
-      <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+  <div id="controlSection" class="container mx-auto p-6 hidden">
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-4xl font-bold text-gray-900"><i class="fa-solid fa-leaf mr-2 text-teal-500"></i> Greenhouse Control</h1>
+      <div class="flex space-x-4">
         <button id="toggleMode" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-sync mr-2"></i> Переключить режим</button>
         <div id="connectionIndicator" class="connection-indicator offline"><i class="fa-solid fa-wifi-slash"></i> Offline</div>
         <button id="logoutButton" class="logout-btn text-white px-4 py-2 rounded-lg"><i class="fa-solid fa-sign-out-alt mr-2"></i> Logout</button>
@@ -739,22 +887,22 @@ app.get('/', (req, res) => {
     </div>
 
     <!-- Tabs Navigation -->
-    <div class="tabs-container flex border-b border-gray-200 mb-6 sm:mb-8">
-      <button id="tabDashboard" class="tab flex-1 py-2 sm:py-3 px-3 sm:px-4 text-center text-gray-600 font-semibold hover:bg-gray-100 active">Панель инструментов</button>
-      <button id="tabRelays" class="tab flex-1 py-2 sm:py-3 px-3 sm:px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Реле</button>
-      <button id="tabSettings" class="tab flex-1 py-2 sm:py-3 px-3 sm:px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Настройки</button>
-      <button id="tabLive" class="tab flex-1 py-2 sm:py-3 px-3 sm:px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Трансляция</button>
+    <div class="flex border-b border-gray-200 mb-8">
+      <button id="tabDashboard" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100 active">Панель инструментов</button>
+      <button id="tabRelays" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Реле</button>
+      <button id="tabSettings" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Настройки</button>
+      <button id="tabLive" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Трансляция</button>
     </div>
 
     <!-- Tab Content -->
     <div id="dashboardContent" class="tab-content">
       <!-- System Status -->
-      <div class="mb-6 sm:mb-8">
-        <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg card">
+      <div class="mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-lg card">
           <div class="section-header">
-            <h3 class="text-lg sm:text-xl font-semibold"><i class="fa-solid fa-gauge mr-2"></i> Состояние системы</h3>
+            <h3 class="text-xl font-semibold"><i class="fa-solid fa-gauge mr-2"></i> Состояние системы</h3>
           </div>
-          <div class="grid grid-cols-1 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <p class="mb-3">Режим: <span id="currentMode" class="status-badge bg-gray-100 text-gray-800">—</span></p>
             <p class="mb-3">Освещение: <span id="relayState1" class="status-badge bg-gray-100 text-gray-800">—</span></p>
             <p class="mb-3">Вентиляция: <span id="relayState2" class="status-badge bg-gray-100 text-gray-800">—</span></p>
@@ -763,36 +911,36 @@ app.get('/', (req, res) => {
       </div>
 
       <!-- Sensors -->
-      <div class="mb-6 sm:mb-8">
-        <div class="section-header" style="margin: 0 0 1rem;">
-          <h3 class="text-lg sm:text-xl font-semibold"><i class="fa-solid fa-thermometer mr-2"></i> Датчики окружающей среды</h3>
+      <div class="mb-8">
+        <div class="section-header" style="margin: 0 0 1.5rem;">
+          <h3 class="text-xl font-semibold"><i class="fa-solid fa-thermometer mr-2"></i> Датчики окружающей среды</h3>
         </div>
-        <div class="grid grid-cols-1 gap-4 sm:gap-6">
-          <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg card">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Температура</h3>
-            <p class="text-xl sm:text-2xl font-bold" id="temperature">— °C</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-2xl shadow-lg card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Температура</h3>
+            <p class="text-2xl font-bold" id="temperature">— °C</p>
             <div class="progress-bar mt-2"><div id="temperatureProgress" class="progress-bar-fill" style="width: 0%;"></div></div>
             <button id="tempChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> Просмотр графика</button>
           </div>
-          <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg card">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Влажность</h3>
-            <p class="text-xl sm:text-2xl font-bold" id="humidity">— %</p>
+          <div class="bg-white p-6 rounded-2xl shadow-lg card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Влажность</h3>
+            <p class="text-2xl font-bold" id="humidity">— %</p>
             <div class="progress-bar mt-2"><div id="humidityProgress" class="progress-bar-fill" style="width: 0%;"></div></div>
             <button id="humidityChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> Просмотр графика</button>
           </div>
-          <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg card">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Влажность почвы</h3>
-            <p class="text-xl sm:text-2xl font-bold" id="soilMoisture">— %</p>
+          <div class="bg-white p-6 rounded-2xl shadow-lg card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Влажность почвы</h3>
+            <p class="text-2xl font-bold" id="soilMoisture">— %</p>
             <div class="progress-bar mt-2"><div id="soilMoistureProgress" class="progress-bar-fill" style="width: 0%;"></div></div>
             <button id="soilMoistureChartBtn" class="mt-4 bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-chart-line mr-2"></i> Просмотр графика</button>
           </div>
         </div>
       </div>
       <!-- Planting Time -->
-      <div class="mb-6 sm:mb-8">
+      <div class="mb-8">
         <div class="planting-time-container card">
           <div class="planting-time-info">
-            <div class="section-header" style="margin: -1.5rem -1.5rem 1rem;">
+            <div class="section-header" style="margin: -2rem -2rem 1.5rem;">
               <i class="fa-solid fa-clock"></i>
               <h3>Время с посадки культуры</h3>
             </div>
@@ -807,10 +955,10 @@ app.get('/', (req, res) => {
 
     <!-- Chart Modals -->
     <div id="tempModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
-      <div class="bg-white p-4 sm:p-6 rounded-2xl w-full h-full sm:max-w-4xl sm:h-[80vh] flex flex-col">
+      <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg sm:text-xl font-semibold text-gray-900"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Temperature Trends (24h)</h3>
-          <button id="closeTempModal" class="text-gray-600 hover:text-gray-900 text-xl sm:text-2xl"><i class="fa-solid fa-times"></i></button>
+          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-temperature-high mr-2 text-teal-500"></i> Temperature Trends (24h)</h3>
+          <button id="closeTempModal" class="text-gray-600 hover:text-gray-900 text-2xl"><i class="fa-solid fa-times"></i></button>
         </div>
         <div class="chart-container flex-grow">
           <canvas id="tempChart"></canvas>
@@ -818,10 +966,10 @@ app.get('/', (req, res) => {
       </div>
     </div>
     <div id="humidityModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
-      <div class="bg-white p-4 sm:p-6 rounded-2xl w-full h-full sm:max-w-4xl sm:h-[80vh] flex flex-col">
+      <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg sm:text-xl font-semibold text-gray-900"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Humidity Trends (24h)</h3>
-          <button id="closeHumidityModal" class="text-gray-600 hover:text-gray-900 text-xl sm:text-2xl"><i class="fa-solid fa-times"></i></button>
+          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-tint mr-2 text-teal-500"></i> Humidity Trends (24h)</h3>
+          <button id="closeHumidityModal" class="text-gray-600 hover:text-gray-900 text-2xl"><i class="fa-solid fa-times"></i></button>
         </div>
         <div class="chart-container flex-grow">
           <canvas id="humidityChart"></canvas>
@@ -829,10 +977,10 @@ app.get('/', (req, res) => {
       </div>
     </div>
     <div id="soilMoistureModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal-overlay">
-      <div class="bg-white p-4 sm:p-6 rounded-2xl w-full h-full sm:max-w-4xl sm:h-[80vh] flex flex-col">
+      <div class="bg-white p-6 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg sm:text-xl font-semibold text-gray-900"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Soil Moisture Trends (24h)</h3>
-          <button id="closeSoilMoistureModal" class="text-gray-600 hover:text-gray-900 text-xl sm:text-2xl"><i class="fa-solid fa-times"></i></button>
+          <h3 class="text-xl font-semibold text-gray-900"><i class="fa-solid fa-seedling mr-2 text-teal-500"></i> Soil Moisture Trends (24h)</h3>
+          <button id="closeSoilMoistureModal" class="text-gray-600 hover:text-gray-900 text-2xl"><i class="fa-solid fa-times"></i></button>
         </div>
         <div class="chart-container flex-grow">
           <canvas id="soilMoistureChart"></canvas>
@@ -841,17 +989,17 @@ app.get('/', (req, res) => {
     </div>
 
     <div id="relaysContent" class="tab-content hidden">
-      <div class="grid grid-cols-1 gap-4 sm:gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Lighting -->
-        <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg card">
-          <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-lightbulb mr-2 text-teal-500"></i> Освещение</h3>
-          <p id="relayState1Control" class="text-base sm:text-lg mb-4">Освещение: —</p>
+        <div class="bg-white p-6 rounded-2xl shadow-lg card">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-lightbulb mr-2 text-teal-500"></i> Освещение</h3>
+          <p id="relayState1Control" class="text-lg mb-4">Освещение: —</p>
           <button id="toggleRelay1" class="w-full bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-power-off mr-2"></i> Переключить</button>
         </div>
         <!-- Ventilation -->
-        <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg card">
-          <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-fan mr-2 text-teal-500"></i> Вентиляция</h3>
-          <p id="relayState2Control" class="text-base sm:text-lg mb-4">Вентиляция: —</p>
+        <div class="bg-white p-6 rounded-2xl shadow-lg card">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4"><i class="fa-solid fa-fan mr-2 text-teal-500"></i> Вентиляция</h3>
+          <p id="relayState2Control" class="text-lg mb-4">Вентиляция: —</p>
           <button id="toggleRelay2" class="w-full bg-teal-500 text-white p-3 rounded-lg btn hover:bg-teal-600"><i class="fa-solid fa-power-off mr-2"></i> Переключить</button>
         </div>
       </div>
@@ -859,45 +1007,47 @@ app.get('/', (req, res) => {
 
     <div id="settingsContent" class="tab-content hidden">
       <!-- Crop Selection -->
-      <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg card mb-6 sm:mb-8">
+      <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
         <div class="section-header">
           <i class="fa-solid fa-seedling"></i>
           <h3>Выбор культуры</h3>
         </div>
-        <div class="grid grid-cols-1 gap-4">
+        <div class="grid grid-cols-1 gap-6">
           <div>
-            <label class="block text-gray-700 font-bold mb-2 text-sm sm:text-base" for="cropSelect">Выбрать культуру</label>
+            <label class="block text-gray-700 font-bold mb-2" for="cropSelect">Выбрать культуру</label>
             <select id="cropSelect" class="crop-select"></select>
           </div>
           <div id="customCropFields" class="hidden">
             <div class="grid grid-cols-1 gap-4">
               <div>
-                <label class="block text-gray-700 font-bold mb-2 text-sm sm:text-base" for="newCropName">Название культуры</label>
+                <label class="block text-gray-700 font-bold mb-2" for="newCropName">Название культуры</label>
                 <input id="newCropName" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Введите название культуры">
               </div>
-              <div>
-                <label class="block text-gray-700 font-bold mb-2 text-sm sm:text-base" for="newCropKey">Ключ культуры</label>
-                <input id="newCropKey" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Уникальный ключ (например, custom_crop)">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-gray-700 font-bold mb-2" for="newCropKey">Ключ культуры</label>
+                  <input id="newCropKey" type="text" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Уникальный ключ (например, custom_crop)">
+                </div>
               </div>
             </div>
           </div>
-          <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
-            <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Применить настройки</button>
+          <div class="flex justify-end">
+            <button id="applyCrop" class="ripple-btn"><i class="fa-solid fa-check mr-2"></i> Применить настройки </button>
             <button id="deleteCrop" class="logout-btn ripple-btn"><i class="fa-solid fa-trash mr-2"></i> Удалить культуру</button>
           </div>
         </div>
       </div>
 
       <!-- Crop Settings Editor -->
-      <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg card mb-6 sm:mb-8">
+      <div class="bg-white p-6 rounded-2xl shadow-lg card mb-8">
         <div class="section-header">
           <i class="fa-solid fa-sliders-h"></i>
           <h3>Редактор настроек культур</h3>
         </div>
         <div class="mb-4">
-          <p class="text-gray-700 text-sm sm:text-base">Текущая культура: <span id="currentCropName" class="crop-badge">Potato</span></p>
+          <p class="text-gray-700">Текущая культура: <span id="currentCropName" class="crop-badge">Potato</span></p>
         </div>
-        <div class="grid grid-cols-1 gap-4 sm:gap-8">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
           <div class="input-card">
             <label class="input-label">Порог температуры (°C)</label>
             <div class="icon-circle"><i class="fa-solid fa-temperature-half"></i></div>
@@ -913,6 +1063,8 @@ app.get('/', (req, res) => {
             <div class="icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
             <input id="cropLightIntervalManual" type="number" value="360" placeholder="Enter minutes">
           </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-8 mt-4">
           <div class="input-card">
             <label class="input-label">Часы запуска насоса</label>
             <div class="icon-circle"><i class="fa-solid fa-clock"></i></div>
@@ -942,13 +1094,13 @@ app.get('/', (req, res) => {
     </div>
     
     <div id="liveContent" class="tab-content hidden">
-      <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg card">
+      <div class="bg-white p-6 rounded-2xl shadow-lg card">
         <div class="section-header">
           <i class="fa-solid fa-video"></i>
           <h3>Прямая трансляция из теплицы</h3>
         </div>
         <div class="flex justify-center">
-          <img id="camImage" class="w-full max-w-2xl sm:max-w-4xl rounded-lg" />
+          <img id="camImage" class="w-full max-w-4xl rounded-lg" />
         </div>
         <div class="flex flex-wrap justify-center gap-4 mt-4">
           <button id="refreshFrame" class="ripple-btn">
@@ -965,6 +1117,7 @@ app.get('/', (req, res) => {
       </div>
     </div>
   </div>
+
 
 
     <script>
