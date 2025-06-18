@@ -990,13 +990,13 @@ app.get('/', (req, res) => {
     <div class="flex items-center justify-between mb-8">
       <h1 class="text-4xl font-bold text-gray-900"><i class="fa-solid fa-leaf mr-2 text-teal-500"></i> Greenhouse Control</h1>
       <div class="flex space-x-4">
-  <button id="toggleMode" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600 ml-0">
+  <button id="toggleMode" class="bg-teal-500 text-white px-4 py-2 rounded-lg btn hover:bg-teal-600 mr-4">
     <i class="fa-solid fa-sync mr-2"></i> Переключить режим
   </button>
-  <div id="connectionIndicator" class="connection-indicator offline ml-0">
+  <div id="connectionIndicator" class="connection-indicator offline mr-4">
     <i class="fa-solid fa-wifi-slash"></i> Offline
   </div>
-  <button id="logoutButton" class="logout-btn text-white px-4 py-2 rounded-lg ml-0">
+  <button id="logoutButton" class="logout-btn text-white px-4 py-2 rounded-lg mr-4">
     <i class="fa-solid fa-sign-out-alt mr-2"></i> Logout
   </button>
 </div>
