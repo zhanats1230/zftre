@@ -651,7 +651,7 @@ app.get('/', (req, res) => {
       .flex.items-center.justify-between.mb-8 {
         flex-direction: column;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
         margin-bottom: 1rem;
       }
       .flex.space-x-4 {
@@ -660,22 +660,55 @@ app.get('/', (req, res) => {
         gap: 0.5rem;
         width: 100%;
       }
-      .bg-teal-500.text-white.px-4.py-2.rounded-lg.btn,
-      .logout-btn.text-white.px-4.py-2.rounded-lg {
+      #toggleMode {
         width: 100%;
         padding: 0.5rem;
         font-size: 0.9rem;
         min-height: 44px;
+        border-radius: 8px;
+        background: linear-gradient(to right, #14b8a6, #2dd4bf);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s, box-shadow 0.2s;
       }
-      .connection-indicator {
+      #toggleMode:hover {
+        transform: scale(1.03);
+        box-shadow: 0 4px 8px rgba(20, 184, 166, 0.3);
+      }
+      #connectionIndicator {
         width: 100%;
         justify-content: center;
         font-size: 0.85rem;
         padding: 0.4rem;
+        border-radius: 6px;
+        animation: pulseOnline 2s infinite;
       }
-      .connection-indicator i {
+      #connectionIndicator i {
         font-size: 1rem;
         margin-right: 0.4rem;
+      }
+      @keyframes pulseOnline {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+      #logoutButton {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        min-height: 44px;
+        border-radius: 8px;
+        background: linear-gradient(to right, #ef4444, #f87171);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      #logoutButton:hover {
+        transform: scale(1.03);
+        box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
       }
       /* Tabs */
       .flex.border-b.border-gray-200.mb-8 {
@@ -739,21 +772,55 @@ app.get('/', (req, res) => {
       .planting-time-container {
         flex-direction: column;
         padding: 0.75rem;
-        align-items: stretch;
+        align-items: center;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .planting-time-info {
+        text-align: center;
+        width: 100%;
       }
       .planting-time-value {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
         margin-bottom: 0.5rem;
       }
       .planting-time-label {
+        font-size: 0.85rem;
+        color: #6b7280;
+      }
+      #resetPlantingTime {
+        width: 100%;
+        padding: 0.5rem;
         font-size: 0.9rem;
+        min-height: 44px;
+        border-radius: 8px;
+        background: linear-gradient(to right, #14b8a6, #2dd4bf);
+        color: white;
+        margin-top: 0.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      #resetPlantingTime:hover {
+        transform: scale(1.03);
+        box-shadow: 0 4px 8px rgba(20, 184, 166, 0.3);
       }
       .water-reservoir-placeholder {
         width: 100%;
-        height: 120px;
+        height: 100px;
         margin-left: 0;
         margin-top: 0.75rem;
         font-size: 0.8rem;
+        background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
+        border: 2px solid transparent;
+        border-image: linear-gradient(to right, #14b8a6, #2dd4bf) 1;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        transition: transform 0.3s;
+      }
+      .water-reservoir-placeholder:hover {
+        transform: scale(1.02);
       }
       .section-header[style*="margin: -2rem -2rem 1.5rem"] {
         margin: -0.75rem -0.75rem 0.75rem;
@@ -1154,6 +1221,7 @@ app.get('/', (req, res) => {
       </div>
     </div>
   </div>
+
 
 
 
