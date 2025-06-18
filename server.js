@@ -995,7 +995,7 @@ app.get('/', (req, res) => {
 
     <!-- Tabs Navigation -->
     <div class="flex border-b border-gray-200 mb-8">
-      <button id="tabDashboard" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100 active">Панель инструментов</button>
+      <button id="tabDashboard" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100 active">Система</button>
       <button id="tabRelays" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Реле</button>
       <button id="tabSettings" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Настройки</button>
       <button id="tabLive" class="tab flex-1 py-3 px-4 text-center text-gray-600 font-semibold hover:bg-gray-100">Трансляция</button>
