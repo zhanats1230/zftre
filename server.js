@@ -571,7 +571,7 @@ app.get('/', (req, res) => {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 2rem;
+      padding: 1.5rem;
       background: linear-gradient(145deg, #ffffff, #f7f7f9);
       border-radius: 16px;
       border: 1px solid #e5e7eb;
