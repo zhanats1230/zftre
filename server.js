@@ -415,6 +415,9 @@ app.get('/', (req, res) => {
       font-weight: 500;
       transition: background-color 0.3s;
     }
+    .space-x-4 > * {
+      margin-left: 0 !important;
+    }
     .modal {
       transition: opacity 0.3s ease, transform 0.3s ease;
       transform: translateY(20px);
