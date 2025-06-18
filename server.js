@@ -687,7 +687,7 @@ app.get('/', (req, res) => {
         font-size: 0.85rem;
         padding: 0.4rem;
         border-radius: 6px;
-        animation: pulseOnline 2s infinite;
+        
       }
       #connectionIndicator i {
         font-size: 1rem;
