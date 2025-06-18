@@ -637,93 +637,112 @@ app.get('/', (req, res) => {
       html, body {
         width: 100%;
         overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
       }
       .container {
-        padding: 0.5rem;
+        padding: 0.75rem;
       }
-      /* Header adjustments */
+      /* Header */
       h1 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
+        text-align: center;
+        margin-bottom: 0.5rem;
       }
       .flex.items-center.justify-between.mb-8 {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
       }
       .flex.space-x-4 {
         flex-direction: column;
-        align-items: stretch;
+        align-items: center;
         gap: 0.5rem;
         width: 100%;
       }
-      /* Tabs navigation */
+      .bg-teal-500.text-white.px-4.py-2.rounded-lg.btn,
+      .logout-btn.text-white.px-4.py-2.rounded-lg {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        min-height: 44px;
+      }
+      .connection-indicator {
+        width: 100%;
+        justify-content: center;
+        font-size: 0.85rem;
+        padding: 0.4rem;
+      }
+      .connection-indicator i {
+        font-size: 1rem;
+        margin-right: 0.4rem;
+      }
+      /* Tabs */
       .flex.border-b.border-gray-200.mb-8 {
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.25rem;
       }
       .flex.border-b.border-gray-200.mb-8::-webkit-scrollbar {
         display: none;
       }
       .tab {
-        font-size: 0.85rem;
-        padding: 0.5rem 1rem;
-        min-width: 100px;
-        flex: none;
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+        min-width: 80px;
+        border-radius: 6px;
+        margin-right: 0.25rem;
       }
-      /* Section headers */
-      .section-header {
-        font-size: 1rem;
-        padding: 0.75rem;
-        margin: -0.75rem -0.75rem 1rem;
-      }
-      .section-header i {
-        font-size: 1.25rem;
-        margin-right: 0.5rem;
-      }
-      /* Cards and spacing */
+      /* Cards */
       .mb-8 {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
       }
       .bg-white.p-6.rounded-2xl.shadow-lg.card {
-        padding: 1rem;
+        padding: 0.75rem;
+        border-radius: 12px;
       }
-      /* System status grid */
+      /* System Status */
       .grid.grid-cols-1.sm\:grid-cols-3.gap-4 {
         grid-template-columns: 1fr;
         gap: 0.5rem;
       }
-      .mb-3 {
-        margin-bottom: 0.75rem;
+      .status-badge {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
       }
-      /* Sensors grid */
+      .mb-3 {
+        margin-bottom: 0.5rem;
+      }
+      /* Sensors */
       .grid.grid-cols-1.md\:grid-cols-3.gap-6 {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 0.75rem;
+      }
+      .text-lg.font-semibold.text-gray-900.mb-2 {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
       }
       .text-2xl.font-bold {
         font-size: 1.25rem;
       }
-      .text-lg.font-semibold.text-gray-900.mb-2 {
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
+      .progress-bar {
+        height: 6px;
       }
       .mt-4.bg-teal-500.text-white.px-4.py-2.rounded-lg.btn {
-        margin-top: 0.75rem;
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        font-size: 0.85rem;
         min-height: 44px;
       }
-      /* Planting time */
+      /* Planting Time */
       .planting-time-container {
         flex-direction: column;
-        padding: 1rem;
+        padding: 0.75rem;
         align-items: stretch;
       }
       .planting-time-value {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         margin-bottom: 0.5rem;
       }
       .planting-time-label {
@@ -731,12 +750,13 @@ app.get('/', (req, res) => {
       }
       .water-reservoir-placeholder {
         width: 100%;
-        height: 150px;
+        height: 120px;
         margin-left: 0;
-        margin-top: 1rem;
+        margin-top: 0.75rem;
+        font-size: 0.8rem;
       }
       .section-header[style*="margin: -2rem -2rem 1.5rem"] {
-        margin: -0.75rem -0.75rem 1rem;
+        margin: -0.75rem -0.75rem 0.75rem;
       }
       /* Modals */
       .modal {
@@ -751,57 +771,62 @@ app.get('/', (req, res) => {
         padding: 0.5rem;
       }
       .modal .text-xl.font-semibold.text-gray-900 {
-        font-size: 1rem;
+        font-size: 0.9rem;
       }
       .modal .text-2xl {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
       }
       .modal .chart-container {
-        height: 50vh;
+        height: 40vh;
       }
       .modal .flex.justify-between.items-center.mb-4 {
         margin-bottom: 0.5rem;
       }
       .modal button.text-gray-600 {
-        font-size: 1rem;
+        font-size: 1.25rem;
+        padding: 0.5rem;
       }
-      /* Relays grid */
+      /* Relays */
       .grid.grid-cols-1.md\:grid-cols-2.gap-6 {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 0.75rem;
       }
       .text-xl.font-semibold.text-gray-900.mb-4 {
-        font-size: 1rem;
-        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
       }
       .text-lg.mb-4 {
-        font-size: 0.9rem;
-        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
       }
       .w-full.bg-teal-500.text-white.p-3.rounded-lg.btn {
         padding: 0.5rem;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         min-height: 44px;
       }
       /* Settings */
       .grid.grid-cols-1.gap-6 {
-        gap: 1rem;
+        gap: 0.75rem;
       }
       .grid.grid-cols-1.sm\:grid-cols-3.gap-8 {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 0.75rem;
       }
       .grid.grid-cols-1.sm\:grid-cols-4.gap-8.mt-4 {
         grid-template-columns: 1fr;
-        gap: 1rem;
-        margin-top: 0.75rem;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+      }
+      .grid.grid-cols-1.sm\:grid-cols-2.gap-4 {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
       }
       .input-card {
         padding: 0.5rem;
       }
       .input-card input {
-        font-size: 0.9rem;
-        padding: 0.5rem 0.5rem 0.5rem 2.25rem;
+        font-size: 0.85rem;
+        padding: 0.4rem 0.4rem 0.4rem 2rem;
       }
       .input-card .icon-circle {
         width: 1.5rem;
@@ -811,6 +836,7 @@ app.get('/', (req, res) => {
       }
       .input-label {
         font-size: 0.7rem;
+        margin-bottom: 0.3rem;
       }
       .wave-divider {
         margin: 1rem 0;
@@ -820,46 +846,57 @@ app.get('/', (req, res) => {
         gap: 0.5rem;
         align-items: stretch;
       }
+      .flex.justify-between.mt-4 {
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
       .ripple-btn {
-        font-size: 0.9rem;
-        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        padding: 0.5rem;
         margin-right: 0;
         min-height: 44px;
       }
       .block.text-gray-700.font-bold.mb-2 {
-        font-size: 0.85rem;
-        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.4rem;
       }
       .crop-select {
-        font-size: 0.9rem;
-        padding: 0.5rem;
+        font-size: 0.85rem;
+        padding: 0.4rem;
       }
       .text-gray-700 {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
       }
       .crop-badge {
-        font-size: 0.75rem;
-        padding: 0.2rem 0.6rem;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
       }
-      /* Live tab */
-      .flex.justify-center .max-w-4xl {
+      /* Live Tab */
+      .bg-white.p-6.rounded-2xl.shadow-lg.card {
+        padding: 0.75rem;
+      }
+      .flex.justify-center .w-full.max-w-4xl.rounded-lg {
         max-width: 100%;
       }
       .flex.flex-wrap.justify-center.gap-4.mt-4 {
+        flex-direction: column;
         gap: 0.5rem;
-        margin-top: 0.75rem;
+        margin-top: 0.5rem;
       }
       .mt-4.text-center.text-sm.text-gray-500 {
-        font-size: 0.75rem;
-        margin-top: 0.75rem;
+        font-size: 0.7rem;
+        margin-top: 0.5rem;
       }
-      /* Buttons and indicators */
-      .connection-indicator {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.6rem;
+      /* Section Headers */
+      .section-header {
+        font-size: 1rem;
+        padding: 0.75rem;
+        margin: -0.75rem -0.75rem 0.75rem;
       }
-      .connection-indicator i {
-        font-size: 0.9rem;
+      .section-header i {
+        font-size: 1.25rem;
+        margin-right: 0.5rem;
       }
     }
   </style>
@@ -1117,6 +1154,7 @@ app.get('/', (req, res) => {
       </div>
     </div>
   </div>
+
 
 
 
