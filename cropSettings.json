@@ -9,7 +9,7 @@
       "pumpStartMinute": 0,
       "pumpDuration": 15,
       "pumpInterval": 180,
-      "plantingTimestamp": 1750630669658
+      "plantingTimestamp": 1750632355795
     },
     "carrot": {
       "name": "Carrot",
@@ -144,5 +144,5 @@
       "plantingTimestamp": 1750631511882
     }
   },
-  "currentCrop": "яяяяяя"
+  "currentCrop": "potato"
 }
