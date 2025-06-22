@@ -2,7 +2,7 @@
   "crops": {
     "potato": {
       "name": "Potato",
-      "fanTemperatureThreshold": 36,
+      "fanTemperatureThreshold": 29.9,
       "lightOnDuration": 60000,
       "lightIntervalManual": 60000,
       "pumpStartHour": 8,
