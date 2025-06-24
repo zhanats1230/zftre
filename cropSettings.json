@@ -1,16 +1,5 @@
 {
   "crops": {
-    "ываываыва": {
-      "name": "wer",
-      "fanTemperatureThreshold": 11,
-      "lightOnDuration": 660000,
-      "lightIntervalManual": 660000,
-      "pumpStartHour": 1,
-      "pumpStartMinute": 1,
-      "pumpDuration": 1,
-      "pumpInterval": 1,
-      "plantingTimestamp": 1749924274574
-    },
     "test": {
       "name": "test",
       "fanTemperatureThreshold": 11,
@@ -45,5 +34,5 @@
       "plantingTimestamp": 1750632866305
     }
   },
-  "currentCrop": "ываываыва"
+  "currentCrop": "test"
 }
