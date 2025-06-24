@@ -1,7 +1,7 @@
 {
   "crops": {
     "potato": {
-      "name": "Картошка",
+      "name": "Potato",
       "fanTemperatureThreshold": 26,
       "lightOnDuration": 60000,
       "lightIntervalManual": 60000,
@@ -12,7 +12,7 @@
       "plantingTimestamp": 1750632893311
     },
     "carrot": {
-      "name": "Марковка",
+      "name": "Carrot",
       "fanTemperatureThreshold": 25,
       "lightOnDuration": 10800000,
       "lightIntervalManual": 18000000,
@@ -20,10 +20,10 @@
       "pumpStartMinute": 30,
       "pumpDuration": 10,
       "pumpInterval": 240,
-      "plantingTimestamp": 1749922519487
+      "plantingTimestamp": 1750757448444
     },
     "tomato": {
-      "name": "Помидор",
+      "name": "Tomato",
       "fanTemperatureThreshold": 28,
       "lightOnDuration": 14400000,
       "lightIntervalManual": 28800000,
@@ -34,7 +34,7 @@
       "plantingTimestamp": 1750061702054
     },
     "цук": {
-      "name": "Огурцы",
+      "name": "wer",
       "fanTemperatureThreshold": 23,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -45,7 +45,7 @@
       "plantingTimestamp": 1749922519487
     },
     "eert": {
-      "name": "Свёкла",
+      "name": "wer",
       "fanTemperatureThreshold": 23,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -56,7 +56,7 @@
       "plantingTimestamp": 1749922519487
     },
     "ыва": {
-      "name": "Капуста",
+      "name": "ыва",
       "fanTemperatureThreshold": 22,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -67,7 +67,7 @@
       "plantingTimestamp": 1749922519487
     },
     "вввв": {
-      "name": "Кукуруза",
+      "name": "ыввв",
       "fanTemperatureThreshold": 22,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -78,7 +78,7 @@
       "plantingTimestamp": 1750065077364
     },
     "ываыва": {
-      "name": "Лук",
+      "name": "ываыва",
       "fanTemperatureThreshold": 22,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -89,7 +89,7 @@
       "plantingTimestamp": 1749922519487
     },
     "йцуйцу": {
-      "name": "Картофель",
+      "name": "йцуйцу",
       "fanTemperatureThreshold": 22,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -100,7 +100,7 @@
       "plantingTimestamp": 1749922519487
     },
     "ываываыва": {
-      "name": "Репа",
+      "name": "wer",
       "fanTemperatureThreshold": 11,
       "lightOnDuration": 660000,
       "lightIntervalManual": 660000,
@@ -111,7 +111,7 @@
       "plantingTimestamp": 1749924274574
     },
     "test": {
-      "name": "Горох",
+      "name": "test",
       "fanTemperatureThreshold": 11,
       "lightOnDuration": 39600000000,
       "lightIntervalManual": 39600000000,
@@ -122,7 +122,7 @@
       "plantingTimestamp": 1749923713413
     },
     "ммммм": {
-      "name": "Петрушка",
+      "name": "ммммм",
       "fanTemperatureThreshold": 11,
       "lightOnDuration": 39600000000,
       "lightIntervalManual": 39600000000,
@@ -133,7 +133,7 @@
       "plantingTimestamp": 1750069341078
     },
     "яяяяяя": {
-      "name": "Сельдерей",
+      "name": "яяяяяя",
       "fanTemperatureThreshold": 11,
       "lightOnDuration": 660000,
       "lightIntervalManual": 660000,
@@ -144,5 +144,5 @@
       "plantingTimestamp": 1750632866305
     }
   },
-  "currentCrop": "potato"
+  "currentCrop": "carrot"
 }
