@@ -1,7 +1,7 @@
 {
   "crops": {
     "potato": {
-      "name": "Potato",
+      "name": "Картошка",
       "fanTemperatureThreshold": 26,
       "lightOnDuration": 60000,
       "lightIntervalManual": 60000,
@@ -12,7 +12,7 @@
       "plantingTimestamp": 1750632893311
     },
     "carrot": {
-      "name": "Carrot",
+      "name": "Марковка",
       "fanTemperatureThreshold": 25,
       "lightOnDuration": 10800000,
       "lightIntervalManual": 18000000,
@@ -23,7 +23,7 @@
       "plantingTimestamp": 1749922519487
     },
     "tomato": {
-      "name": "Tomato",
+      "name": "Помидор",
       "fanTemperatureThreshold": 28,
       "lightOnDuration": 14400000,
       "lightIntervalManual": 28800000,
@@ -34,7 +34,7 @@
       "plantingTimestamp": 1750061702054
     },
     "цук": {
-      "name": "wer",
+      "name": "Огурцы",
       "fanTemperatureThreshold": 23,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -45,7 +45,7 @@
       "plantingTimestamp": 1749922519487
     },
     "eert": {
-      "name": "wer",
+      "name": "Свёкла",
       "fanTemperatureThreshold": 23,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -56,7 +56,7 @@
       "plantingTimestamp": 1749922519487
     },
     "ыва": {
-      "name": "ыва",
+      "name": "Капуста",
       "fanTemperatureThreshold": 22,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -67,7 +67,7 @@
       "plantingTimestamp": 1749922519487
     },
     "вввв": {
-      "name": "ыввв",
+      "name": "Кукуруза",
       "fanTemperatureThreshold": 22,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -78,7 +78,7 @@
       "plantingTimestamp": 1750065077364
     },
     "ываыва": {
-      "name": "ываыва",
+      "name": "Лук",
       "fanTemperatureThreshold": 22,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -89,7 +89,7 @@
       "plantingTimestamp": 1749922519487
     },
     "йцуйцу": {
-      "name": "йцуйцу",
+      "name": "Картофель",
       "fanTemperatureThreshold": 22,
       "lightOnDuration": 7200000,
       "lightIntervalManual": 21600000,
@@ -100,7 +100,7 @@
       "plantingTimestamp": 1749922519487
     },
     "ываываыва": {
-      "name": "wer",
+      "name": "Репа",
       "fanTemperatureThreshold": 11,
       "lightOnDuration": 660000,
       "lightIntervalManual": 660000,
@@ -111,7 +111,7 @@
       "plantingTimestamp": 1749924274574
     },
     "test": {
-      "name": "test",
+      "name": "Горох",
       "fanTemperatureThreshold": 11,
       "lightOnDuration": 39600000000,
       "lightIntervalManual": 39600000000,
@@ -122,7 +122,7 @@
       "plantingTimestamp": 1749923713413
     },
     "ммммм": {
-      "name": "ммммм",
+      "name": "Петрушка",
       "fanTemperatureThreshold": 11,
       "lightOnDuration": 39600000000,
       "lightIntervalManual": 39600000000,
@@ -133,7 +133,7 @@
       "plantingTimestamp": 1750069341078
     },
     "яяяяяя": {
-      "name": "яяяяяя",
+      "name": "Сельдерей",
       "fanTemperatureThreshold": 11,
       "lightOnDuration": 660000,
       "lightIntervalManual": 660000,
