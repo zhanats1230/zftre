@@ -21,7 +21,18 @@
       "pumpDuration": 1,
       "pumpInterval": 1,
       "plantingTimestamp": 1750758311649
+    },
+    "Капуста": {
+      "name": "Капуста",
+      "fanTemperatureThreshold": 30,
+      "lightOnDuration": 180000,
+      "lightIntervalManual": 180000,
+      "pumpStartHour": 1,
+      "pumpStartMinute": 1,
+      "pumpDuration": 1,
+      "pumpInterval": 1,
+      "plantingTimestamp": 1750758340896
     }
   },
-  "currentCrop": "Марковка"
+  "currentCrop": "Капуста"
 }
