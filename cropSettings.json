@@ -1,16 +1,5 @@
 {
   "crops": {
-    "ммммм": {
-      "name": "ммммм",
-      "fanTemperatureThreshold": 11,
-      "lightOnDuration": 39600000000,
-      "lightIntervalManual": 39600000000,
-      "pumpStartHour": 1,
-      "pumpStartMinute": 1,
-      "pumpDuration": 1,
-      "pumpInterval": 1,
-      "plantingTimestamp": 1750069341078
-    },
     "яяяяяя": {
       "name": "яяяяяя",
       "fanTemperatureThreshold": 11,
@@ -23,5 +12,5 @@
       "plantingTimestamp": 1750632866305
     }
   },
-  "currentCrop": "ммммм"
+  "currentCrop": "яяяяяя"
 }
