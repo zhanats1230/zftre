@@ -68,7 +68,7 @@
     },
     "Лук репчатый": {
       "name": "Лук репчатый",
-      "fanTemperatureThreshold": 27,
+      "fanTemperatureThreshold": 28.3,
       "lightOnDuration": 60000,
       "lightIntervalManual": 60000,
       "pumpStartHour": 1,
