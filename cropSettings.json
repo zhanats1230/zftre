@@ -120,7 +120,18 @@
       "pumpDuration": 1,
       "pumpInterval": 1,
       "plantingTimestamp": 1750632866305
+    },
+    "Картошка": {
+      "name": "Картошка",
+      "fanTemperatureThreshold": 28,
+      "lightOnDuration": 14400000,
+      "lightIntervalManual": 28800000,
+      "pumpStartHour": 6,
+      "pumpStartMinute": 0,
+      "pumpDuration": 20,
+      "pumpInterval": 120,
+      "plantingTimestamp": 1750758095938
     }
   },
-  "currentCrop": "tomato"
+  "currentCrop": "Картошка"
 }
