@@ -142,18 +142,7 @@
       "pumpDuration": 1,
       "pumpInterval": 1,
       "plantingTimestamp": 1750632866305
-    },
-    "Картошка": {
-      "name": "Картошка",
-      "fanTemperatureThreshold": 22,
-      "lightOnDuration": 7200000,
-      "lightIntervalManual": 21600000,
-      "pumpStartHour": 8,
-      "pumpStartMinute": 0,
-      "pumpDuration": 15,
-      "pumpInterval": 180,
-      "plantingTimestamp": 1750757917577
     }
   },
-  "currentCrop": "Картошка"
+  "currentCrop": "potato"
 }
