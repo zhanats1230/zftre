@@ -1,16 +1,5 @@
 {
   "crops": {
-    "tomato": {
-      "name": "Tomato",
-      "fanTemperatureThreshold": 28,
-      "lightOnDuration": 14400000,
-      "lightIntervalManual": 28800000,
-      "pumpStartHour": 6,
-      "pumpStartMinute": 0,
-      "pumpDuration": 20,
-      "pumpInterval": 120,
-      "plantingTimestamp": 1750061702054
-    },
     "цук": {
       "name": "wer",
       "fanTemperatureThreshold": 23,
@@ -122,5 +111,5 @@
       "plantingTimestamp": 1750632866305
     }
   },
-  "currentCrop": "tomato"
+  "currentCrop": "цук"
 }
