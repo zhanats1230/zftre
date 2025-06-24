@@ -1031,7 +1031,7 @@ app.get('/', (req, res) => {
       <!-- Sensors -->
       <div class="mb-8">
         <div class="section-header" style="margin: 0 0 1.5rem;">
-          <h3 class="text-xl font-semibold"><i class="fa-solid fa-thermometer mr-2"></i> Датчики окружающей среды</h3>
+          <h3 class="text-xl font-semibold"><i class="fa-solid fa-thermometer mr-2"></i> Датчики контроля среды</h3>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-2xl shadow-lg card">
