@@ -119,7 +119,7 @@
       "pumpStartMinute": 1,
       "pumpDuration": 1,
       "pumpInterval": 1,
-      "plantingTimestamp": 1750632866305
+      "plantingTimestamp": 1750758145628
     },
     "Картошка": {
       "name": "Картошка",
@@ -133,5 +133,5 @@
       "plantingTimestamp": 1750758095938
     }
   },
-  "currentCrop": "Картошка"
+  "currentCrop": "яяяяяя"
 }
