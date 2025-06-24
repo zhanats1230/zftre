@@ -75,7 +75,7 @@
       "pumpStartMinute": 0,
       "pumpDuration": 15,
       "pumpInterval": 180,
-      "plantingTimestamp": 1750065077364
+      "plantingTimestamp": 1750757829349
     },
     "ываыва": {
       "name": "ываыва",
@@ -144,5 +144,5 @@
       "plantingTimestamp": 1750632866305
     }
   },
-  "currentCrop": "carrot"
+  "currentCrop": "вввв"
 }
