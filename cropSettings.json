@@ -32,7 +32,18 @@
       "pumpDuration": 1,
       "pumpInterval": 1,
       "plantingTimestamp": 1750758340896
+    },
+    "Свёкла": {
+      "name": "Свёкла",
+      "fanTemperatureThreshold": 29,
+      "lightOnDuration": 60000,
+      "lightIntervalManual": 60000,
+      "pumpStartHour": 1,
+      "pumpStartMinute": 1,
+      "pumpDuration": 1,
+      "pumpInterval": 1,
+      "plantingTimestamp": 1750758362442
     }
   },
-  "currentCrop": "Капуста"
+  "currentCrop": "Свёкла"
 }
