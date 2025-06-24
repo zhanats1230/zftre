@@ -1,16 +1,5 @@
 {
   "crops": {
-    "carrot": {
-      "name": "Carrot",
-      "fanTemperatureThreshold": 25,
-      "lightOnDuration": 10800000,
-      "lightIntervalManual": 18000000,
-      "pumpStartHour": 7,
-      "pumpStartMinute": 30,
-      "pumpDuration": 10,
-      "pumpInterval": 240,
-      "plantingTimestamp": 1750757448444
-    },
     "tomato": {
       "name": "Tomato",
       "fanTemperatureThreshold": 28,
@@ -133,5 +122,5 @@
       "plantingTimestamp": 1750632866305
     }
   },
-  "currentCrop": "carrot"
+  "currentCrop": "tomato"
 }
