@@ -2,7 +2,7 @@
   "crops": {
     "Картошка": {
       "name": "Картошка",
-      "fanTemperatureThreshold": 20,
+      "fanTemperatureThreshold": 36,
       "lightOnDuration": 60000,
       "lightIntervalManual": 60000,
       "pumpStartHour": 1,
