@@ -31,7 +31,7 @@
       "pumpStartMinute": 1,
       "pumpDuration": 1,
       "pumpInterval": 1,
-      "plantingTimestamp": 1750758340896
+      "plantingTimestamp": 1751289095220
     },
     "Свёкла": {
       "name": "Свёкла",
@@ -78,5 +78,5 @@
       "plantingTimestamp": 1750758525543
     }
   },
-  "currentCrop": "Картошка"
+  "currentCrop": "Капуста"
 }
